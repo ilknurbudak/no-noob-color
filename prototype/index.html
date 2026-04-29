@@ -20,6 +20,21 @@
     --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
     --grad: linear-gradient(90deg, #ff7a8a 0%, #ff9c4a 22%, #f7d048 42%, #5fcd8c 60%, #5fa1f7 80%, #b87fff 100%);
     --grad-soft: linear-gradient(90deg, #ffd6dc 0%, #ffe1c2 22%, #fdf3c2 42%, #cfedda 60%, #cfdef9 80%, #e6d5ff 100%);
+
+    /* spacing scale (8pt grid) */
+    --s-1: 4px;
+    --s-2: 8px;
+    --s-3: 12px;
+    --s-4: 16px;
+    --s-5: 24px;
+    --s-6: 32px;
+    --s-7: 48px;
+    --s-8: 64px;
+
+    /* sizes */
+    --tap: 44px;
+    --content-max: 880px;
+    --nav-bottom-offset: 24px;
   }
   [data-theme="dark"] {
     --bg: #0d0d0d;
@@ -45,22 +60,43 @@
   }
 
   .app {
-    max-width: 880px;
+    max-width: var(--content-max);
     margin: 0 auto;
-    padding: 28px 24px 140px;
+    padding: var(--s-6) var(--s-5) 140px;
     min-height: 100vh;
   }
 
   /* brand */
-  .brand-header { text-align: center; padding: 16px 0 36px; }
+  .brand-header {
+    text-align: center;
+    padding: 28px 0 12px;
+    position: relative;
+  }
   .brand {
     font-family: var(--sans);
-    font-weight: 700;
+    font-weight: 800;
     font-style: italic;
-    font-size: 30px;
-    letter-spacing: -.015em;
+    font-size: 56px;
+    letter-spacing: -.035em;
     color: var(--text);
-    line-height: 1;
+    line-height: .95;
+    user-select: none;
+  }
+  .brand .grad-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+  .brand-tagline {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .18em;
+    opacity: .7;
   }
 
   .tab { display: none; }
@@ -71,8 +107,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 24px;
+    gap: var(--s-3);
+    margin-bottom: var(--s-7);
     position: relative;
   }
   .controls-right {
@@ -205,8 +241,8 @@
     color: var(--text-3);
     text-transform: uppercase;
     letter-spacing: .1em;
-    margin-bottom: 10px;
-    margin-top: 32px;
+    margin-bottom: var(--s-3);
+    margin-top: var(--s-7);
     display: block;
   }
   .section-label:first-child { margin-top: 0; }
@@ -278,12 +314,74 @@
   .mood-popover button:hover { background: var(--surface-hover); }
   .mood-popover button.active { background: var(--text); color: var(--bg); }
 
-  /* source — hero element on Photo tab */
+  /* photo tab — two-column grid */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: var(--s-6);
+    align-items: start;
+  }
+  .photo-col-source, .photo-col-palette { min-width: 0; }
+  .photo-col-source .section-label:first-child,
+  .photo-col-palette .palette-header .section-label {
+    margin-top: 0;
+  }
+
+  /* palette header — section label + chip actions */
+  .palette-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--s-7);
+    margin-bottom: var(--s-3);
+    gap: var(--s-3);
+    flex-wrap: wrap;
+  }
+  .palette-header .section-label {
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .palette-actions {
+    display: flex;
+    gap: var(--s-2);
+    align-items: center;
+  }
+
+  /* chip button — compact action style */
+  .chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--hairline);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    letter-spacing: -.005em;
+  }
+  .chip-btn:hover:not(:disabled) {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .chip-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+  .chip-btn svg { width: 12px; height: 12px; }
+  .chip-btn .chev { font-size: 8px; opacity: .7; margin-left: 2px; }
+
+  /* source — hero drag & drop zone */
   .source-strip {
     width: 100%;
     height: 340px;
-    border: 1.5px dashed var(--text);
-    border-radius: 12px;
+    border: 1.5px dashed var(--hairline);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -291,24 +389,46 @@
     position: relative;
     cursor: pointer;
     background: var(--bg);
-    transition: border-color .15s, background .15s, transform .15s;
+    transition: border-color .2s, border-width .15s, background .2s, transform .2s, box-shadow .25s;
   }
-  .source-strip:hover:not(.has-image) {
+  .source-strip:hover:not(.has-image):not(.dragover) {
     background: var(--surface-hover);
   }
   .source-strip.has-image {
     border-style: solid;
     border-width: 1px;
+    border-color: var(--hairline);
     cursor: default;
-    height: 220px;
   }
   .source-strip.dragover {
     border-color: var(--text);
+    border-width: 2px;
     background: var(--surface-hover);
-    transform: scale(1.005);
+    transform: scale(1.012);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, .14);
   }
-  .source-strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .source-strip input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .source-strip.dropped {
+    animation: dropReceived .7s cubic-bezier(.2, .8, .2, 1);
+  }
+  @keyframes dropReceived {
+    0%   { transform: scale(1); }
+    20%  { transform: scale(.985); }
+    55%  { transform: scale(1.018); }
+    100% { transform: scale(1); }
+  }
+  .source-strip img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    animation: imgFadeIn .55s ease;
+  }
+  @keyframes imgFadeIn {
+    from { opacity: 0; transform: scale(1.025); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .source-strip input[type=file] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+  }
   .source-prompt {
     text-align: center;
     color: var(--text);
@@ -317,6 +437,12 @@
     font-weight: 700;
     letter-spacing: -.02em;
     line-height: 1.1;
+    pointer-events: none;
+    transition: opacity .15s, transform .15s;
+  }
+  .source-strip.dragover .source-prompt {
+    opacity: .6;
+    transform: scale(.96);
   }
   .source-prompt .small {
     display: block;
@@ -328,16 +454,84 @@
     text-transform: uppercase;
     letter-spacing: .12em;
   }
+  .demo-link {
+    pointer-events: auto;
+    position: relative;
+    z-index: 4;
+    background: transparent;
+    border: none;
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--text-2);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+    transition: color .15s;
+  }
+  .demo-link:hover { color: var(--text); }
+  .drop-icon {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 22px;
+    display: block;
+    color: var(--text);
+    animation: dropBounce 2.4s ease-in-out infinite;
+  }
+  .source-strip.dragover .drop-icon {
+    animation-duration: .7s;
+  }
+  @keyframes dropBounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+
+  .source-loading {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    padding: 7px 14px;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity .25s;
+    pointer-events: none;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+  .source-loading::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bg);
+    animation: livePulse 1s ease-in-out infinite;
+  }
+  .source-loading.active { opacity: 1; }
 
   /* palette strips — Pantone-style vertical columns */
   .palette-strips {
     display: flex;
     width: 100%;
     height: 460px;
-    border: 1px solid var(--text);
-    border-radius: 8px;
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
     overflow: hidden;
     position: relative;
+    margin-bottom: 0;
   }
   .strip {
     flex: 1;
@@ -375,9 +569,23 @@
     font-weight: 700;
     white-space: nowrap;
     letter-spacing: -.04em;
-    pointer-events: none;
     z-index: 1;
     opacity: .95;
+  }
+
+  /* clickable color codes */
+  .copyable {
+    cursor: pointer;
+    transition: opacity .15s;
+    border-radius: 3px;
+    padding: 0 2px;
+    margin: 0 -2px;
+  }
+  .copyable:hover { opacity: .55; }
+  .copyable.copied {
+    font-style: italic;
+    opacity: .85;
+    background: rgba(255,255,255,.18);
   }
   .strip-bottom {
     z-index: 2;
@@ -391,19 +599,42 @@
     width: 100%;
     align-self: center;
     text-align: center;
-    color: var(--text-3);
+    padding: var(--s-7) var(--s-5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-3);
+  }
+  .palette-empty-mini {
+    display: flex;
+    gap: 4px;
+    margin-bottom: var(--s-2);
+  }
+  .palette-empty-mini span {
+    width: 32px;
+    height: 40px;
+    border-radius: 4px;
+    display: block;
+  }
+  .palette-empty-tag {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 9px;
+    color: var(--text-3);
     text-transform: uppercase;
-    letter-spacing: .08em;
-    padding: 20px;
+    letter-spacing: .12em;
+  }
+  .palette-empty-message {
+    color: var(--text-2);
+    font-size: 12px;
+    line-height: 1.5;
+    max-width: 280px;
   }
 
   /* actions row */
   .actions {
-    margin-top: 36px;
+    margin-top: var(--s-7);
     display: flex;
-    gap: 12px;
+    gap: var(--s-3);
     justify-content: center;
   }
 
@@ -411,8 +642,8 @@
   .canvas-wrap {
     width: 100%;
     aspect-ratio: 16 / 9;
-    border: 1px solid var(--text);
-    border-radius: 8px;
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
     overflow: hidden;
     background: #ffffff;
   }
@@ -532,32 +763,37 @@
     font-weight: 400;
   }
 
-  /* library grid */
+  /* library grid — compact cards */
   .library-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
+    gap: 14px;
+    justify-content: start;
   }
   .library-card {
     position: relative;
-    border: 1px solid var(--text);
-    border-radius: 8px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
     overflow: hidden;
     background: var(--bg);
     cursor: pointer;
-    transition: transform .15s;
+    transition: transform .15s, box-shadow .15s;
   }
-  .library-card:hover { transform: translateY(-2px); }
+  .library-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+  }
   .lib-thumb {
     width: 100%;
-    height: 140px;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
     display: block;
-    border-bottom: 1px solid var(--text);
+    border-bottom: 1px solid var(--hairline);
+    background: var(--surface-2);
   }
   .lib-swatches {
     display: flex;
-    height: 32px;
+    height: 22px;
   }
   .lib-sw { flex: 1; height: 100%; }
   .lib-meta {
@@ -569,11 +805,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    line-height: 1.2;
   }
   .lib-meta .count {
     text-transform: uppercase;
     letter-spacing: .06em;
     color: var(--text-3);
+    font-size: 9px;
   }
   .lib-delete {
     position: absolute;
@@ -594,6 +832,21 @@
     justify-content: center;
   }
   .library-card:hover .lib-delete { opacity: 1; }
+  .lib-tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    background: rgba(255,255,255,.85);
+    color: #000;
+    font-family: var(--mono);
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    border-radius: 4px;
+    z-index: 5;
+    backdrop-filter: blur(4px);
+  }
 
   /* placeholder tabs */
   .empty-large {
@@ -652,25 +905,115 @@
   }
   .nav-btn:hover:not(.active) { background: var(--surface-hover); }
 
-  /* responsive */
+  /* ---- responsive ---- */
+
+  /* tablet / small desktop */
+  @media (max-width: 1024px) {
+    :root { --content-max: 100%; }
+    .app { padding: var(--s-5) var(--s-5) 120px; }
+  }
+
+  /* large mobile / small tablet */
   @media (max-width: 720px) {
-    .app { padding: 20px 16px 120px; }
-    .brand { font-size: 26px; }
-    .nav-btn { padding: 9px 16px; font-size: 12px; }
-    .actions { flex-direction: column; }
-    .btn { width: 100%; }
+    .app { padding: var(--s-5) var(--s-4) 120px; }
+
+    .brand-header { padding: var(--s-5) 0 var(--s-2); }
+    .brand { font-size: 42px; letter-spacing: -.03em; }
+    .brand-tagline { font-size: 9px; letter-spacing: .14em; }
+
+    .controls-row { margin-bottom: var(--s-5); }
+
+    .section-label { margin-top: var(--s-6); margin-bottom: var(--s-3); }
+
+    .photo-grid {
+      grid-template-columns: 1fr;
+      gap: var(--s-5);
+    }
+
+    .source-strip { aspect-ratio: 4 / 3; height: auto; max-height: 320px; border-radius: 14px; }
+    .source-strip.has-image { aspect-ratio: 4 / 3; height: auto; }
+    .source-prompt { font-size: 24px; }
+    .drop-icon { width: 32px; height: 32px; margin-bottom: 16px; }
+
+    .palette-header { margin-top: var(--s-5); }
+
     .palette-strips {
       overflow-x: auto;
-      height: 380px;
+      height: 400px;
       scrollbar-width: none;
     }
     .palette-strips::-webkit-scrollbar { display: none; }
     .strip {
-      flex: 0 0 130px;
-      min-width: 130px;
+      flex: 0 0 140px;
+      min-width: 140px;
     }
-    .strip-hex-big { font-size: 44px; }
-    .source-strip { height: 140px; }
+    .strip-hex-big { font-size: 48px; }
+
+    .actions { flex-direction: column; margin-top: var(--s-6); }
+    .btn { width: 100%; min-height: var(--tap); padding: 12px 20px; }
+    .export-wrap { width: 100%; }
+
+    /* touch-friendly controls */
+    .profile-pill, .mood-pill { min-height: 36px; padding: 9px 14px; }
+    .theme-toggle { width: 56px; height: 30px; }
+    [data-theme="dark"] .theme-toggle .thumb { transform: translateX(26px); }
+    .theme-toggle .thumb { width: 24px; height: 24px; }
+
+    .nav-btn { padding: 11px 18px; font-size: 12px; min-height: var(--tap); }
+  }
+
+  /* phone */
+  @media (max-width: 480px) {
+    .app { padding: var(--s-4) var(--s-3) 110px; }
+
+    .brand-header { padding: var(--s-4) 0 var(--s-1); }
+    .brand { font-size: 34px; letter-spacing: -.025em; }
+    .brand-tagline { font-size: 8px; letter-spacing: .12em; }
+
+    .controls-row {
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      margin-bottom: var(--s-4);
+    }
+    .controls-right { gap: var(--s-2); }
+    .manifesto-btn { font-size: 11px; padding: 6px 12px; }
+    .profile-pill { font-size: 10px; padding: 7px 12px; }
+
+    .source-strip { height: 240px; }
+    .source-strip.has-image { height: 180px; }
+    .source-prompt { font-size: 20px; }
+    .source-prompt .small { margin-top: 12px; font-size: 9px; }
+    .drop-icon { width: 28px; height: 28px; margin-bottom: 14px; }
+
+    .strip { flex: 0 0 130px; min-width: 130px; padding: 14px 12px; }
+    .strip-name { font-size: 12px; }
+    .strip-meta { font-size: 8.5px; }
+    .strip-hex-big { font-size: 42px; }
+
+    .library-list {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--s-3);
+    }
+    .lib-meta { padding: 7px 10px; font-size: 9px; }
+
+    /* bottom nav stays inside viewport */
+    .bottom-nav {
+      bottom: var(--s-4);
+      max-width: calc(100vw - 24px);
+      padding: 5px;
+    }
+    .nav-btn { padding: 10px 12px; font-size: 11px; }
+
+    /* manifesto canvas — tighter on phones */
+    .manifesto-meta { font-size: 9px; flex-wrap: wrap; gap: var(--s-2); }
+  }
+
+  /* very narrow */
+  @media (max-width: 360px) {
+    .brand { font-size: 28px; }
+    .controls-row .manifesto-btn { font-size: 10px; padding: 5px 10px; }
+    .strip { flex: 0 0 110px; min-width: 110px; }
+    .strip-hex-big { font-size: 36px; }
   }
 </style>
 </head>
@@ -679,7 +1022,8 @@
 <div class="app">
 
   <header class="brand-header">
-    <h1 class="brand">no noob color</h1>
+    <h1 class="brand">no noob <span class="grad-text">color</span></h1>
+    <div class="brand-tagline">capture · curate · export</div>
   </header>
 
   <div class="controls-row">
@@ -730,36 +1074,71 @@
 
     <!-- Photo -->
     <section class="tab active" id="tab-photo">
-      <div class="section-label"><span class="num">01</span>Source</div>
-      <label class="source-strip" id="sourceArea">
-        <div class="source-prompt" id="sourcePrompt">
-          drop a photo
-          <div class="small">or click to choose</div>
+      <div class="photo-grid">
+        <div class="photo-col-source">
+          <div class="section-label"><span class="num">01</span>Source</div>
+          <label class="source-strip" id="sourceArea">
+            <div class="source-prompt" id="sourcePrompt">
+              <svg class="drop-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M16 5 V21"/>
+                <path d="M9 15 L16 22 L23 15"/>
+                <line x1="6" y1="27" x2="26" y2="27"/>
+              </svg>
+              drop a photo
+              <div class="small">or click anywhere</div>
+              <button class="demo-link" id="demoBtn" type="button">Try a demo image →</button>
+            </div>
+            <div class="source-loading" id="sourceLoading">extracting palette</div>
+            <input type="file" id="fileInput" accept="image/*" />
+          </label>
         </div>
-        <input type="file" id="fileInput" accept="image/*" />
-      </label>
 
-      <div class="section-label"><span class="num">02</span>Palette</div>
-      <div class="palette-strips" id="palette-photo">
-        <div class="palette-empty">load a photo to see the palette</div>
-      </div>
+        <div class="photo-col-palette">
+          <div class="palette-header">
+            <div class="section-label"><span class="num">02</span>Palette</div>
+            <div class="palette-actions">
+              <button class="chip-btn" id="saveBtn" disabled title="Save to Library">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+                  <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
+                </svg>
+                Save
+              </button>
+              <div class="export-wrap">
+                <button class="chip-btn" id="exportBtn" disabled>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2 V11 M5 8 L8 11 L11 8"/>
+                    <path d="M3 13 H13"/>
+                  </svg>
+                  Export
+                  <span class="chev">▾</span>
+                </button>
+                <div class="export-menu" id="exportMenu">
+                  <button data-format="procreate">
+                    <span>Procreate</span><span class="ext">.swatches</span>
+                  </button>
+                  <button data-format="ase">
+                    <span>Adobe</span><span class="ext">.ase</span>
+                  </button>
+                  <button data-format="text">
+                    <span>Copy as text</span><span class="ext">clipboard</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div class="actions">
-        <button class="btn ghost" id="saveBtn" disabled>Save to Library</button>
-        <div class="export-wrap">
-          <button class="btn" id="exportBtn" disabled>
-            Export <span class="chev">▾</span>
-          </button>
-          <div class="export-menu" id="exportMenu">
-            <button data-format="procreate">
-              <span>Procreate</span><span class="ext">.swatches</span>
-            </button>
-            <button data-format="ase">
-              <span>Adobe</span><span class="ext">.ase</span>
-            </button>
-            <button data-format="text">
-              <span>Copy as text</span><span class="ext">clipboard</span>
-            </button>
+          <div class="palette-strips" id="palette-photo">
+            <div class="palette-empty">
+              <div class="palette-empty-mini">
+                <span style="background:#e8d5b7"></span>
+                <span style="background:#c19a6b"></span>
+                <span style="background:#8b5d33"></span>
+                <span style="background:#4a3520"></span>
+                <span style="background:#1f1410"></span>
+              </div>
+              <div class="palette-empty-tag">example · earth</div>
+              <div class="palette-empty-message">Drop a photo or try the demo to see colors extracted via k-means in L*a*b* space.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -785,28 +1164,49 @@
         <div class="mood-popover" id="moodPopover"></div>
       </div>
 
-      <div class="section-label"><span class="num">02</span>Palette</div>
-      <div class="palette-strips" id="palette-gen">
-        <div class="palette-empty">pick a mood, hit shuffle</div>
-      </div>
-
-      <div class="actions">
-        <button class="btn" id="saveBtnGen" disabled>Save to Library</button>
-        <div class="export-wrap">
-          <button class="btn" id="exportBtnGen" disabled>
-            Export <span class="chev">▾</span>
+      <div class="palette-header">
+        <div class="section-label"><span class="num">02</span>Palette</div>
+        <div class="palette-actions">
+          <button class="chip-btn" id="saveBtnGen" disabled title="Save to Library">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+              <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
+            </svg>
+            Save
           </button>
-          <div class="export-menu" id="exportMenuGen">
-            <button data-format="procreate">
-              <span>Procreate</span><span class="ext">.swatches</span>
+          <div class="export-wrap">
+            <button class="chip-btn" id="exportBtnGen" disabled>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2 V11 M5 8 L8 11 L11 8"/>
+                <path d="M3 13 H13"/>
+              </svg>
+              Export
+              <span class="chev">▾</span>
             </button>
-            <button data-format="ase">
-              <span>Adobe</span><span class="ext">.ase</span>
-            </button>
-            <button data-format="text">
-              <span>Copy as text</span><span class="ext">clipboard</span>
-            </button>
+            <div class="export-menu" id="exportMenuGen">
+              <button data-format="procreate">
+                <span>Procreate</span><span class="ext">.swatches</span>
+              </button>
+              <button data-format="ase">
+                <span>Adobe</span><span class="ext">.ase</span>
+              </button>
+              <button data-format="text">
+                <span>Copy as text</span><span class="ext">clipboard</span>
+              </button>
+            </div>
           </div>
+        </div>
+      </div>
+      <div class="palette-strips" id="palette-gen">
+        <div class="palette-empty">
+          <div class="palette-empty-mini">
+            <span style="background:#5fa1f7"></span>
+            <span style="background:#7a9659"></span>
+            <span style="background:#c47550"></span>
+            <span style="background:#7d3a8a"></span>
+            <span style="background:#1a0f2a"></span>
+          </div>
+          <div class="palette-empty-tag">example · spectrum</div>
+          <div class="palette-empty-message">Pick a mood and hit shuffle for an algorithmically generated palette.</div>
         </div>
       </div>
     </section>
@@ -1173,6 +1573,9 @@ function renderPaletteInto(container, palette, emptyMsg) {
     const desc = paletteLabel(sw.L, sw.chroma);
     const textColor = textColorFor(r, g, b);
 
+    const HEX = hex.toUpperCase();
+    const rgbStr = `${r}, ${g}, ${b}`;
+    const cmykStr = cmyk.join(", ");
     const strip = document.createElement("div");
     strip.className = "strip";
     strip.style.background = hex;
@@ -1180,11 +1583,11 @@ function renderPaletteInto(container, palette, emptyMsg) {
     strip.innerHTML = `
       <div class="strip-top">
         <div class="strip-name">${name}</div>
-        <div class="strip-meta">RGB: ${r}, ${g}, ${b}</div>
-        <div class="strip-meta">CMYK: ${cmyk.join(", ")}</div>
-        <div class="strip-meta">HEX: ${hex.toUpperCase()}</div>
+        <div class="strip-meta">RGB: <span class="copyable" data-copy="rgb(${rgbStr})">${rgbStr}</span></div>
+        <div class="strip-meta">CMYK: <span class="copyable" data-copy="cmyk(${cmyk[0]}%, ${cmyk[1]}%, ${cmyk[2]}%, ${cmyk[3]}%)">${cmykStr}</span></div>
+        <div class="strip-meta">HEX: <span class="copyable" data-copy="${HEX}">${HEX}</span></div>
       </div>
-      <div class="strip-hex-big">${hex.toUpperCase()}</div>
+      <div class="strip-hex-big copyable" data-copy="${HEX}">${HEX}</div>
       <div class="strip-bottom">${desc}</div>
     `;
     container.appendChild(strip);
@@ -1203,6 +1606,30 @@ function renderGen() {
   document.getElementById("saveBtnGen").disabled = !ok;
 }
 function render() { renderPhoto(); }
+
+async function copyValue(text, el) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = el.textContent;
+    el.classList.add("copied");
+    el.textContent = "copied";
+    setTimeout(() => {
+      el.classList.remove("copied");
+      el.textContent = original;
+    }, 1100);
+  } catch (e) {
+    console.error("copy failed", e);
+  }
+}
+
+document.addEventListener("click", (e) => {
+  const target = e.target.closest(".copyable");
+  if (!target || target.classList.contains("copied")) return;
+  const value = target.dataset.copy;
+  if (!value) return;
+  e.stopPropagation();
+  copyValue(value, target);
+});
 
 function setProfile(name) {
   currentProfile = name;
@@ -1248,16 +1675,39 @@ function generateMood(mood) {
   return out;
 }
 
-function makePaletteThumb(palette, w = 360, h = 140) {
+function makePaletteThumb(palette, w = 360, h = 270) {
+  // Procedural mini block-art using palette colors — distinct from the
+  // small swatch strip shown below in library cards.
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  const stripW = w / palette.length;
-  palette.forEach((sw, i) => {
-    ctx.fillStyle = rgbToHex(...sw.rgb);
-    ctx.fillRect(Math.floor(i * stripW), 0, Math.ceil(stripW) + 1, h);
-  });
-  return canvas.toDataURL("image/jpeg", 0.85);
+  const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+
+  const colors = palette.map(p => rgbToHex(...p.rgb));
+  const cell = 12;
+  const cols = Math.ceil(w / cell);
+  const rows = Math.ceil(h / cell);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, w, h);
+
+  for (let i = 0; i < 26; i++) {
+    const cx = Math.floor(Math.random() * cols);
+    const cy = Math.floor(Math.random() * rows);
+    const bw = 1 + Math.floor(Math.random() * 5);
+    const bh = 1 + Math.floor(Math.random() * 4);
+    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+    ctx.fillRect(cx * cell, cy * cell, bw * cell, bh * cell);
+  }
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      if (Math.random() < 0.08) {
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillRect(x * cell, y * cell, cell, cell);
+      }
+    }
+  }
+  return canvas.toDataURL("image/jpeg", 0.86);
 }
 
 /* ---------- ZIP writer (store-only) ---------- */
@@ -1431,6 +1881,15 @@ function makeThumbnail(img, size = 360) {
 
 function loadFile(file) {
   if (!file || !file.type.startsWith("image/")) return;
+
+  sourceArea.classList.remove("dropped");
+  void sourceArea.offsetWidth;
+  sourceArea.classList.add("dropped");
+  setTimeout(() => sourceArea.classList.remove("dropped"), 720);
+
+  const loadingEl = document.getElementById("sourceLoading");
+  if (loadingEl) loadingEl.classList.add("active");
+
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
@@ -1446,6 +1905,7 @@ function loadFile(file) {
       currentThumbnail = makeThumbnail(img);
       lastResult = await extractPalette(img);
       renderPhoto();
+      if (loadingEl) loadingEl.classList.remove("active");
     };
     img.src = e.target.result;
   };
@@ -1453,6 +1913,77 @@ function loadFile(file) {
 }
 
 fileInput.addEventListener("change", (e) => loadFile(e.target.files[0]));
+
+/* ---------- Demo image (procedural, no external deps) ---------- */
+function generateDemoImage() {
+  const W = 600, H = 600;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const themes = [
+    ["#2a1e15", "#5c3a2a", "#a87854", "#d4b89a", "#ede4d3"],
+    ["#1b3050", "#475d7a", "#c4756a", "#f0a06c", "#fcd5a8"],
+    ["#1a2818", "#2e4d2f", "#7a9659", "#bdc89a", "#e8e3c5"],
+    ["#1a0f2a", "#3d1f5c", "#7d3a8a", "#c478b8", "#f0c5da"],
+    ["#3a1a1f", "#7d3939", "#c47550", "#e8b88a", "#f5e0c4"],
+    ["#101824", "#2c4053", "#5e8aa8", "#a8c4d4", "#e6e2d3"],
+  ];
+  const theme = themes[Math.floor(Math.random() * themes.length)];
+
+  const bands = 5;
+  for (let i = 0; i < bands; i++) {
+    ctx.fillStyle = theme[i];
+    ctx.fillRect(0, (i * H) / bands, W, H / bands + 2);
+  }
+  for (let i = 0; i < 700; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const size = 4 + Math.random() * 32;
+    ctx.fillStyle = theme[Math.floor(Math.random() * theme.length)];
+    ctx.globalAlpha = 0.15 + Math.random() * 0.45;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  return canvas.toDataURL("image/jpeg", 0.88);
+}
+
+function loadDemo() {
+  const dataUrl = generateDemoImage();
+  sourceArea.classList.remove("dropped");
+  void sourceArea.offsetWidth;
+  sourceArea.classList.add("dropped");
+  setTimeout(() => sourceArea.classList.remove("dropped"), 720);
+
+  const loadingEl = document.getElementById("sourceLoading");
+  if (loadingEl) loadingEl.classList.add("active");
+
+  const img = new Image();
+  img.onload = async () => {
+    sourceArea.classList.add("has-image");
+    const promptEl = document.getElementById("sourcePrompt");
+    if (promptEl && promptEl.parentNode) promptEl.remove();
+    const existing = sourceArea.querySelector("img");
+    if (existing) existing.remove();
+    const imgEl = document.createElement("img");
+    imgEl.src = dataUrl;
+    sourceArea.insertBefore(imgEl, sourceArea.firstChild);
+    currentThumbnail = makeThumbnail(img);
+    lastResult = await extractPalette(img);
+    renderPhoto();
+    if (loadingEl) loadingEl.classList.remove("active");
+  };
+  img.src = dataUrl;
+}
+
+document.getElementById("demoBtn").addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  loadDemo();
+});
 ["dragenter", "dragover"].forEach(ev =>
   sourceArea.addEventListener(ev, (e) => { e.preventDefault(); sourceArea.classList.add("dragover"); }));
 ["dragleave", "drop"].forEach(ev =>
@@ -1472,13 +2003,14 @@ function saveLibrary(items) {
   try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(items)); }
   catch (e) { console.error("library save failed", e); }
 }
-function savePaletteToLibrary(palette, thumb) {
+function savePaletteToLibrary(palette, thumb, source = "photo") {
   const items = loadLibrary();
   const item = {
     id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
     ts: Date.now(),
     palette: palette.map(sw => ({ rgb: sw.rgb, L: sw.L, chroma: sw.chroma })),
     thumb,
+    source,
   };
   items.unshift(item);
   saveLibrary(items);
@@ -1508,8 +2040,10 @@ function renderLibrary() {
     const swatchesHtml = item.palette
       .map(p => `<span class="lib-sw" style="background:${rgbToHex(...p.rgb)}"></span>`)
       .join("");
+    const tag = item.source === "generate" ? "Generated" : "Photo";
     card.innerHTML = `
       <button class="lib-delete" aria-label="Delete">×</button>
+      <span class="lib-tag">${tag}</span>
       <img class="lib-thumb" src="${item.thumb}" alt="" />
       <div class="lib-swatches">${swatchesHtml}</div>
       <div class="lib-meta">
@@ -1542,14 +2076,14 @@ function loadFromLibrary(item) {
   setActiveTab("photo");
 }
 
-function wireSaveBtn(btnId, getResult, getThumb) {
+function wireSaveBtn(btnId, getResult, getThumb, source) {
   const btn = document.getElementById(btnId);
   btn.addEventListener("click", () => {
     const result = getResult();
     const thumb = getThumb();
     if (!result || !thumb) return;
     try {
-      savePaletteToLibrary(result, thumb);
+      savePaletteToLibrary(result, thumb, source);
       const original = btn.textContent;
       btn.textContent = "Saved";
       setTimeout(() => { btn.textContent = original; }, 1400);
@@ -1559,8 +2093,8 @@ function wireSaveBtn(btnId, getResult, getThumb) {
     }
   });
 }
-wireSaveBtn("saveBtn",    () => lastResult, () => currentThumbnail);
-wireSaveBtn("saveBtnGen", () => genResult,  () => genResult ? makePaletteThumb(genResult) : null);
+wireSaveBtn("saveBtn",    () => lastResult, () => currentThumbnail, "photo");
+wireSaveBtn("saveBtnGen", () => genResult,  () => genResult ? makePaletteThumb(genResult) : null, "generate");
 
 /* ---------- Export menu ---------- */
 function wireExportMenu(btnId, menuId, getResult) {
