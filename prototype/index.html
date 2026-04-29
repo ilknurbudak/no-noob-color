@@ -1197,56 +1197,51 @@
 <div class="app">
 
   <header class="brand-header">
-    <div class="brand-left">
-      <span class="logo-mark" role="img" aria-label="no noob color"></span>
-
-      <div class="brand-text">
-        <h1 class="brand">no noob <span class="grad-text">color</span></h1>
-        <div class="brand-tagline">capture · curate · export</div>
-      </div>
-    </div>
+    <span class="logo-mark" role="img" aria-label="no noob color"></span>
+    <h1 class="brand">no noob <span class="grad-text">color</span></h1>
+    <div class="brand-tagline">capture · curate · export</div>
 
     <div class="header-controls">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-          <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="3" fill="currentColor"/>
-            <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
-              <line x1="8" y1="1.6" x2="8" y2="3.2"/>
-              <line x1="8" y1="12.8" x2="8" y2="14.4"/>
-              <line x1="1.6" y1="8" x2="3.2" y2="8"/>
-              <line x1="12.8" y1="8" x2="14.4" y2="8"/>
-              <line x1="3.4" y1="3.4" x2="4.5" y2="4.5"/>
-              <line x1="11.5" y1="11.5" x2="12.6" y2="12.6"/>
-              <line x1="3.4" y1="12.6" x2="4.5" y2="11.5"/>
-              <line x1="12.6" y1="3.4" x2="11.5" y2="4.5"/>
-            </g>
-          </svg>
-          <svg class="icon-moon" viewBox="0 0 16 16" fill="none">
-            <path d="M 13 9.5 A 5.5 5.5 0 1 1 6.5 3 A 4.5 4.5 0 0 0 13 9.5 Z" fill="currentColor"/>
-          </svg>
-          <span class="thumb"></span>
-        </button>
+        <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="3" fill="currentColor"/>
+          <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+            <line x1="8" y1="1.6" x2="8" y2="3.2"/>
+            <line x1="8" y1="12.8" x2="8" y2="14.4"/>
+            <line x1="1.6" y1="8" x2="3.2" y2="8"/>
+            <line x1="12.8" y1="8" x2="14.4" y2="8"/>
+            <line x1="3.4" y1="3.4" x2="4.5" y2="4.5"/>
+            <line x1="11.5" y1="11.5" x2="12.6" y2="12.6"/>
+            <line x1="3.4" y1="12.6" x2="4.5" y2="11.5"/>
+            <line x1="12.6" y1="3.4" x2="11.5" y2="4.5"/>
+          </g>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 16 16" fill="none">
+          <path d="M 13 9.5 A 5.5 5.5 0 1 1 6.5 3 A 4.5 4.5 0 0 0 13 9.5 Z" fill="currentColor"/>
+        </svg>
+        <span class="thumb"></span>
+      </button>
 
-        <button class="profile-pill" id="profilePill" aria-label="Color profile">
-          <span id="profileLabel">sRGB</span>
-          <span class="chev">▾</span>
+      <button class="profile-pill" id="profilePill" aria-label="Color profile">
+        <span id="profileLabel">sRGB</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="profile-popover" id="profilePopover">
+        <button data-profile="sRGB" class="active">
+          <span>sRGB</span><span class="desc">screen</span>
         </button>
-        <div class="profile-popover" id="profilePopover">
-          <button data-profile="sRGB" class="active">
-            <span>sRGB</span><span class="desc">screen</span>
-          </button>
-          <button data-profile="Display P3">
-            <span>Display P3</span><span class="desc">Procreate</span>
-          </button>
-          <button data-profile="Adobe RGB">
-            <span>Adobe RGB</span><span class="desc">print prep</span>
-          </button>
-          <button data-profile="CMYK">
-            <span>CMYK</span><span class="desc">offset</span>
-          </button>
-        </div>
+        <button data-profile="Display P3">
+          <span>Display P3</span><span class="desc">Procreate</span>
+        </button>
+        <button data-profile="Adobe RGB">
+          <span>Adobe RGB</span><span class="desc">print prep</span>
+        </button>
+        <button data-profile="CMYK">
+          <span>CMYK</span><span class="desc">offset</span>
+        </button>
+      </div>
     </div>
-  </div>
+  </header>
 
   <main>
 
