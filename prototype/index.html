@@ -324,30 +324,28 @@
   .mood-popover button:hover { background: var(--surface-hover); }
   .mood-popover button.active { background: var(--text); color: var(--bg); }
 
-  /* photo tab — two-column grid, equal height columns */
+  /* photo tab — two-column grid */
   .photo-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     gap: var(--s-6);
-    align-items: stretch;
+    align-items: start;
   }
-  .photo-col-source, .photo-col-palette {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-  }
+  .photo-col-source, .photo-col-palette { min-width: 0; }
   .photo-col-source .section-label:first-child,
-  .photo-col-palette > .palette-header:first-child {
-    margin-top: 0;
-  }
+  .photo-col-palette > .palette-header:first-child,
   .photo-col-palette > .palette-header:first-child .section-label {
     margin-top: 0;
   }
+  /* equal heights so palette and photo bottoms align */
   .photo-col-source .source-strip,
-  .photo-col-palette .palette-strips {
-    flex: 1;
-    height: auto;
-    min-height: 460px;
+  .photo-col-palette .palette-strips { height: 460px; }
+  /* footer with save+export at bottom-right of palette column */
+  .palette-footer {
+    margin-top: var(--s-3);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--s-2);
   }
 
   /* palette header — section label + chip actions */
@@ -449,8 +447,12 @@
     to   { opacity: 1; transform: scale(1); }
   }
   .source-strip input[type=file] {
-    position: absolute; inset: 0;
-    opacity: 0; cursor: pointer;
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
   }
   .source-prompt {
     text-align: center;
@@ -1162,35 +1164,6 @@
         <div class="photo-col-palette">
           <div class="palette-header">
             <div class="section-label"><span class="num">02</span>Palette</div>
-            <div class="palette-actions">
-              <button class="chip-btn" id="saveBtn" disabled title="Save to Library">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
-                  <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
-                </svg>
-                Save
-              </button>
-              <div class="export-wrap">
-                <button class="chip-btn" id="exportBtn" disabled>
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 2 V11 M5 8 L8 11 L11 8"/>
-                    <path d="M3 13 H13"/>
-                  </svg>
-                  Export
-                  <span class="chev">▾</span>
-                </button>
-                <div class="export-menu" id="exportMenu">
-                  <button data-format="procreate">
-                    <span>Procreate</span><span class="ext">.swatches</span>
-                  </button>
-                  <button data-format="ase">
-                    <span>Adobe</span><span class="ext">.ase</span>
-                  </button>
-                  <button data-format="text">
-                    <span>Copy as text</span><span class="ext">clipboard</span>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div class="palette-strips" id="palette-photo">
@@ -1204,6 +1177,30 @@
               </div>
               <div class="palette-empty-tag">example · earth</div>
               <div class="palette-empty-message">Drop a photo or try the demo to see colors extracted via k-means in L*a*b* space.</div>
+            </div>
+          </div>
+
+          <div class="palette-footer">
+            <button class="chip-btn" id="saveBtn" disabled title="Save to Library">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+                <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
+              </svg>
+              Save
+            </button>
+            <div class="export-wrap">
+              <button class="chip-btn" id="exportBtn" disabled>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 2 V11 M5 8 L8 11 L11 8"/>
+                  <path d="M3 13 H13"/>
+                </svg>
+                Export
+                <span class="chev">▾</span>
+              </button>
+              <div class="export-menu" id="exportMenu">
+                <button data-format="procreate"><span>Procreate</span><span class="ext">.swatches</span></button>
+                <button data-format="ase"><span>Adobe</span><span class="ext">.ase</span></button>
+                <button data-format="text"><span>Copy as text</span><span class="ext">clipboard</span></button>
+              </div>
             </div>
           </div>
         </div>
@@ -1238,35 +1235,6 @@
 
       <div class="palette-header">
         <div class="section-label"><span class="num">02</span>Palette</div>
-        <div class="palette-actions">
-          <button class="chip-btn" id="saveBtnGen" disabled title="Save to Library">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
-              <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
-            </svg>
-            Save
-          </button>
-          <div class="export-wrap">
-            <button class="chip-btn" id="exportBtnGen" disabled>
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 2 V11 M5 8 L8 11 L11 8"/>
-                <path d="M3 13 H13"/>
-              </svg>
-              Export
-              <span class="chev">▾</span>
-            </button>
-            <div class="export-menu" id="exportMenuGen">
-              <button data-format="procreate">
-                <span>Procreate</span><span class="ext">.swatches</span>
-              </button>
-              <button data-format="ase">
-                <span>Adobe</span><span class="ext">.ase</span>
-              </button>
-              <button data-format="text">
-                <span>Copy as text</span><span class="ext">clipboard</span>
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
       <div class="palette-strips" id="palette-gen">
         <div class="palette-empty">
@@ -1279,6 +1247,30 @@
           </div>
           <div class="palette-empty-tag">example · spectrum</div>
           <div class="palette-empty-message">Pick a mood and hit shuffle for an algorithmically generated palette.</div>
+        </div>
+      </div>
+
+      <div class="palette-footer">
+        <button class="chip-btn" id="saveBtnGen" disabled title="Save to Library">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+            <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
+          </svg>
+          Save
+        </button>
+        <div class="export-wrap">
+          <button class="chip-btn" id="exportBtnGen" disabled>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 2 V11 M5 8 L8 11 L11 8"/>
+              <path d="M3 13 H13"/>
+            </svg>
+            Export
+            <span class="chev">▾</span>
+          </button>
+          <div class="export-menu" id="exportMenuGen">
+            <button data-format="procreate"><span>Procreate</span><span class="ext">.swatches</span></button>
+            <button data-format="ase"><span>Adobe</span><span class="ext">.ase</span></button>
+            <button data-format="text"><span>Copy as text</span><span class="ext">clipboard</span></button>
+          </div>
         </div>
       </div>
     </section>
