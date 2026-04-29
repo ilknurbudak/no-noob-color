@@ -1497,8 +1497,7 @@
 
     <section class="tab" id="tab-library">
       <div class="library-filters" id="libraryFilters">
-        <button class="filter-chip active" data-filter="all">All <span class="count" data-count="all">0</span></button>
-        <button class="filter-chip" data-filter="photo">Photo <span class="count" data-count="photo">0</span></button>
+        <button class="filter-chip active" data-filter="photo">Photo <span class="count" data-count="photo">0</span></button>
         <button class="filter-chip" data-filter="generate">Generate <span class="count" data-count="generate">0</span></button>
       </div>
       <div id="libraryList"></div>
@@ -3062,11 +3061,11 @@ function deleteFromLibrary(id) {
   saveLibrary(loadLibrary().filter(i => i.id !== id));
 }
 
-let libraryFilter = "all";
+let libraryFilter = "photo";
 
 function updateFilterCounts() {
   const all = loadLibrary();
-  const counts = { all: all.length, photo: 0, generate: 0 };
+  const counts = { photo: 0, generate: 0 };
   all.forEach(i => {
     const src = i.source || "photo";
     if (counts[src] !== undefined) counts[src]++;
@@ -3079,18 +3078,12 @@ function updateFilterCounts() {
 function renderLibrary() {
   updateFilterCounts();
   const allItems = loadLibrary();
-  const items = libraryFilter === "all"
-    ? allItems
-    : allItems.filter(i => (i.source || "photo") === libraryFilter);
+  const items = allItems.filter(i => (i.source || "photo") === libraryFilter);
   const container = document.getElementById("libraryList");
   if (!items.length) {
     container.className = "";
-    const msg = libraryFilter === "all"
-      ? "Your saved palettes will live here."
-      : `No ${libraryFilter} palettes saved yet.`;
-    const sub = libraryFilter === "all"
-      ? "extract a photo · save · come back"
-      : `save from ${libraryFilter} to populate this tab`;
+    const msg = `No ${libraryFilter} palettes saved yet.`;
+    const sub = `save from ${libraryFilter} to populate this tab`;
     container.innerHTML = `<div class="empty-large"><p>${msg}</p><p>${sub}</p></div>`;
     return;
   }
