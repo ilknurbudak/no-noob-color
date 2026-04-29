@@ -320,10 +320,10 @@
     width: max-content;
   }
   .training-card {
-    width: 120px;
-    height: 120px;
+    width: 180px;
+    height: 180px;
     flex-shrink: 0;
-    border-radius: 14px;
+    border-radius: 18px;
     border: 3px solid transparent;
     cursor: pointer;
     transition: transform .2s ease, border-color .15s, box-shadow .25s;
@@ -332,24 +332,27 @@
   }
   .training-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    box-shadow: 0 14px 32px rgba(0,0,0,.16);
   }
   .training-card.selected {
     border-color: var(--text);
     transform: scale(0.94);
-    box-shadow: 0 6px 18px rgba(0,0,0,.16);
+    box-shadow: 0 8px 22px rgba(0,0,0,.18);
   }
   .training-card.selected::after {
     content: "";
     position: absolute;
-    top: 14px; right: 14px;
-    width: 20px; height: 20px;
+    top: 16px; right: 16px;
+    width: 24px; height: 24px;
     border-radius: 50%;
     background: rgba(255,255,255,.95);
-    box-shadow: inset 0 0 0 2.5px var(--text);
+    box-shadow: inset 0 0 0 3px var(--text);
   }
   @media (max-width: 720px) {
-    .training-card { width: 96px; height: 96px; }
+    .training-card { width: 140px; height: 140px; border-radius: 14px; }
+  }
+  @media (max-width: 480px) {
+    .training-card { width: 120px; height: 120px; }
   }
   .training-actions {
     display: flex;
@@ -2136,7 +2139,7 @@ function makeRandomColorPool(count = 80) {
   return out;
 }
 
-const TRAINING_CARD_WIDTH = 132;
+const TRAINING_CARD_WIDTH = 192;
 const TRAINING_SLIDE_TICK_MS = 8;     // continuous smooth scroll cadence
 const TRAINING_SLIDE_PX_PER_TICK = 1; // ~125 px/sec
 let trainingSlideTimer = null;
