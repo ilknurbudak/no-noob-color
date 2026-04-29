@@ -75,7 +75,7 @@
     border-bottom: 1px solid var(--hairline);
     position: relative;
   }
-  .brand-spacer, .brand-block, .brand-text { all: unset; display: contents; }
+  .brand-spacer, .brand-block, .brand-text, .brand-left { all: unset; display: contents; }
   .logo-mark {
     display: block;
     width: 132px;
@@ -101,21 +101,10 @@
     margin: 0 0 var(--s-1);
   }
   .brand .grad-text {
-    background: linear-gradient(110deg,
-      #ff8fa8 0%,
-      #ffae72 22%,
-      #f3d370 42%,
-      #82d6a4 60%,
-      #7eaef4 80%,
-      #b894f7 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    filter:
-      saturate(0.88)
-      drop-shadow(0 1px 0 rgba(255, 255, 255, .55))
-      drop-shadow(0 2px 8px rgba(150, 130, 200, .12));
+    color: var(--text);
+    background: none;
+    -webkit-text-fill-color: var(--text);
+    filter: none;
   }
   .brand-tagline {
     display: block;
