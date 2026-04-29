@@ -679,6 +679,20 @@
     object-fit: cover; display: block;
     animation: imgFadeIn .55s ease;
   }
+  .source-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #ffffff;
+  }
+  .source-strip.has-anim .source-canvas { display: block; }
+  .source-strip.has-anim .source-prompt { display: none; }
+  .source-strip.has-anim img { display: none; }
+  [data-theme="dark"] .source-canvas { background: var(--bg); }
   @keyframes imgFadeIn {
     from { opacity: 0; transform: scale(1.025); }
     to   { opacity: 1; transform: scale(1); }
@@ -1438,6 +1452,7 @@
         <div class="photo-col-source">
           <div class="section-label"><span class="num">01</span>Source</div>
           <label class="source-strip" id="sourceArea">
+            <canvas class="source-canvas" id="sourceCanvas" width="1280" height="960"></canvas>
             <div class="source-prompt" id="sourcePrompt">
               <img class="drop-icon" src="drop-arrow.png" alt="" aria-hidden="true" />
 
@@ -2895,6 +2910,151 @@ async function copyAsText(palette, paletteName) {
   await navigator.clipboard.writeText(text);
 }
 
+/* ---------- Source generative grid (block-reveal animation) ---------- */
+const SourceGrid = (() => {
+  const canvas = document.getElementById("sourceCanvas");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+
+  let PALETTE = ["#222"];
+  const PAPER = "#ffffff";
+  let PAPER_I = PALETTE.length;
+
+  const GRID_X = 24;
+  const GAP = 1;
+  const cell = Math.floor(canvas.width / GRID_X);
+  const W = Math.floor(canvas.width / cell);
+  const H = Math.floor(canvas.height / cell);
+  const size = cell - GAP;
+  const qW = Math.ceil(W / 2);
+  const qH = Math.ceil(H / 2);
+
+  function rng(seed) { return () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296; }
+  let R = rng((Date.now() ^ ((Math.random() * 1e9) >>> 0)) >>> 0);
+  const mirror = (i, n) => (i < n / 2 ? i : n - 1 - i);
+  const idx2 = (x, y, w) => y * w + x;
+  function hash32(x, y, seed) {
+    let h = (x * 374761393 + y * 668265263 + seed * 2654435761) >>> 0;
+    h ^= h >>> 13; h = Math.imul(h, 1274126177) >>> 0;
+    h ^= h >>> 16;
+    return h >>> 0;
+  }
+  function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  let state = new Uint8Array(qW * qH);
+  let nextState = new Uint8Array(qW * qH);
+
+  function randomColor() { return (R() < 0.32) ? PAPER_I : Math.floor(R() * PALETTE.length); }
+  function stampRect(target, minW, maxW, minH, maxH) {
+    const rw = Math.min(qW, minW + Math.floor(R() * (Math.min(maxW, qW) - minW + 1)));
+    const rh = Math.min(qH, minH + Math.floor(R() * (Math.min(maxH, qH) - minH + 1)));
+    const rx = Math.floor(R() * Math.max(1, qW - rw + 1));
+    const ry = Math.floor(R() * Math.max(1, qH - rh + 1));
+    const col = randomColor();
+    for (let y = ry; y < ry + rh; y++) for (let x = rx; x < rx + rw; x++) if (R() < 0.9) target[idx2(x, y, qW)] = col;
+  }
+  function initState() {
+    state.fill(PAPER_I);
+    for (let i = 0; i < 12; i++) stampRect(state, 2, 5, 2, 4);
+    for (let i = 0; i < 5; i++)  stampRect(state, 5, 10, 3, 7);
+  }
+  function evolve(from, out) {
+    out.set(from);
+    const muts = 5 + Math.floor(R() * 6);
+    for (let i = 0; i < muts; i++) {
+      const x = Math.floor(R() * qW), y = Math.floor(R() * qH);
+      out[idx2(x, y, qW)] = randomColor();
+    }
+    if (R() < 0.8) stampRect(out, 2, 4, 2, 4);
+    if (R() < 0.25) stampRect(out, 5, 9, 3, 6);
+    const breaths = Math.floor(qW * qH * 0.025);
+    for (let i = 0; i < breaths; i++) { const k = Math.floor(R() * qW * qH); if (R() < 0.6) out[k] = PAPER_I; }
+  }
+
+  const BLOCK = 4;
+  let revealSeed = (Date.now() >>> 0);
+  function drawBlockReveal(p01) {
+    const p = easeInOutCubic(p01);
+    ctx.fillStyle = PAPER;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let y = 0; y < H; y++) {
+      const qy = mirror(y, H);
+      const by = Math.floor(qy / BLOCK);
+      const py = y * cell;
+      for (let x = 0; x < W; x++) {
+        const qx = mirror(x, W);
+        const bx = Math.floor(qx / BLOCK);
+        const h = hash32(bx, by, revealSeed) / 4294967296;
+        const useNext = h < p;
+        const k = idx2(qx, qy, qW);
+        const ci = useNext ? nextState[k] : state[k];
+        ctx.fillStyle = (ci === PAPER_I) ? PAPER : PALETTE[ci];
+        ctx.fillRect(x * cell, py, size, size);
+      }
+    }
+  }
+
+  const TRANSITION_MS = 1100;
+  const HOLD_MS = 320;
+  let t0 = performance.now();
+  let phase = "transition";
+  let rafId = null;
+  let running = false;
+  let initialized = false;
+
+  function tick(now) {
+    if (!running) return;
+    const dt = now - t0;
+    if (phase === "transition") {
+      const p = Math.min(1, dt / TRANSITION_MS);
+      drawBlockReveal(p);
+      if (p >= 1) {
+        const tmp = state; state = nextState; nextState = tmp;
+        evolve(state, nextState);
+        revealSeed = (revealSeed * 1103515245 + 12345) >>> 0;
+        phase = "hold"; t0 = now;
+      }
+    } else {
+      drawBlockReveal(1);
+      if (dt >= HOLD_MS) { phase = "transition"; t0 = now; }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function reseed() {
+    R = rng((Date.now() ^ ((Math.random() * 1e9) >>> 0)) >>> 0);
+    revealSeed = (Date.now() >>> 0);
+    initState(); evolve(state, nextState);
+    phase = "transition"; t0 = performance.now();
+  }
+
+  return {
+    setPalette(hexes) {
+      if (!hexes || !hexes.length) return;
+      PALETTE = hexes.slice(); PAPER_I = PALETTE.length;
+      reseed(); initialized = true;
+    },
+    start() {
+      if (running) return;
+      if (!initialized) { reseed(); initialized = true; }
+      running = true; t0 = performance.now();
+      rafId = requestAnimationFrame(tick);
+    },
+    stop() {
+      running = false;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    },
+    reseed,
+  };
+})();
+window.SourceGrid = SourceGrid;
+
+// Pause animation when tab is hidden
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) SourceGrid.stop();
+  else if (sourceArea.classList.contains("has-anim")) SourceGrid.start();
+});
+
 /* ---------- File handling ---------- */
 const sourceArea = document.getElementById("sourceArea");
 const fileInput = document.getElementById("fileInput");
@@ -2915,6 +3075,10 @@ function makeThumbnail(img, size = 360) {
 
 function loadFile(file) {
   if (!file || !file.type.startsWith("image/")) return;
+
+  // Stop any running source animation when uploading a real photo
+  if (window.SourceGrid) SourceGrid.stop();
+  sourceArea.classList.remove("has-anim");
 
   sourceArea.classList.remove("dropped");
   void sourceArea.offsetWidth;
@@ -3122,14 +3286,29 @@ function loadFromLibrary(item) {
   originalPhotoResult = item.palette.slice();
   activeVariation = "Dominant";
   currentThumbnail = item.thumb;
-  sourceArea.classList.add("has-image");
+
   const promptEl = document.getElementById("sourcePrompt");
   if (promptEl && promptEl.parentNode) promptEl.remove();
   const existing = sourceArea.querySelector("img");
   if (existing) existing.remove();
-  const imgEl = document.createElement("img");
-  imgEl.src = item.thumb;
-  sourceArea.insertBefore(imgEl, sourceArea.firstChild);
+
+  if (item.source === "generate") {
+    // Generate-saved palette → animated generative grid in source area
+    sourceArea.classList.remove("has-image");
+    sourceArea.classList.add("has-anim");
+    const hexes = item.palette.map(sw => rgbToHex(...sw.rgb));
+    SourceGrid.setPalette(hexes);
+    SourceGrid.start();
+  } else {
+    // Photo-saved palette → static thumbnail as before
+    SourceGrid.stop();
+    sourceArea.classList.remove("has-anim");
+    sourceArea.classList.add("has-image");
+    const imgEl = document.createElement("img");
+    imgEl.src = item.thumb;
+    sourceArea.insertBefore(imgEl, sourceArea.firstChild);
+  }
+
   renderPhoto();
   setActiveTab("photo");
 }
