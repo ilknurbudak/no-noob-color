@@ -88,8 +88,10 @@
     object-fit: contain;
     user-select: none;
     -webkit-user-drag: none;
-    pointer-events: none;
+    cursor: pointer;
+    transition: opacity .15s;
   }
+  .brand-lockup:hover { opacity: .72; }
   [data-theme="dark"] .brand-lockup { filter: invert(1); }
   .brand {
     display: block;
@@ -1223,6 +1225,91 @@
     backdrop-filter: blur(4px);
   }
 
+  /* home / welcome page */
+  .home-hero {
+    text-align: center;
+    padding: var(--s-7) 0 var(--s-8);
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: var(--s-7);
+  }
+  .home-hero h1 {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-style: italic;
+    font-size: 64px;
+    letter-spacing: -.035em;
+    line-height: 1;
+    margin: 0 0 var(--s-4);
+    color: var(--text);
+  }
+  .home-hero p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text-2);
+    max-width: 580px;
+    margin: 0 auto;
+  }
+  .home-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--s-4);
+    margin-bottom: var(--s-7);
+  }
+  .home-card {
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: var(--s-5);
+    background: var(--bg);
+    cursor: pointer;
+    transition: border-color .15s, transform .15s, box-shadow .2s;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+  .home-card:hover {
+    border-color: var(--text);
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(0,0,0,.08);
+  }
+  .home-card-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-bottom: var(--s-2);
+  }
+  .home-card h3 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -.015em;
+    margin: 0;
+  }
+  .home-card p {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-2);
+    margin: 0 0 var(--s-3);
+  }
+  .home-card-cta {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--text);
+    font-weight: 600;
+    margin-top: auto;
+  }
+  @media (max-width: 720px) {
+    .home-hero { padding: var(--s-5) 0 var(--s-6); }
+    .home-hero h1 { font-size: 44px; }
+    .home-hero p { font-size: 14px; }
+  }
+
   /* black info section under each tab */
   .tab-info {
     margin-top: var(--s-7);
@@ -1464,7 +1551,7 @@
 <div class="app">
 
   <header class="brand-header">
-    <img class="brand-lockup" src="logo-lockup.png" alt="no noob color · capture · curate · export" />
+    <img class="brand-lockup" id="brandLockup" src="logo-lockup.png" alt="no noob color · capture · curate · export" />
 
     <div class="header-controls">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
@@ -1510,8 +1597,63 @@
 
   <main>
 
+    <!-- Home / welcome -->
+    <section class="tab active" id="tab-home">
+      <div class="home-hero">
+        <h1>no noob <em>color</em></h1>
+        <p>A minimalist, on-device color palette tool for artists and illustrators. Capture a palette from any photo, generate harmonies from your own taste, export straight to Procreate or Adobe — all without ever leaving your browser.</p>
+      </div>
+
+      <div class="home-cards">
+        <button class="home-card" data-go="photo" type="button">
+          <div class="home-card-num">01 · Photo</div>
+          <h3>From a photograph</h3>
+          <p>Drop any image. Five honest colors extracted via k-means in perceptual L*a*b* space and snapped to actual pixels. WCAG ratios on every swatch.</p>
+          <div class="home-card-cta">Start with a photo →</div>
+        </button>
+
+        <button class="home-card" data-go="generate" type="button">
+          <div class="home-card-num">02 · Generate</div>
+          <h3>From your own taste</h3>
+          <p>Pick 30 colors you love. From there, generate palettes using color theory: monochromatic, analogous, complementary, triadic, split-comp, tetradic — biased by mood and temperature.</p>
+          <div class="home-card-cta">Train your palette →</div>
+        </button>
+
+        <button class="home-card" data-go="library" type="button">
+          <div class="home-card-num">03 · Library</div>
+          <h3>Saved & ready</h3>
+          <p>Your saves persist locally. Generate-saved palettes restore as animated block-grid art; photo-saved palettes restore with their source thumbnail. Filter by source, export anytime.</p>
+          <div class="home-card-cta">Open library →</div>
+        </button>
+      </div>
+
+      <section class="tab-info">
+        <div class="tab-info-eyebrow">Why no noob color</div>
+        <h2 class="tab-info-title">Built for illustrators, not engineers</h2>
+        <p class="tab-info-lead">Every other palette tool feels designed by software people. no noob color speaks the language of artists: gestural ink, hand-drawn UI, real WCAG numbers, ICC color profiles, Procreate-native export. No subscriptions, no telemetry, no backend — your taste lives on your device.</p>
+        <ul class="tab-info-grid">
+          <li>
+            <strong>On-device</strong>
+            All processing happens in your browser. Nothing uploaded, nothing stored on a server.
+          </li>
+          <li>
+            <strong>Open-source typography</strong>
+            Inter + JetBrains Mono (SIL OFL), Tippy.js for tooltips (MIT). No proprietary dependencies.
+          </li>
+          <li>
+            <strong>Honest math</strong>
+            k-means in L*a*b* perceptual space, mode-snapped to actual pixels. WCAG contrast on every swatch.
+          </li>
+          <li>
+            <strong>Multi-format export</strong>
+            Procreate .swatches, Adobe .ase, plain text — all generated client-side. Hand-rolled ZIP, no libraries.
+          </li>
+        </ul>
+      </section>
+    </section>
+
     <!-- Photo -->
-    <section class="tab active" id="tab-photo">
+    <section class="tab" id="tab-photo">
       <div class="photo-grid">
         <div class="photo-col-source">
           <div class="section-label"><span class="num">01</span>Source</div>
@@ -1760,7 +1902,7 @@
 
 <nav class="bottom-nav" aria-label="Sections">
   <button class="nav-btn" data-tab="generate">Generate</button>
-  <button class="nav-btn active" data-tab="photo">Photo</button>
+  <button class="nav-btn" data-tab="photo">Photo</button>
   <button class="nav-btn" data-tab="library">Library</button>
 </nav>
 
@@ -3678,6 +3820,15 @@ function setActiveTab(name) {
 }
 document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+});
+
+// Logo click → home
+const brandLockup = document.getElementById("brandLockup");
+if (brandLockup) brandLockup.addEventListener("click", () => setActiveTab("home"));
+
+// Home cards → tabs
+document.querySelectorAll(".home-card").forEach(card => {
+  card.addEventListener("click", () => setActiveTab(card.dataset.go));
 });
 
 document.querySelectorAll(".filter-chip").forEach(chip => {
