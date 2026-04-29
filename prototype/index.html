@@ -2957,9 +2957,6 @@ const SourceGrid = (() => {
   }
   function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
-  let state = new Uint8Array(qW * qH);
-  let nextState = new Uint8Array(qW * qH);
-
   function randomColor() { return (R() < 0.45) ? PAPER_I : Math.floor(R() * PALETTE.length); }
   function stampRect(target, minW, maxW, minH, maxH) {
     const rw = Math.min(W, minW + Math.floor(R() * (Math.min(maxW, W) - minW + 1)));
