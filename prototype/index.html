@@ -439,6 +439,147 @@
     position: relative;
   }
 
+  /* sliders + ref-image + cb-preview (illustrator extras, available to all) */
+  .mood-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    min-width: 140px;
+    max-width: 200px;
+    height: 4px;
+    background: var(--hairline);
+    border-radius: 999px;
+    outline: none;
+    margin: 4px 0 2px;
+    cursor: pointer;
+  }
+  .mood-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+  }
+  .mood-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    border: none;
+  }
+  .mood-slider-value {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: .04em;
+  }
+
+  .ref-image-section {
+    margin-top: var(--s-3);
+    padding: var(--s-3) 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .ref-image-section summary {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    cursor: pointer;
+    padding: 6px 0;
+    list-style: none;
+    user-select: none;
+  }
+  .ref-image-section summary::-webkit-details-marker { display: none; }
+  .ref-image-section summary::before {
+    content: "+";
+    margin-right: 8px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .ref-image-section[open] summary::before { content: "−"; }
+  .ref-image-drop {
+    margin-top: var(--s-3);
+    height: 120px;
+    border: 1px dashed var(--text);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    transition: background .15s, border-color .15s;
+  }
+  .ref-image-drop:hover { background: var(--surface-hover); }
+  .ref-image-drop input[type=file] {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+  }
+  .ref-image-drop img { width: 100%; height: 100%; object-fit: cover; }
+  .ref-image-prompt {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    text-align: center;
+  }
+  .ref-image-clear {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 22px; height: 22px;
+    border: none;
+    background: rgba(0,0,0,.65);
+    color: white;
+    border-radius: 50%;
+    font-size: 13px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .ref-image-drop.has-image .ref-image-clear { display: flex; }
+  .ref-image-drop.has-image .ref-image-prompt { display: none; }
+
+  /* color-blindness preview */
+  .cb-preview {
+    margin-top: var(--s-5);
+    padding: var(--s-4);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+  }
+  .cb-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--s-3);
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .cb-preview-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+  }
+  .cb-strips {
+    display: flex;
+    height: 60px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+  }
+  .cb-strips span {
+    flex: 1;
+  }
+
   /* mood studio — color harmonies + temperature + keyword + wcag */
   .mood-studio {
     display: flex;
@@ -1868,10 +2009,38 @@
           </div>
 
           <div class="mood-control">
-            <label class="mood-control-label">Keyword</label>
+            <label class="mood-control-label">Prompt / Keyword</label>
             <input type="text" class="mood-input" id="keywordInput"
-              placeholder="energy · forest · luxury · sunset · gold…"
-              data-tippy-content="Tek kelime mood. EN: energy, calm, trust, forest, ocean, luxury, sunset, gold, retro, gothic, neon, vintage… TR: huzur, doğa, lüks, şafak, deniz, ateş, sıcak, soğuk… 100+ keyword tanımlı, anahtar kelime palet havuzunu o ruh haline yönlendirir." />
+              placeholder="huysuz bir kedi · cloudy autumn day · forest at dusk…"
+              data-tippy-content="Free-text prompt or single keyword. Multi-word prompts are tokenized — biases are merged. EN+TR: 100+ feeling/season/material/industry keywords. Examples: 'huysuz kedi', 'happy meadow', 'cyberpunk neon', 'lüks gece'." />
+          </div>
+
+          <div class="mood-control">
+            <label class="mood-control-label">Palette size</label>
+            <input type="range" id="paletteSizeSlider" class="mood-slider"
+              min="2" max="20" value="5"
+              data-tippy-content="Number of swatches. 5 standard, 8-12 illustration, 12-20 tonal systems / brand suites." />
+            <div class="mood-slider-value"><span id="paletteSizeValue">5</span> swatches</div>
+          </div>
+
+          <div class="mood-control">
+            <label class="mood-control-label">Creativity</label>
+            <input type="range" id="creativitySlider" class="mood-slider"
+              min="0" max="100" value="0"
+              data-tippy-content="Safe ↔ Wild. Adds hue/saturation/lightness jitter to picked colors. 0 = strict, 50 = balanced, 100 = unexpected." />
+            <div class="mood-slider-value"><span id="creativityValue">0</span>% jitter</div>
+          </div>
+
+          <div class="mood-control">
+            <label class="mood-control-label">Variations</label>
+            <div class="seg-control" id="variationsControl"
+              data-tippy-content="Auto-generate tints (lighter), shades (darker), or tones (greyer) around each picked color. Expands the palette for brush dynamics & systems.">
+              <button data-var="off" class="active">Off</button>
+              <button data-var="tints">Tints</button>
+              <button data-var="shades">Shades</button>
+              <button data-var="tones">Tones</button>
+              <button data-var="all">All</button>
+            </div>
           </div>
 
           <div class="mood-control">
@@ -1895,6 +2064,15 @@
           </div>
         </div>
 
+        <details class="ref-image-section">
+          <summary>Use a reference image</summary>
+          <label class="ref-image-drop" id="refImageDrop">
+            <button type="button" class="ref-image-clear" id="refImageClear" aria-label="Clear">×</button>
+            <input type="file" accept="image/*" id="refImageInput" />
+            <div class="ref-image-prompt">drop or click — palette is extracted and used as the pool</div>
+          </label>
+        </details>
+
       <div class="palette-header">
         <div class="section-label"><span class="num">03</span>Palette</div>
       </div>
@@ -1910,6 +2088,20 @@
           <div class="palette-empty-tag">example · spectrum</div>
           <div class="palette-empty-message">Pick a mood and hit shuffle for an algorithmically generated palette.</div>
         </div>
+      </div>
+
+      <div class="cb-preview" id="cbPreview" style="display:none">
+        <div class="cb-preview-header">
+          <div class="cb-preview-label">Color-blindness preview</div>
+          <div class="seg-control" id="cbControl"
+            data-tippy-content="Simulates how the palette looks under common color vision deficiencies. ~8% of men have some form.">
+            <button data-cb="normal" class="active">Normal</button>
+            <button data-cb="protanopia">Protanopia</button>
+            <button data-cb="deuteranopia">Deuteranopia</button>
+            <button data-cb="tritanopia">Tritanopia</button>
+          </div>
+        </div>
+        <div class="cb-strips" id="cbStrips"></div>
       </div>
 
       <div class="palette-footer">
@@ -2680,12 +2872,12 @@ document.getElementById("retrainBtn").addEventListener("click", () => {
 
 /* ---------- Personas (step 01) ---------- */
 const PERSONAS = [
-  { id: "ui",         name: "UI / Web Designer",   desc: "Web apps, interfaces, dashboards. AA contrast, sRGB, Tailwind & CSS exports.",     profile: "sRGB",       wcagMin: 4.5, preferred: "tailwind",  bias: "professional" },
-  { id: "illustrator",name: "Illustrator",         desc: "Procreate, painting, comics. Display P3 native, .swatches priority, no contrast lock.", profile: "Display P3", wcagMin: 0,   preferred: "procreate", bias: "" },
-  { id: "print",      name: "Print Designer",      desc: "Posters, editorial, packaging. CMYK gamut preview, Adobe .ase priority.",         profile: "CMYK",       wcagMin: 0,   preferred: "ase",       bias: "vintage" },
-  { id: "brand",      name: "Brand Designer",      desc: "Identity, logos, campaigns. Versatile multi-format exports, AA enforcement.",      profile: "sRGB",       wcagMin: 4.5, preferred: "ase",       bias: "elegant" },
-  { id: "game",       name: "Game / Motion Artist",desc: "Game UI, characters, motion. Display P3, vibrant defaults, JSON tokens.",          profile: "Display P3", wcagMin: 0,   preferred: "json",      bias: "vibrant" },
-  { id: "editorial",  name: "Editorial / Photo",   desc: "Magazines, photography, mood boards. sRGB, muted tendencies.",                     profile: "sRGB",       wcagMin: 0,   preferred: "text",      bias: "muted" },
+  { id: "ui",          name: "UI / Web Designer",    desc: "Web apps, interfaces, dashboards. AA contrast, sRGB, Tailwind & CSS exports.",         profile: "sRGB",       wcagMin: 4.5, preferred: "tailwind",  bias: "professional", size: 5,  creativity: 10, variations: "off"   },
+  { id: "illustrator", name: "Illustrator & Artist", desc: "Procreate, painting, comics. Wide palettes, tints/shades/tones, prompt-driven, infinite variation.", profile: "Display P3", wcagMin: 0,   preferred: "procreate", bias: "",             size: 12, creativity: 45, variations: "all"   },
+  { id: "print",       name: "Print Designer",       desc: "Posters, editorial, packaging. CMYK gamut preview, Adobe .ase priority.",             profile: "CMYK",       wcagMin: 0,   preferred: "ase",       bias: "vintage",      size: 6,  creativity: 15, variations: "off"   },
+  { id: "brand",       name: "Brand Designer",       desc: "Identity, logos, campaigns. Versatile multi-format exports, AA enforcement.",          profile: "sRGB",       wcagMin: 4.5, preferred: "ase",       bias: "elegant",      size: 5,  creativity: 5,  variations: "off"   },
+  { id: "game",        name: "Game / Motion Artist", desc: "Game UI, characters, motion. Display P3, vibrant defaults, JSON tokens.",              profile: "Display P3", wcagMin: 0,   preferred: "json",      bias: "vibrant",      size: 8,  creativity: 60, variations: "tints" },
+  { id: "editorial",   name: "Editorial / Photo",    desc: "Magazines, photography, mood boards. sRGB, muted tendencies.",                         profile: "sRGB",       wcagMin: 0,   preferred: "text",      bias: "muted",        size: 5,  creativity: 25, variations: "off"   },
 ];
 const PERSONA_KEY = "nnc_persona_v1";
 let activePersonaId = null;
@@ -2701,9 +2893,7 @@ function applyPersona(p) {
   if (!p) return;
   activePersonaId = p.id;
   savePersona(p.id);
-  // Apply color profile
   if (p.profile && PROFILES[p.profile]) setProfile(p.profile);
-  // Apply WCAG min
   moodSettings.wcagMin = p.wcagMin || 0;
   const wcagLabel = document.getElementById("wcagLabel");
   if (wcagLabel) {
@@ -2716,18 +2906,37 @@ function applyPersona(p) {
   document.querySelectorAll("#wcagPopover button").forEach(b => {
     b.classList.toggle("active", parseFloat(b.dataset.wcag) === p.wcagMin);
   });
-  // Apply mood bias as keyword if set
-  if (p.bias) {
+  if (p.bias !== undefined) {
     moodSettings.keyword = p.bias;
+    moodSettings.prompt = "";
     const kwInput = document.getElementById("keywordInput");
     if (kwInput) kwInput.value = p.bias;
   }
-  // Re-shuffle with new settings
+  // New persona-driven defaults: size, creativity, variations
+  if (p.size !== undefined) {
+    moodSettings.size = p.size;
+    const sz = document.getElementById("paletteSizeSlider");
+    if (sz) sz.value = p.size;
+    const szv = document.getElementById("paletteSizeValue");
+    if (szv) szv.textContent = p.size;
+  }
+  if (p.creativity !== undefined) {
+    moodSettings.creativity = p.creativity;
+    const cr = document.getElementById("creativitySlider");
+    if (cr) cr.value = p.creativity;
+    const crv = document.getElementById("creativityValue");
+    if (crv) crv.textContent = p.creativity;
+  }
+  if (p.variations !== undefined) {
+    moodSettings.variations = p.variations;
+    document.querySelectorAll("#variationsControl button").forEach(b => {
+      b.classList.toggle("active", b.dataset.var === p.variations);
+    });
+  }
   if (typeof renderGen === "function") {
     genResult = generateFromSettings(moodSettings);
     if (genResult) renderGen();
   }
-  // Update active state on cards
   document.querySelectorAll(".persona-card").forEach(c => c.classList.toggle("active", c.dataset.persona === p.id));
 }
 
@@ -3004,26 +3213,146 @@ const moodSettings = {
   harmony: "auto",
   temperature: "any",
   keyword: "",
+  prompt: "",
   wcagMin: 0,
+  size: 5,
+  creativity: 0,
+  variations: "off",
+  cbPreview: "normal",
 };
 let genResult = null;
+let referenceImagePalette = null;
 
-function pickByHarmony(pool, harmonyId) {
+/* ---------- Tints / Shades / Tones (color variations) ---------- */
+function mixRgb(rgb1, rgb2, t) {
+  return [
+    Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * t),
+    Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * t),
+    Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * t),
+  ];
+}
+function rgbVariations(rgb, mode) {
+  if (mode === "off" || !mode) return [];
+  const out = [];
+  const tint = (t) => mixRgb(rgb, [255, 255, 255], t);
+  const shade = (t) => mixRgb(rgb, [0, 0, 0], t);
+  const tone = (t) => mixRgb(rgb, [128, 128, 128], t);
+  if (mode === "tints" || mode === "all") { out.push(tint(0.3)); out.push(tint(0.55)); out.push(tint(0.78)); }
+  if (mode === "shades" || mode === "all") { out.push(shade(0.25)); out.push(shade(0.5)); out.push(shade(0.7)); }
+  if (mode === "tones" || mode === "all") { out.push(tone(0.35)); out.push(tone(0.6)); }
+  return out;
+}
+
+/* ---------- Creativity jitter ---------- */
+function applyCreativity(picked, level) {
+  if (!level) return picked;
+  const factor = level / 100;
+  return picked.map(c => {
+    const [h, s, v] = rgbToHsv(...c.rgb);
+    const jH = (Math.random() - 0.5) * factor * 50;
+    const jS = (Math.random() - 0.5) * factor * 0.32;
+    const jV = (Math.random() - 0.5) * factor * 0.22;
+    const newH = ((h + jH) % 360 + 360) % 360;
+    const newS = Math.max(0, Math.min(1, s + jS));
+    const newV = Math.max(0, Math.min(1, v + jV));
+    const [r, g, b] = hsvToRgb(newH, newS, newV);
+    const [L, A, B] = rgbToLab(r, g, b);
+    return { rgb: [r, g, b], L, chroma: Math.sqrt(A * A + B * B) };
+  });
+}
+
+/* ---------- Color blindness simulation (Brettel-style matrices) ---------- */
+function simulateColorBlind(rgb, type) {
+  if (type === "normal" || !type) return rgb;
+  const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+  let nr, ng, nb;
+  if (type === "protanopia") {
+    nr = 0.567 * r + 0.433 * g;
+    ng = 0.558 * r + 0.442 * g;
+    nb = 0.242 * g + 0.758 * b;
+  } else if (type === "deuteranopia") {
+    nr = 0.625 * r + 0.375 * g;
+    ng = 0.700 * r + 0.300 * g;
+    nb = 0.300 * g + 0.700 * b;
+  } else if (type === "tritanopia") {
+    nr = 0.950 * r + 0.050 * g;
+    ng = 0.433 * g + 0.567 * b;
+    nb = 0.475 * g + 0.525 * b;
+  } else {
+    return rgb;
+  }
+  return [
+    Math.round(Math.max(0, Math.min(1, nr)) * 255),
+    Math.round(Math.max(0, Math.min(1, ng)) * 255),
+    Math.round(Math.max(0, Math.min(1, nb)) * 255),
+  ];
+}
+
+/* ---------- Multi-word prompt → bias (extends keyword matching) ---------- */
+function parsePromptToBias(prompt) {
+  if (!prompt) return null;
+  const words = String(prompt).toLowerCase().trim().split(/[\s,;.!?\-]+/).filter(w => w.length > 1);
+  const biases = [];
+  for (const w of words) {
+    const stripped = w.replace(/[^a-zçğıöşüâîû]/g, "");
+    if (!stripped) continue;
+    if (KEYWORD_BIAS[stripped]) { biases.push(KEYWORD_BIAS[stripped]); continue; }
+    for (const [k, v] of Object.entries(KEYWORD_BIAS)) {
+      if (stripped.length > 3 && (stripped.includes(k) || (k.length > 4 && k.includes(stripped)))) {
+        biases.push(v);
+        break;
+      }
+    }
+  }
+  if (!biases.length) return null;
+  const merged = {};
+  const allHues = biases.filter(b => b.hues).flatMap(b => b.hues);
+  if (allHues.length) merged.hues = allHues;
+  const sats = biases.filter(b => b.sat);
+  if (sats.length) merged.sat = [Math.min(...sats.map(b => b.sat[0])), Math.max(...sats.map(b => b.sat[1]))];
+  const lits = biases.filter(b => b.lit);
+  if (lits.length) merged.lit = [Math.min(...lits.map(b => b.lit[0])), Math.max(...lits.map(b => b.lit[1]))];
+  return merged;
+}
+
+function pickByHarmony(pool, harmonyId, N = 5) {
   if (!pool.length) return [];
   if (harmonyId === "auto") {
-    return pool.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+    return pool.slice().sort(() => Math.random() - 0.5).slice(0, N);
   }
   const anchor = pool[Math.floor(Math.random() * pool.length)];
   const a = anchor.h;
-  let targetHues;
+  let targetHues = [];
   switch (harmonyId) {
-    case "monochromatic":      targetHues = [a, a, a, a, a]; break;
-    case "analogous":          targetHues = [a - 30, a - 15, a, a + 15, a + 30]; break;
-    case "complementary":      targetHues = [a, a, a + 180, a + 180, a]; break;
-    case "triadic":            targetHues = [a, a + 120, a + 240, a, a + 120]; break;
-    case "split-complementary": targetHues = [a, a + 150, a + 210, a, a + 150]; break;
-    case "tetradic":           targetHues = [a, a + 90, a + 180, a + 270, a]; break;
-    default:                   targetHues = [a, a, a, a, a];
+    case "monochromatic":
+      for (let i = 0; i < N; i++) targetHues.push(a);
+      break;
+    case "analogous": {
+      const span = 60;
+      for (let i = 0; i < N; i++) {
+        const t = N === 1 ? 0 : (i / (N - 1)) * span - span / 2;
+        targetHues.push(a + t);
+      }
+      break;
+    }
+    case "complementary":
+      for (let i = 0; i < N; i++) targetHues.push(i < Math.ceil(N / 2) ? a : a + 180);
+      break;
+    case "triadic":
+      for (let i = 0; i < N; i++) targetHues.push(a + (i % 3) * 120);
+      break;
+    case "split-complementary": {
+      const splits = [a, a + 150, a + 210];
+      for (let i = 0; i < N; i++) targetHues.push(splits[i % 3]);
+      break;
+    }
+    case "tetradic": {
+      const tetra = [a, a + 90, a + 180, a + 270];
+      for (let i = 0; i < N; i++) targetHues.push(tetra[i % 4]);
+      break;
+    }
+    default:
+      for (let i = 0; i < N; i++) targetHues.push(a);
   }
   targetHues = targetHues.map(h => ((h % 360) + 360) % 360);
 
@@ -3035,7 +3364,6 @@ function pickByHarmony(pool, harmonyId) {
       if (used.has(i)) continue;
       const diff = Math.abs(pool[i].h - targetH);
       const d = Math.min(diff, 360 - diff);
-      // For monochromatic, also bias by lightness diversity
       let score = d;
       if (harmonyId === "monochromatic" && picked.length > 0) {
         const lDiff = picked.reduce((min, p) => Math.min(min, Math.abs(p.v - pool[i].v)), Infinity);
@@ -3044,7 +3372,15 @@ function pickByHarmony(pool, harmonyId) {
       if (score < bestDist) { bestDist = score; bestIdx = i; }
     }
     if (bestIdx >= 0) { picked.push(pool[bestIdx]); used.add(bestIdx); }
-    if (picked.length >= 5) break;
+    if (picked.length >= N) break;
+  }
+  // Round-robin if pool exhausted but we want more — repeat from start
+  if (picked.length < N && pool.length > 0) {
+    let i = 0;
+    while (picked.length < N) {
+      picked.push(pool[i % pool.length]);
+      i++;
+    }
   }
   return picked;
 }
@@ -3086,7 +3422,7 @@ function generateFromSettings(settings) {
   let picked = pickByHarmony(pool, settings.harmony);
 
   // WCAG enforcement: try to reorder/swap so adjacent contrast >= min
-  if (settings.wcagMin > 0 && picked.length === 5) {
+  if (settings.wcagMin > 0 && picked.length === N) {
     picked.sort((a, b) => srgbLum(...a.rgb) - srgbLum(...b.rgb));
     let attempts = 0;
     while (attempts < 30) {
@@ -3108,10 +3444,26 @@ function generateFromSettings(settings) {
     }
   }
 
-  const out = picked.slice(0, 5).map(c => {
+  let out = picked.slice(0, N).map(c => {
     const [L, A, B] = rgbToLab(...c.rgb);
     return { rgb: c.rgb, L, chroma: Math.sqrt(A * A + B * B) };
   });
+
+  // Apply variations (tints/shades/tones) — expands palette around each base
+  if (settings.variations && settings.variations !== "off") {
+    const expanded = [];
+    const perBase = settings.variations === "all" ? 2 : 1;
+    out.forEach(base => {
+      expanded.push(base);
+      const variants = rgbVariations(base.rgb, settings.variations).slice(0, perBase);
+      variants.forEach(v => {
+        const [L, A, B] = rgbToLab(...v);
+        expanded.push({ rgb: v, L, chroma: Math.sqrt(A * A + B * B) });
+      });
+    });
+    out = expanded;
+  }
+
   out.sort((a, b) => a.L - b.L);
   return out;
 }
@@ -3984,17 +4336,127 @@ document.addEventListener("click", () => {
     });
   });
 
-  // Keyword input
+  // Keyword / prompt input — both single keyword AND multi-word prompt
   const keywordInput = document.getElementById("keywordInput");
   let keywordTimer = null;
   keywordInput.addEventListener("input", (e) => {
-    moodSettings.keyword = e.target.value;
+    const v = e.target.value;
+    moodSettings.keyword = v;
+    moodSettings.prompt = /\s/.test(v.trim()) ? v : "";
     if (keywordTimer) clearTimeout(keywordTimer);
     keywordTimer = setTimeout(runShuffle, 350);
   });
   keywordInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); runShuffle(); }
   });
+
+  // Palette size slider
+  const sizeSlider = document.getElementById("paletteSizeSlider");
+  const sizeValue = document.getElementById("paletteSizeValue");
+  if (sizeSlider) {
+    sizeSlider.addEventListener("input", () => {
+      moodSettings.size = parseInt(sizeSlider.value, 10);
+      sizeValue.textContent = moodSettings.size;
+    });
+    sizeSlider.addEventListener("change", runShuffle);
+  }
+
+  // Creativity slider
+  const creativitySlider = document.getElementById("creativitySlider");
+  const creativityValue = document.getElementById("creativityValue");
+  if (creativitySlider) {
+    creativitySlider.addEventListener("input", () => {
+      moodSettings.creativity = parseInt(creativitySlider.value, 10);
+      creativityValue.textContent = moodSettings.creativity;
+    });
+    creativitySlider.addEventListener("change", runShuffle);
+  }
+
+  // Variations seg control
+  const variationsControl = document.getElementById("variationsControl");
+  if (variationsControl) {
+    variationsControl.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        variationsControl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+        moodSettings.variations = btn.dataset.var;
+        runShuffle();
+      });
+    });
+  }
+
+  // Reference image drop in Generate
+  const refImageInput = document.getElementById("refImageInput");
+  const refImageDrop = document.getElementById("refImageDrop");
+  const refImageClear = document.getElementById("refImageClear");
+  if (refImageInput && refImageDrop) {
+    function loadRefImage(file) {
+      if (!file || !file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = async () => {
+          const result = await extractPalette(img);
+          referenceImagePalette = result;
+          refImageDrop.classList.add("has-image");
+          const existing = refImageDrop.querySelector("img");
+          if (existing) existing.remove();
+          const imgEl = document.createElement("img");
+          imgEl.src = e.target.result;
+          refImageDrop.appendChild(imgEl);
+          runShuffle();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    refImageInput.addEventListener("change", (e) => loadRefImage(e.target.files[0]));
+    refImageDrop.addEventListener("dragover", (e) => { e.preventDefault(); });
+    refImageDrop.addEventListener("drop", (e) => { e.preventDefault(); loadRefImage(e.dataTransfer.files[0]); });
+    if (refImageClear) {
+      refImageClear.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        referenceImagePalette = null;
+        refImageDrop.classList.remove("has-image");
+        const existing = refImageDrop.querySelector("img");
+        if (existing) existing.remove();
+        if (refImageInput) refImageInput.value = "";
+        runShuffle();
+      });
+    }
+  }
+
+  // Color-blindness preview
+  const cbPreview = document.getElementById("cbPreview");
+  const cbControl = document.getElementById("cbControl");
+  if (cbControl) {
+    cbControl.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        cbControl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+        moodSettings.cbPreview = btn.dataset.cb;
+        renderCbPreview();
+      });
+    });
+  }
+  function renderCbPreview() {
+    if (!cbPreview) return;
+    if (!genResult || !genResult.length) { cbPreview.style.display = "none"; return; }
+    cbPreview.style.display = "block";
+    const strips = document.getElementById("cbStrips");
+    strips.innerHTML = "";
+    genResult.forEach(sw => {
+      const span = document.createElement("span");
+      const simulated = simulateColorBlind(sw.rgb, moodSettings.cbPreview);
+      span.style.background = rgbToHex(...simulated);
+      strips.appendChild(span);
+    });
+  }
+  // Re-render cb-preview whenever palette changes
+  const _origRenderGen = renderGen;
+  renderGen = function () {
+    _origRenderGen();
+    renderCbPreview();
+  };
 
   // Shuffle button
   function runShuffle() {
