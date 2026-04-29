@@ -3530,6 +3530,14 @@ function setActiveTab(name) {
 document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
 });
+
+document.querySelectorAll(".filter-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    libraryFilter = chip.dataset.filter;
+    document.querySelectorAll(".filter-chip").forEach(c => c.classList.toggle("active", c === chip));
+    renderLibrary();
+  });
+});
 renderLibrary();
 
 
