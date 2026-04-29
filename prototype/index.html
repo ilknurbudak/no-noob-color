@@ -706,15 +706,16 @@
   .strip-hex-big {
     position: absolute;
     left: 50%;
-    top: 50%;
+    top: 62%;
     transform: translate(-50%, -50%) rotate(-90deg);
     font-family: var(--mono);
-    font-size: 56px;
+    font-size: 42px;
     font-weight: 700;
     white-space: nowrap;
     letter-spacing: -.04em;
     z-index: 1;
-    opacity: .95;
+    opacity: .92;
+    pointer-events: none;
   }
 
   /* clickable color codes */
@@ -809,16 +810,24 @@
   .wcag-line {
     display: flex;
     gap: 6px;
-    align-items: baseline;
-    margin-top: 4px;
+    align-items: center;
+    margin-top: 6px;
+    z-index: 2;
+    position: relative;
+  }
+  .wcag-line .strip-meta {
+    background: rgba(0,0,0,.06);
+    padding: 1px 5px;
+    border-radius: 3px;
   }
   .wcag-line .wcag-badge {
     font-size: 8px;
     font-weight: 700;
-    padding: 1px 5px;
+    padding: 2px 5px;
     border-radius: 3px;
-    background: rgba(255,255,255,.18);
+    background: rgba(0,0,0,.18);
     letter-spacing: .04em;
+    color: inherit;
   }
   .strip-bottom {
     z-index: 2;
