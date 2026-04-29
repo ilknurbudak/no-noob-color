@@ -2,6 +2,7 @@
 import { onMounted } from "vue";
 import BrandHeader from "@/components/BrandHeader.vue";
 import BottomNav from "@/components/BottomNav.vue";
+import Toast from "@/components/Toast.vue";
 import { detectApi } from "@/services/api";
 
 onMounted(() => {
@@ -18,4 +19,5 @@ onMounted(() => {
     </main>
   </div>
   <BottomNav />
+  <Toast />
 </template>
