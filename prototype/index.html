@@ -2324,11 +2324,14 @@ function loadDemo() {
   img.src = dataUrl;
 }
 
-document.getElementById("demoBtn").addEventListener("click", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  loadDemo();
-});
+const demoBtnEl = document.getElementById("demoBtn");
+if (demoBtnEl) {
+  demoBtnEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    loadDemo();
+  });
+}
 ["dragenter", "dragover"].forEach(ev =>
   sourceArea.addEventListener(ev, (e) => { e.preventDefault(); sourceArea.classList.add("dragover"); }));
 ["dragleave", "drop"].forEach(ev =>
