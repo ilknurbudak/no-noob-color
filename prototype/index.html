@@ -85,11 +85,12 @@
   }
   .logo-mark {
     width: 64px;
-    height: 28px;
+    height: 64px;
     flex-shrink: 0;
-    color: var(--text);
+    object-fit: contain;
+    display: block;
   }
-  .logo-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  [data-theme="dark"] .logo-mark { filter: invert(1); }
   .brand-text {
     display: flex;
     flex-direction: column;
@@ -1212,33 +1213,8 @@
 
   <header class="brand-header">
     <div class="brand-left">
-      <span class="logo-mark" aria-hidden="true">
-        <svg viewBox="0 0 260 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <filter id="logoRough" x="-4%" y="-4%" width="108%" height="108%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="11" result="noise"/>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6"/>
-            </filter>
-          </defs>
-          <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#logoRough)">
-            <!-- left loop -->
-            <path d="M 38 50
-                     C 38 22, 90 18, 122 38
-                     C 142 50, 138 64, 122 70
-                     C 90 86, 38 78, 38 50 Z"/>
-            <!-- right loop with extending tail (overlaps left at the cross) -->
-            <path d="M 122 38
-                     C 152 18, 210 18, 232 38
-                     C 250 48, 246 60, 230 64
-                     C 200 78, 150 76, 122 60
-                     C 110 56, 110 46, 122 38 Z"/>
-            <!-- left v / wave inside left loop -->
-            <path d="M 64 46 L 78 60 L 92 46 C 96 44, 100 46, 104 50"/>
-            <!-- right v / wave inside right loop -->
-            <path d="M 158 44 L 172 58 L 186 44 C 192 42, 198 46, 204 50"/>
-          </g>
-        </svg>
-      </span>
+      <img class="logo-mark" src="logo.png" alt="no noob color" />
+
       <div class="brand-text">
         <h1 class="brand">no noob <span class="grad-text">color</span></h1>
         <div class="brand-tagline">capture · curate · export</div>
