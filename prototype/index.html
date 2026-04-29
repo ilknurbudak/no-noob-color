@@ -2957,7 +2957,7 @@ const SourceGrid = (() => {
   }
   function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
-  function randomColor() { return (R() < 0.22) ? PAPER_I : Math.floor(R() * PALETTE.length); }
+  function randomColor() { return (R() < 0.15) ? PAPER_I : Math.floor(R() * PALETTE.length); }
   function stampRect(target, minW, maxW, minH, maxH) {
     const rw = Math.min(W, minW + Math.floor(R() * (Math.min(maxW, W) - minW + 1)));
     const rh = Math.min(H, minH + Math.floor(R() * (Math.min(maxH, H) - minH + 1)));
@@ -2974,11 +2974,10 @@ const SourceGrid = (() => {
     }
   }
   function initState() {
-    state.fill(PAPER_I);
-    // Dense scatter — fills more of the grid to avoid empty bands
-    scatter(state, Math.floor(W * H * 0.65));
-    for (let i = 0; i < 4; i++) stampRect(state, 1, 3, 1, 3);
-    for (let i = 0; i < 2; i++) stampRect(state, 2, 4, 2, 3);
+    // Fill EVERY cell with a random color (not partial scatter on white bg)
+    for (let i = 0; i < state.length; i++) state[i] = randomColor();
+    // A few clumps for variety
+    for (let i = 0; i < 3; i++) stampRect(state, 2, 4, 2, 3);
   }
   function evolve(from, out) {
     out.set(from);
