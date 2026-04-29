@@ -66,20 +66,45 @@
     min-height: 100vh;
   }
 
-  /* brand */
+  /* brand — full-width header */
   .brand-header {
-    text-align: center;
-    padding: 28px 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-3) 0;
+    margin-bottom: var(--s-7);
+    border-bottom: 1px solid var(--hairline);
     position: relative;
+  }
+  .brand-left {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-width: 0;
+  }
+  .logo-mark {
+    width: 56px;
+    height: 32px;
+    flex-shrink: 0;
+    color: var(--text);
+  }
+  .logo-mark svg { display: block; width: 100%; height: 100%; }
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1;
+    min-width: 0;
   }
   .brand {
     font-family: var(--sans);
     font-weight: 800;
     font-style: italic;
-    font-size: 56px;
-    letter-spacing: -.035em;
+    font-size: 26px;
+    letter-spacing: -.025em;
     color: var(--text);
-    line-height: .95;
+    line-height: 1;
     user-select: none;
   }
   .brand .grad-text {
@@ -100,27 +125,27 @@
       drop-shadow(0 2px 8px rgba(150, 130, 200, .12));
   }
   .brand-tagline {
-    margin-top: 6px;
+    margin: 0;
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-3);
     text-transform: uppercase;
     letter-spacing: .18em;
-    opacity: .7;
+    opacity: .8;
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    flex-shrink: 0;
+    position: relative;
   }
 
   .tab { display: none; }
   .tab.active { display: block; }
 
-  /* controls row — manifesto (left) + theme toggle + profile pill (right) */
-  .controls-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--s-3);
-    margin-bottom: var(--s-7);
-    position: relative;
-  }
+  /* controls row — kept hidden for legacy, header now hosts controls */
+  .controls-row { display: none; }
   .controls-right {
     display: flex;
     align-items: center;
@@ -324,10 +349,10 @@
   .mood-popover button:hover { background: var(--surface-hover); }
   .mood-popover button.active { background: var(--text); color: var(--bg); }
 
-  /* photo tab — two-column grid */
+  /* photo tab — strict 40/60 two-column grid */
   .photo-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
     gap: var(--s-6);
     align-items: start;
   }
@@ -983,11 +1008,17 @@
 
   /* large mobile / small tablet */
   @media (max-width: 720px) {
-    .app { padding: var(--s-5) var(--s-4) 120px; }
+    .app { padding: var(--s-4) var(--s-4) 120px; }
 
-    .brand-header { padding: var(--s-5) 0 var(--s-2); }
-    .brand { font-size: 42px; letter-spacing: -.03em; }
-    .brand-tagline { font-size: 9px; letter-spacing: .14em; }
+    .brand-header {
+      flex-wrap: wrap;
+      gap: var(--s-3);
+      padding: var(--s-3) 0;
+      margin-bottom: var(--s-5);
+    }
+    .brand { font-size: 22px; }
+    .logo-mark { width: 48px; height: 28px; }
+    .brand-tagline { font-size: 8px; letter-spacing: .14em; }
 
     .controls-row { margin-bottom: var(--s-5); }
 
@@ -1032,20 +1063,21 @@
 
   /* phone */
   @media (max-width: 480px) {
-    .app { padding: var(--s-4) var(--s-3) 110px; }
+    .app { padding: var(--s-3) var(--s-3) 110px; }
 
-    .brand-header { padding: var(--s-4) 0 var(--s-1); }
-    .brand { font-size: 34px; letter-spacing: -.025em; }
-    .brand-tagline { font-size: 8px; letter-spacing: .12em; }
-
-    .controls-row {
-      flex-wrap: wrap;
+    .brand-header {
+      flex-wrap: nowrap;
       gap: var(--s-2);
+      padding: var(--s-2) 0;
       margin-bottom: var(--s-4);
     }
-    .controls-right { gap: var(--s-2); }
-    .manifesto-btn { font-size: 11px; padding: 6px 12px; }
-    .profile-pill { font-size: 10px; padding: 7px 12px; }
+    .brand-left { gap: var(--s-2); }
+    .logo-mark { width: 40px; height: 24px; }
+    .brand { font-size: 18px; }
+    .brand-tagline { display: none; }
+
+    .header-controls { gap: var(--s-2); }
+    .profile-pill { font-size: 10px; padding: 6px 10px; }
 
     .source-strip { height: 240px; }
     .source-strip.has-image { height: 180px; }
@@ -1090,13 +1122,30 @@
 <div class="app">
 
   <header class="brand-header">
-    <h1 class="brand">no noob <span class="grad-text">color</span></h1>
-    <div class="brand-tagline">capture · curate · export</div>
-  </header>
+    <div class="brand-left">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="logoRough" x="-5%" y="-5%" width="110%" height="110%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="3" result="noise"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4"/>
+            </filter>
+          </defs>
+          <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#logoRough)">
+            <path d="M30 45 C 50 18, 95 18, 115 45 C 95 72, 50 72, 30 45 Z"/>
+            <path d="M115 45 C 130 32, 158 30, 175 45 C 168 56, 145 60, 130 52"/>
+            <path d="M52 38 L62 52 L72 38"/>
+            <path d="M132 38 L142 52 L152 38"/>
+          </g>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <h1 class="brand">no noob <span class="grad-text">color</span></h1>
+        <div class="brand-tagline">capture · curate · export</div>
+      </div>
+    </div>
 
-  <div class="controls-row">
-    <div></div>
-    <div class="controls-right">
+    <div class="header-controls">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
           <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="3" fill="currentColor"/>
