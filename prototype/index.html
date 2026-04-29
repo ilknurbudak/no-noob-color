@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>no noob color</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,500;1,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #ffffff;
+    --hairline: #e5e5e5;
+    --text: #000000;
+    --text-2: #666666;
+    --text-3: #999999;
+    --surface-2: #f5f5f5;
+    --surface-hover: #fafafa;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --grad: linear-gradient(90deg, #ff7a8a 0%, #ff9c4a 22%, #f7d048 42%, #5fcd8c 60%, #5fa1f7 80%, #b87fff 100%);
+    --grad-soft: linear-gradient(90deg, #ffd6dc 0%, #ffe1c2 22%, #fdf3c2 42%, #cfedda 60%, #cfdef9 80%, #e6d5ff 100%);
+  }
+  [data-theme="dark"] {
+    --bg: #0d0d0d;
+    --hairline: #262626;
+    --text: #ffffff;
+    --text-2: #a0a0a0;
+    --text-3: #595959;
+    --surface-2: #1a1a1a;
+    --surface-hover: #161616;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { background: var(--bg); }
+  html { transition: background .2s; }
+  body {
+    font-family: var(--sans);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background .2s, color .2s;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .app {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 28px 24px 140px;
+    min-height: 100vh;
+  }
+
+  /* brand */
+  .brand-header { text-align: center; padding: 16px 0 36px; }
+  .brand {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-style: italic;
+    font-size: 30px;
+    letter-spacing: -.015em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* controls row — manifesto (left) + theme toggle + profile pill (right) */
+  .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .controls-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+  }
+  .manifesto-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 16px;
+    border: 1px solid var(--text);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: -.005em;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s, color .15s;
+  }
+  .manifesto-btn:hover, .manifesto-btn.active {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .theme-toggle {
+    width: 52px;
+    height: 28px;
+    border: 1px solid var(--text);
+    border-radius: 999px;
+    background: var(--bg);
+    position: relative;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    user-select: none;
+    transition: background .15s, border-color .15s;
+  }
+  .theme-toggle svg {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    transform: translateY(-50%);
+    color: var(--text);
+    opacity: .3;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  .theme-toggle .icon-sun { left: 6px; }
+  .theme-toggle .icon-moon { right: 6px; }
+  [data-theme="dark"] .theme-toggle .icon-moon { opacity: .9; }
+  :root:not([data-theme="dark"]) .theme-toggle .icon-sun { opacity: .9; }
+  .theme-toggle .thumb {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--text);
+    top: 2px;
+    left: 2px;
+    transition: transform .28s cubic-bezier(.45, 0, .25, 1);
+    pointer-events: none;
+  }
+  [data-theme="dark"] .theme-toggle .thumb {
+    transform: translateX(22px);
+  }
+  .theme-toggle.dragging .thumb { transition: none; }
+
+  .profile-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--text);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s, color .15s;
+  }
+  .profile-pill:hover { background: var(--text); color: var(--bg); }
+  .profile-pill .chev { font-size: 9px; }
+
+  .profile-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--bg);
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    width: 200px;
+    z-index: 100;
+    display: none;
+    overflow: hidden;
+  }
+  .profile-popover.open { display: block; }
+  .profile-popover button {
+    width: 100%;
+    text-align: left;
+    padding: 11px 14px;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--bg);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .profile-popover button:last-child { border-bottom: none; }
+  .profile-popover button:hover { background: var(--surface-hover); }
+  .profile-popover button.active { background: var(--text); color: var(--bg); }
+  .profile-popover button .desc { font-size: 9px; opacity: .7; }
+
+  /* section labels for visual hierarchy */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-bottom: 10px;
+    margin-top: 32px;
+    display: block;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .section-label .num {
+    color: var(--text-2);
+    margin-right: 6px;
+    font-weight: 500;
+  }
+
+  /* generate controls — mood + shuffle */
+  .generate-controls {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 18px 0;
+    position: relative;
+  }
+  .mood-pill { font-size: 13px; padding: 9px 18px; }
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--text);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background .15s, color .15s, transform .25s;
+  }
+  .btn-icon:hover { background: var(--text); color: var(--bg); }
+  .btn-icon:active { transform: rotate(-180deg); }
+  .btn-icon svg { width: 16px; height: 16px; }
+  .mood-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg);
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    width: 220px;
+    z-index: 100;
+    display: none;
+    overflow: hidden;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+  .mood-popover.open { display: block; }
+  .mood-popover button {
+    width: 100%;
+    text-align: left;
+    padding: 11px 14px;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--bg);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    letter-spacing: -.005em;
+  }
+  .mood-popover button:last-child { border-bottom: none; }
+  .mood-popover button:hover { background: var(--surface-hover); }
+  .mood-popover button.active { background: var(--text); color: var(--bg); }
+
+  /* source — wide rectangle at top */
+  .source-strip {
+    width: 100%;
+    height: 180px;
+    border: 1px dashed var(--text);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: var(--bg);
+    transition: border-color .15s, background .15s;
+  }
+  .source-strip.has-image { border-style: solid; cursor: default; }
+  .source-strip.dragover { border-color: var(--text); background: var(--surface-hover); }
+  .source-strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .source-strip input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .source-prompt {
+    text-align: center;
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .source-prompt .small {
+    font-size: 10px;
+    margin-top: 6px;
+    opacity: .8;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* palette strips — Pantone-style vertical columns */
+  .palette-strips {
+    display: flex;
+    width: 100%;
+    height: 460px;
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .strip {
+    flex: 1;
+    position: relative;
+    padding: 18px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    min-width: 0;
+    transition: flex .25s ease;
+  }
+  .strip-top { z-index: 2; position: relative; }
+  .strip-name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -.005em;
+    margin-bottom: 8px;
+    line-height: 1.15;
+  }
+  .strip-meta {
+    font-family: var(--mono);
+    font-size: 9px;
+    line-height: 1.55;
+    letter-spacing: .02em;
+    opacity: .85;
+  }
+  .strip-hex-big {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    font-family: var(--mono);
+    font-size: 56px;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: -.04em;
+    pointer-events: none;
+    z-index: 1;
+    opacity: .95;
+  }
+  .strip-bottom {
+    z-index: 2;
+    position: relative;
+    font-size: 11px;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -.005em;
+  }
+  .palette-empty {
+    width: 100%;
+    align-self: center;
+    text-align: center;
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 20px;
+  }
+
+  /* actions row */
+  .actions {
+    margin-top: 36px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  /* manifesto canvas */
+  .canvas-wrap {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+  .canvas-wrap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .manifesto-meta {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .manifesto-meta .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .manifesto-meta .live::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text);
+    animation: livePulse 1.4s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .25; }
+  }
+  .btn {
+    padding: 12px 24px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    min-width: 180px;
+  }
+  .btn:hover:not(:disabled) {
+    background: var(--text);
+    color: var(--bg);
+  }
+  .btn:disabled {
+    border-color: var(--hairline);
+    color: var(--text-3);
+    cursor: not-allowed;
+  }
+
+  /* export dropdown */
+  .export-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .export-wrap .btn .chev {
+    margin-left: 8px;
+    font-size: 9px;
+    opacity: .7;
+  }
+  .export-menu {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    right: 0;
+    background: var(--bg);
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    width: 220px;
+    z-index: 100;
+    display: none;
+    overflow: hidden;
+  }
+  .export-menu.open { display: block; }
+  .export-menu button {
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .export-menu button:last-child { border-bottom: none; }
+  .export-menu button:hover { background: var(--surface-hover); }
+  .export-menu button .ext {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    font-weight: 400;
+  }
+
+  /* library grid */
+  .library-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .library-card {
+    position: relative;
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg);
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  .library-card:hover { transform: translateY(-2px); }
+  .lib-thumb {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--text);
+  }
+  .lib-swatches {
+    display: flex;
+    height: 32px;
+  }
+  .lib-sw { flex: 1; height: 100%; }
+  .lib-meta {
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-2);
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .lib-meta .count {
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-3);
+  }
+  .lib-delete {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 24px; height: 24px;
+    border: none;
+    background: rgba(0,0,0,.65);
+    color: white;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .library-card:hover .lib-delete { opacity: 1; }
+
+  /* placeholder tabs */
+  .empty-large {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .empty-large p { margin-bottom: 8px; }
+  .empty-large p:first-child {
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--sans);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-bottom: 14px;
+  }
+
+  /* bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    padding: 6px;
+    border-radius: 999px;
+    background:
+      linear-gradient(var(--bg), var(--bg)) padding-box,
+      var(--grad) border-box;
+    border: 1px solid transparent;
+    display: flex;
+    gap: 2px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.06);
+  }
+  .nav-btn {
+    padding: 10px 22px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: font-weight .15s, background .15s;
+    letter-spacing: -.005em;
+  }
+  .nav-btn.active {
+    font-weight: 600;
+    color: #0a0a0a;
+    background: var(--grad-soft);
+  }
+  .nav-btn:hover:not(.active) { background: var(--surface-hover); }
+
+  /* responsive */
+  @media (max-width: 720px) {
+    .app { padding: 20px 16px 120px; }
+    .brand { font-size: 26px; }
+    .nav-btn { padding: 9px 16px; font-size: 12px; }
+    .actions { flex-direction: column; }
+    .btn { width: 100%; }
+    .palette-strips {
+      overflow-x: auto;
+      height: 380px;
+      scrollbar-width: none;
+    }
+    .palette-strips::-webkit-scrollbar { display: none; }
+    .strip {
+      flex: 0 0 130px;
+      min-width: 130px;
+    }
+    .strip-hex-big { font-size: 44px; }
+    .source-strip { height: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="brand-header">
+    <h1 class="brand">no noob color</h1>
+  </header>
+
+  <div class="controls-row">
+    <button class="manifesto-btn" id="manifestoBtn" type="button">Manifesto</button>
+    <div class="controls-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="3" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+              <line x1="8" y1="1.6" x2="8" y2="3.2"/>
+              <line x1="8" y1="12.8" x2="8" y2="14.4"/>
+              <line x1="1.6" y1="8" x2="3.2" y2="8"/>
+              <line x1="12.8" y1="8" x2="14.4" y2="8"/>
+              <line x1="3.4" y1="3.4" x2="4.5" y2="4.5"/>
+              <line x1="11.5" y1="11.5" x2="12.6" y2="12.6"/>
+              <line x1="3.4" y1="12.6" x2="4.5" y2="11.5"/>
+              <line x1="12.6" y1="3.4" x2="11.5" y2="4.5"/>
+            </g>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 16 16" fill="none">
+            <path d="M 13 9.5 A 5.5 5.5 0 1 1 6.5 3 A 4.5 4.5 0 0 0 13 9.5 Z" fill="currentColor"/>
+          </svg>
+          <span class="thumb"></span>
+        </button>
+
+        <button class="profile-pill" id="profilePill" aria-label="Color profile">
+          <span id="profileLabel">sRGB</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="profile-popover" id="profilePopover">
+          <button data-profile="sRGB" class="active">
+            <span>sRGB</span><span class="desc">screen</span>
+          </button>
+          <button data-profile="Display P3">
+            <span>Display P3</span><span class="desc">Procreate</span>
+          </button>
+          <button data-profile="Adobe RGB">
+            <span>Adobe RGB</span><span class="desc">print prep</span>
+          </button>
+          <button data-profile="CMYK">
+            <span>CMYK</span><span class="desc">offset</span>
+          </button>
+        </div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- Photo -->
+    <section class="tab active" id="tab-photo">
+      <div class="section-label"><span class="num">01</span>Source</div>
+      <label class="source-strip" id="sourceArea">
+        <div class="source-prompt" id="sourcePrompt">
+          drop a photo
+          <div class="small">or click to choose</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" />
+      </label>
+
+      <div class="section-label"><span class="num">02</span>Palette</div>
+      <div class="palette-strips" id="palette-photo">
+        <div class="palette-empty">load a photo to see the palette</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="saveBtn" disabled>Save to Library</button>
+        <div class="export-wrap">
+          <button class="btn" id="exportBtn" disabled>
+            Export <span class="chev">▾</span>
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <button data-format="procreate">
+              <span>Procreate</span><span class="ext">.swatches</span>
+            </button>
+            <button data-format="ase">
+              <span>Adobe</span><span class="ext">.ase</span>
+            </button>
+            <button data-format="text">
+              <span>Copy as text</span><span class="ext">clipboard</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-library">
+      <div id="libraryList"></div>
+    </section>
+
+    <section class="tab" id="tab-generate">
+      <div class="section-label"><span class="num">01</span>Mood</div>
+      <div class="generate-controls">
+        <button class="profile-pill mood-pill" id="moodPill">
+          <span id="moodLabel">warm winter</span>
+          <span class="chev">▾</span>
+        </button>
+        <button class="btn-icon" id="shuffleBtn" aria-label="Shuffle palette">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.5 7 A5.5 5.5 0 1 0 13.3 9.8"/>
+            <path d="M13.5 4 V7 H10.5"/>
+          </svg>
+        </button>
+        <div class="mood-popover" id="moodPopover"></div>
+      </div>
+
+      <div class="section-label"><span class="num">02</span>Palette</div>
+      <div class="palette-strips" id="palette-gen">
+        <div class="palette-empty">pick a mood, hit shuffle</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="saveBtnGen" disabled>Save to Library</button>
+        <div class="export-wrap">
+          <button class="btn" id="exportBtnGen" disabled>
+            Export <span class="chev">▾</span>
+          </button>
+          <div class="export-menu" id="exportMenuGen">
+            <button data-format="procreate">
+              <span>Procreate</span><span class="ext">.swatches</span>
+            </button>
+            <button data-format="ase">
+              <span>Adobe</span><span class="ext">.ase</span>
+            </button>
+            <button data-format="text">
+              <span>Copy as text</span><span class="ext">clipboard</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-manifesto">
+      <div class="section-label"><span class="num">∞</span>Generative grid</div>
+      <div class="canvas-wrap">
+        <canvas id="manifestoCanvas" width="1920" height="1080"></canvas>
+      </div>
+      <div class="manifesto-meta">
+        <span id="manifestoSource">paper · default palette</span>
+        <span class="live">live</span>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<nav class="bottom-nav" aria-label="Sections">
+  <button class="nav-btn" data-tab="generate">Generate</button>
+  <button class="nav-btn active" data-tab="photo">Photo</button>
+  <button class="nav-btn" data-tab="library">Library</button>
+</nav>
+
+<script>
+"use strict";
+
+/* ---------- Colour space ---------- */
+function rgbToXyz(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+  g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+  b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+  return [
+    (r * 0.4124 + g * 0.3576 + b * 0.1805) * 100,
+    (r * 0.2126 + g * 0.7152 + b * 0.0722) * 100,
+    (r * 0.0193 + g * 0.1192 + b * 0.9505) * 100,
+  ];
+}
+function xyzToLab(x, y, z) {
+  const refX = 95.047, refY = 100.0, refZ = 108.883;
+  let xr = x / refX, yr = y / refY, zr = z / refZ;
+  const f = (t) => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16/116;
+  xr = f(xr); yr = f(yr); zr = f(zr);
+  return [(116*yr) - 16, 500*(xr - yr), 200*(yr - zr)];
+}
+function rgbToLab(r, g, b) {
+  const [x, y, z] = rgbToXyz(r, g, b);
+  return xyzToLab(x, y, z);
+}
+function rgbToHsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max - min;
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g-b)/d) % 6;
+    else if (max === g) h = (b-r)/d + 2;
+    else h = (r-g)/d + 4;
+    h *= 60; if (h < 0) h += 360;
+  }
+  return [h, max === 0 ? 0 : d/max, max];
+}
+function rgbToHex(r, g, b) {
+  return "#" + [r,g,b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2,"0")).join("");
+}
+function hexToRgb(hex) {
+  const h = hex.replace("#", "");
+  return [parseInt(h.slice(0,2), 16), parseInt(h.slice(2,4), 16), parseInt(h.slice(4,6), 16)];
+}
+function hslToRgb(h, s, l) {
+  if (s === 0) {
+    const v = Math.round(l * 255);
+    return [v, v, v];
+  }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const hueToRgb = (t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  return [
+    Math.round(hueToRgb(h + 1/3) * 255),
+    Math.round(hueToRgb(h) * 255),
+    Math.round(hueToRgb(h - 1/3) * 255),
+  ];
+}
+
+function rgbToCmyk(r, g, b) {
+  const rN = r/255, gN = g/255, bN = b/255;
+  const k = 1 - Math.max(rN, gN, bN);
+  if (k >= 1) return [0, 0, 0, 100];
+  const c = (1 - rN - k) / (1 - k);
+  const m = (1 - gN - k) / (1 - k);
+  const y = (1 - bN - k) / (1 - k);
+  return [Math.round(c*100), Math.round(m*100), Math.round(y*100), Math.round(k*100)];
+}
+function relativeLuminance(r, g, b) {
+  return 0.2126*r + 0.7152*g + 0.0722*b;
+}
+function textColorFor(r, g, b) {
+  return relativeLuminance(r, g, b) > 145 ? "#000000" : "#ffffff";
+}
+
+/* ---------- Color naming ---------- */
+const NAMED_COLORS = [
+  { name: "Black",      hex: "#000000" },
+  { name: "Charcoal",   hex: "#36454f" },
+  { name: "Graphite",   hex: "#2a2a2a" },
+  { name: "Slate",      hex: "#708090" },
+  { name: "Grey",       hex: "#808080" },
+  { name: "Silver",     hex: "#c0c0c0" },
+  { name: "Pearl",      hex: "#eaeaea" },
+  { name: "White",      hex: "#ffffff" },
+  { name: "Cream",      hex: "#fffdd0" },
+  { name: "Ivory",      hex: "#fffff0" },
+  { name: "Bone",       hex: "#e3dac9" },
+  { name: "Beige",      hex: "#f5f5dc" },
+  { name: "Sand",       hex: "#c2b280" },
+  { name: "Khaki",      hex: "#c3b091" },
+  { name: "Tan",        hex: "#d2b48c" },
+  { name: "Camel",      hex: "#c19a6b" },
+  { name: "Brown",      hex: "#8b4513" },
+  { name: "Sienna",     hex: "#a0522d" },
+  { name: "Umber",      hex: "#635147" },
+  { name: "Sepia",      hex: "#704214" },
+  { name: "Rust",       hex: "#b7410e" },
+  { name: "Brick",      hex: "#9b3a3a" },
+  { name: "Wine",       hex: "#722f37" },
+  { name: "Maroon",     hex: "#800000" },
+  { name: "Burgundy",   hex: "#570404" },
+  { name: "Crimson",    hex: "#dc143c" },
+  { name: "Red",        hex: "#e63946" },
+  { name: "Scarlet",    hex: "#ff2400" },
+  { name: "Coral",      hex: "#ff7f50" },
+  { name: "Salmon",     hex: "#fa8072" },
+  { name: "Pink",       hex: "#ffc0cb" },
+  { name: "Rose",       hex: "#ff66cc" },
+  { name: "Magenta",    hex: "#ff00ff" },
+  { name: "Plum",       hex: "#8e4585" },
+  { name: "Lavender",   hex: "#b497d6" },
+  { name: "Violet",     hex: "#8a2be2" },
+  { name: "Purple",     hex: "#6a0dad" },
+  { name: "Indigo",     hex: "#4b0082" },
+  { name: "Royal",      hex: "#4169e1" },
+  { name: "Navy",       hex: "#1a2752" },
+  { name: "Steel",      hex: "#4682b4" },
+  { name: "Blue",       hex: "#0a66dd" },
+  { name: "Cobalt",     hex: "#0047ab" },
+  { name: "Sky",        hex: "#87ceeb" },
+  { name: "Azure",      hex: "#a3d8f4" },
+  { name: "Cyan",       hex: "#00b7c2" },
+  { name: "Teal",       hex: "#008080" },
+  { name: "Turquoise",  hex: "#40e0d0" },
+  { name: "Mint",       hex: "#98e0b6" },
+  { name: "Aqua",       hex: "#7fffd4" },
+  { name: "Sage",       hex: "#9caf88" },
+  { name: "Olive",      hex: "#808000" },
+  { name: "Moss",       hex: "#5a6b3b" },
+  { name: "Forest",     hex: "#1f5132" },
+  { name: "Emerald",    hex: "#2f8b53" },
+  { name: "Green",      hex: "#3a8b40" },
+  { name: "Lime",       hex: "#8fcb46" },
+  { name: "Chartreuse", hex: "#7fff00" },
+  { name: "Yellow",     hex: "#ffd60a" },
+  { name: "Lemon",      hex: "#fff44f" },
+  { name: "Mustard",    hex: "#d4a83a" },
+  { name: "Gold",       hex: "#d4a017" },
+  { name: "Amber",      hex: "#ffbf00" },
+  { name: "Apricot",    hex: "#fbceb1" },
+  { name: "Peach",      hex: "#ffd0a8" },
+  { name: "Tangerine",  hex: "#f28500" },
+  { name: "Orange",     hex: "#ff7a00" },
+  { name: "Ochre",      hex: "#c89c4c" },
+];
+const NAMED_COLORS_LAB = NAMED_COLORS.map(n => {
+  const [r, g, b] = hexToRgb(n.hex);
+  return { name: n.name, lab: rgbToLab(r, g, b) };
+});
+function nameForRGB(r, g, b) {
+  const [tL, tA, tB] = rgbToLab(r, g, b);
+  let best = null, bestD = Infinity;
+  for (const n of NAMED_COLORS_LAB) {
+    const [L, A, B] = n.lab;
+    const d = (L-tL)*(L-tL) + (A-tA)*(A-tA) + (B-tB)*(B-tB);
+    if (d < bestD) { bestD = d; best = n.name; }
+  }
+  return best;
+}
+
+/* ---------- Profile transforms ---------- */
+const PROFILES = {
+  "sRGB":       (rgb) => rgb,
+  "Display P3": ([r,g,b]) => {
+    const m = 0.96, grey = (r+g+b)/3;
+    return [r*m + grey*(1-m), g*m + grey*(1-m), b*m + grey*(1-m)];
+  },
+  "Adobe RGB":  ([r,g,b]) => [Math.min(255, r*0.98), Math.min(255, g*1.02), b*0.96],
+  "CMYK":       ([r,g,b]) => {
+    const grey = 0.299*r + 0.587*g + 0.114*b, m = 0.78;
+    return [r*m + grey*(1-m), g*m + grey*(1-m), b*m + grey*(1-m)];
+  },
+};
+
+/* ---------- K-means in L*a*b* ---------- */
+function kmeans(points, k, maxIter = 18) {
+  const centroids = [];
+  centroids.push(points[Math.floor(Math.random() * points.length)].slice(0, 3));
+  while (centroids.length < k) {
+    const distances = points.map(p => {
+      let min = Infinity;
+      for (const c of centroids) {
+        const d = (p[0]-c[0])**2 + (p[1]-c[1])**2 + (p[2]-c[2])**2;
+        if (d < min) min = d;
+      }
+      return min;
+    });
+    const sum = distances.reduce((a,b) => a+b, 0) || 1;
+    let r = Math.random() * sum;
+    let idx = 0;
+    for (let i = 0; i < distances.length; i++) {
+      r -= distances[i];
+      if (r <= 0) { idx = i; break; }
+    }
+    centroids.push(points[idx].slice(0, 3));
+  }
+  const assignments = new Array(points.length).fill(0);
+  for (let iter = 0; iter < maxIter; iter++) {
+    let changed = 0;
+    for (let pi = 0; pi < points.length; pi++) {
+      const p = points[pi];
+      let best = 0, bestD = Infinity;
+      for (let i = 0; i < k; i++) {
+        const c = centroids[i];
+        const d = (p[0]-c[0])**2 + (p[1]-c[1])**2 + (p[2]-c[2])**2;
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      if (assignments[pi] !== best) { changed++; assignments[pi] = best; }
+    }
+    const sums = Array.from({length: k}, () => [0,0,0,0]);
+    for (let pi = 0; pi < points.length; pi++) {
+      const p = points[pi]; const a = assignments[pi];
+      sums[a][0] += p[0]; sums[a][1] += p[1]; sums[a][2] += p[2]; sums[a][3] += 1;
+    }
+    for (let i = 0; i < k; i++) {
+      if (sums[i][3] === 0) continue;
+      centroids[i] = [sums[i][0]/sums[i][3], sums[i][1]/sums[i][3], sums[i][2]/sums[i][3]];
+    }
+    if (changed === 0) break;
+  }
+  return { centroids, assignments };
+}
+
+/* ---------- Extraction ---------- */
+let lastResult = null;
+let currentProfile = "sRGB";
+
+async function extractPalette(imgEl) {
+  const TARGET = 260;
+  const scale = TARGET / Math.max(imgEl.naturalWidth, imgEl.naturalHeight);
+  const w = Math.max(1, Math.round(imgEl.naturalWidth * scale));
+  const h = Math.max(1, Math.round(imgEl.naturalHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(imgEl, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h).data;
+
+  const pixels = [];
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+    if (a < 200) continue;
+    const [L, A, B] = rgbToLab(r, g, b);
+    pixels.push([L, A, B, r, g, b]);
+  }
+
+  const K = 7;
+  const { assignments } = kmeans(pixels, K, 22);
+
+  // For each cluster compute size, mean chroma, and a MODE-based representative
+  // pixel (most common quantized color). This guarantees the swatch is a color
+  // that actually appears in the photo, robust to outlier sparse pixels.
+  const clusters = Array.from({length: K}, () => ({
+    size: 0, sumChroma: 0, repPixel: null, buckets: new Map(),
+  }));
+  for (let pi = 0; pi < pixels.length; pi++) {
+    const p = pixels[pi];
+    const idx = assignments[pi];
+    const cl = clusters[idx];
+    cl.size++;
+    cl.sumChroma += Math.sqrt(p[1]*p[1] + p[2]*p[2]);
+    const key = ((p[3] >> 3) << 16) | ((p[4] >> 3) << 8) | (p[5] >> 3);
+    const e = cl.buckets.get(key);
+    if (e) e.count++;
+    else cl.buckets.set(key, { count: 1, pixel: p });
+  }
+  for (const cl of clusters) {
+    if (cl.size === 0) continue;
+    let bestEntry = null, bestCount = 0;
+    for (const e of cl.buckets.values()) {
+      if (e.count > bestCount) { bestCount = e.count; bestEntry = e; }
+    }
+    cl.repPixel = bestEntry.pixel;
+  }
+
+  const scored = clusters
+    .filter(c => c.size > 0 && c.repPixel)
+    .map(c => ({
+      cluster: c,
+      score: Math.sqrt(c.size) * (c.sumChroma / c.size + 5),
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const picked = [];
+  for (const s of scored) {
+    if (picked.length === 5) break;
+    const [pL, pA, pB] = s.cluster.repPixel;
+    const tooClose = picked.some(p => {
+      const [qL, qA, qB] = p.cluster.repPixel;
+      return Math.sqrt((pL-qL)**2 + (pA-qA)**2 + (pB-qB)**2) < 14;
+    });
+    if (!tooClose) picked.push(s);
+  }
+  while (picked.length < 5 && picked.length < scored.length) picked.push(scored[picked.length]);
+
+  picked.sort((a, b) => {
+    const ha = rgbToHsv(a.cluster.repPixel[3], a.cluster.repPixel[4], a.cluster.repPixel[5])[0];
+    const hb = rgbToHsv(b.cluster.repPixel[3], b.cluster.repPixel[4], b.cluster.repPixel[5])[0];
+    return ha - hb;
+  });
+
+  return picked.map(s => {
+    const p = s.cluster.repPixel;
+    return {
+      rgb: [p[3], p[4], p[5]],
+      L: p[0],
+      chroma: Math.sqrt(p[1]*p[1] + p[2]*p[2]),
+    };
+  });
+}
+
+function paletteLabel(L, C) {
+  const light = L < 25 ? "deep" : L < 50 ? "shadow" : L < 75 ? "mid" : "bright";
+  const ch = C < 12 ? "muted" : C < 30 ? "soft" : "vivid";
+  return `${ch} · ${light}`;
+}
+
+/* ---------- Render strips ---------- */
+function renderPaletteInto(container, palette, emptyMsg) {
+  if (!palette || !palette.length) {
+    container.innerHTML = `<div class="palette-empty">${emptyMsg}</div>`;
+    return false;
+  }
+  container.innerHTML = "";
+  for (const sw of palette) {
+    const transformedRgb = PROFILES[currentProfile](sw.rgb).map(v => Math.round(Math.max(0, Math.min(255, v))));
+    const [r, g, b] = transformedRgb;
+    const hex = rgbToHex(r, g, b);
+    const cmyk = rgbToCmyk(r, g, b);
+    const name = nameForRGB(r, g, b);
+    const desc = paletteLabel(sw.L, sw.chroma);
+    const textColor = textColorFor(r, g, b);
+
+    const strip = document.createElement("div");
+    strip.className = "strip";
+    strip.style.background = hex;
+    strip.style.color = textColor;
+    strip.innerHTML = `
+      <div class="strip-top">
+        <div class="strip-name">${name}</div>
+        <div class="strip-meta">RGB: ${r}, ${g}, ${b}</div>
+        <div class="strip-meta">CMYK: ${cmyk.join(", ")}</div>
+        <div class="strip-meta">HEX: ${hex.toUpperCase()}</div>
+      </div>
+      <div class="strip-hex-big">${hex.toUpperCase()}</div>
+      <div class="strip-bottom">${desc}</div>
+    `;
+    container.appendChild(strip);
+  }
+  return true;
+}
+
+function renderPhoto() {
+  const ok = renderPaletteInto(document.getElementById("palette-photo"), lastResult, "load a photo to see the palette");
+  document.getElementById("exportBtn").disabled = !ok;
+  document.getElementById("saveBtn").disabled = !ok;
+}
+function renderGen() {
+  const ok = renderPaletteInto(document.getElementById("palette-gen"), genResult, "pick a mood, hit shuffle");
+  document.getElementById("exportBtnGen").disabled = !ok;
+  document.getElementById("saveBtnGen").disabled = !ok;
+}
+function render() { renderPhoto(); }
+
+function setProfile(name) {
+  currentProfile = name;
+  document.getElementById("profileLabel").textContent = name;
+  document.querySelectorAll(".profile-popover button").forEach(b => {
+    b.classList.toggle("active", b.dataset.profile === name);
+  });
+  if (lastResult) renderPhoto();
+  if (genResult) renderGen();
+}
+
+/* ---------- Mood-based generator ---------- */
+const MOODS = [
+  { name: "warm winter",       hues: [[10, 35], [205, 220]],         sat: [12, 45], lit: [25, 78] },
+  { name: "summer afternoon",  hues: [[35, 60], [180, 200]],         sat: [40, 80], lit: [50, 85] },
+  { name: "oxide grey",        hues: [[195, 220]],                   sat: [3, 15],  lit: [22, 80] },
+  { name: "rainy day",         hues: [[200, 240], [180, 200]],       sat: [10, 35], lit: [35, 72] },
+  { name: "forest floor",      hues: [[55, 110], [25, 50]],          sat: [20, 55], lit: [18, 58] },
+  { name: "desert dusk",       hues: [[15, 35], [340, 360], [0, 15]], sat: [35, 72], lit: [40, 78] },
+  { name: "midnight bloom",    hues: [[260, 310], [220, 260]],       sat: [25, 65], lit: [12, 50] },
+  { name: "bone & ash",        hues: [[25, 50]],                     sat: [3, 15],  lit: [55, 95] },
+  { name: "citrus",            hues: [[40, 75]],                     sat: [65, 95], lit: [50, 78] },
+  { name: "monochrome",        hues: [[0, 360]],                     sat: [0, 4],   lit: [10, 95] },
+];
+let currentMood = MOODS[0];
+let genResult = null;
+
+function generateMood(mood) {
+  const N = 5;
+  const out = [];
+  const litStep = (mood.lit[1] - mood.lit[0]) / N;
+  for (let i = 0; i < N; i++) {
+    const hueRange = mood.hues[Math.floor(Math.random() * mood.hues.length)];
+    const h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
+    const s = mood.sat[0] + Math.random() * (mood.sat[1] - mood.sat[0]);
+    const baseL = mood.lit[0] + i * litStep + litStep / 2;
+    const l = Math.max(mood.lit[0], Math.min(mood.lit[1], baseL + (Math.random() - 0.5) * litStep * 0.55));
+    const [r, g, b] = hslToRgb(((h % 360) + 360) % 360 / 360, s / 100, l / 100);
+    const [L, A, B] = rgbToLab(r, g, b);
+    out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) });
+  }
+  out.sort((a, b) => a.L - b.L);
+  return out;
+}
+
+function makePaletteThumb(palette, w = 360, h = 140) {
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  const stripW = w / palette.length;
+  palette.forEach((sw, i) => {
+    ctx.fillStyle = rgbToHex(...sw.rgb);
+    ctx.fillRect(Math.floor(i * stripW), 0, Math.ceil(stripW) + 1, h);
+  });
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
+/* ---------- ZIP writer (store-only) ---------- */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) c = (c & 1) ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[i] = c;
+  }
+  return t;
+})();
+function crc32(data) {
+  let c = 0xffffffff;
+  for (let i = 0; i < data.length; i++) c = CRC_TABLE[(c ^ data[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+function makeZip(filename, content) {
+  const nameBytes = new TextEncoder().encode(filename);
+  const crc = crc32(content);
+  const size = content.length;
+
+  const localHeader = new Uint8Array(30 + nameBytes.length);
+  const lh = new DataView(localHeader.buffer);
+  lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true);
+  lh.setUint16(6, 0, true); lh.setUint16(8, 0, true);
+  lh.setUint16(10, 0, true); lh.setUint16(12, 0, true);
+  lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true);
+  lh.setUint16(26, nameBytes.length, true); lh.setUint16(28, 0, true);
+  localHeader.set(nameBytes, 30);
+
+  const central = new Uint8Array(46 + nameBytes.length);
+  const cv = new DataView(central.buffer);
+  cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+  cv.setUint16(8, 0, true); cv.setUint16(10, 0, true);
+  cv.setUint16(12, 0, true); cv.setUint16(14, 0, true);
+  cv.setUint32(16, crc, true); cv.setUint32(20, size, true); cv.setUint32(24, size, true);
+  cv.setUint16(28, nameBytes.length, true); cv.setUint16(30, 0, true);
+  cv.setUint16(32, 0, true); cv.setUint16(34, 0, true); cv.setUint16(36, 0, true);
+  cv.setUint32(38, 0, true); cv.setUint32(42, 0, true);
+  central.set(nameBytes, 46);
+
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(4, 0, true); ev.setUint16(6, 0, true);
+  ev.setUint16(8, 1, true); ev.setUint16(10, 1, true);
+  ev.setUint32(12, central.length, true);
+  ev.setUint32(16, 30 + nameBytes.length + size, true);
+  ev.setUint16(20, 0, true);
+
+  const total = new Uint8Array(localHeader.length + size + central.length + eocd.length);
+  let off = 0;
+  total.set(localHeader, off); off += localHeader.length;
+  total.set(content, off); off += size;
+  total.set(central, off); off += central.length;
+  total.set(eocd, off);
+  return total;
+}
+
+function buildSwatchesFile(palette, name) {
+  const swatches = palette.map(sw => {
+    const [r, g, b] = sw.rgb;
+    const [hDeg, s, v] = rgbToHsv(r, g, b);
+    return { hue: hDeg / 360, saturation: s, brightness: v, alpha: 1.0, colorSpace: 0 };
+  });
+  while (swatches.length < 30) swatches.push(null);
+  const data = [{ name, swatches }];
+  return makeZip("Swatches.json", new TextEncoder().encode(JSON.stringify(data, null, 2)));
+}
+
+/* ---------- Adobe .ase writer ---------- */
+function writeUTF16BE(str) {
+  const out = new Uint8Array(str.length * 2);
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    out[i*2] = (c >> 8) & 0xff;
+    out[i*2 + 1] = c & 0xff;
+  }
+  return out;
+}
+function buildASE(palette, paletteName) {
+  const groupName = paletteName + "\0";
+  const groupBytes = writeUTF16BE(groupName);
+  const groupBlockLen = 2 + groupBytes.length;
+
+  const colorBlocks = palette.map(sw => {
+    const name = sw.name + "\0";
+    const nameBytes = writeUTF16BE(name);
+    const blockLen = 2 + nameBytes.length + 4 + 12 + 2;
+    return { name, nameBytes, blockLen, rgb: sw.rgb };
+  });
+
+  let totalSize = 12 + (6 + groupBlockLen);
+  for (const cb of colorBlocks) totalSize += 6 + cb.blockLen;
+  totalSize += 6;
+
+  const buffer = new ArrayBuffer(totalSize);
+  const view = new DataView(buffer);
+  let off = 0;
+
+  view.setUint8(0, 0x41); view.setUint8(1, 0x53); view.setUint8(2, 0x45); view.setUint8(3, 0x46);
+  view.setUint16(4, 1, false);
+  view.setUint16(6, 0, false);
+  view.setUint32(8, colorBlocks.length + 2, false);
+  off = 12;
+
+  view.setUint16(off, 0xC001, false); off += 2;
+  view.setUint32(off, groupBlockLen, false); off += 4;
+  view.setUint16(off, groupName.length, false); off += 2;
+  new Uint8Array(buffer, off, groupBytes.length).set(groupBytes);
+  off += groupBytes.length;
+
+  for (const cb of colorBlocks) {
+    view.setUint16(off, 0x0001, false); off += 2;
+    view.setUint32(off, cb.blockLen, false); off += 4;
+    view.setUint16(off, cb.name.length, false); off += 2;
+    new Uint8Array(buffer, off, cb.nameBytes.length).set(cb.nameBytes);
+    off += cb.nameBytes.length;
+    view.setUint8(off, 0x52); view.setUint8(off+1, 0x47); view.setUint8(off+2, 0x42); view.setUint8(off+3, 0x20);
+    off += 4;
+    view.setFloat32(off, cb.rgb[0]/255, false); off += 4;
+    view.setFloat32(off, cb.rgb[1]/255, false); off += 4;
+    view.setFloat32(off, cb.rgb[2]/255, false); off += 4;
+    view.setUint16(off, 0, false); off += 2;
+  }
+
+  view.setUint16(off, 0xC002, false); off += 2;
+  view.setUint32(off, 0, false); off += 4;
+
+  return new Uint8Array(buffer);
+}
+
+function downloadBlob(bytes, filename) {
+  const blob = new Blob([bytes], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+async function copyAsText(palette, paletteName) {
+  const lines = palette.map(sw => {
+    const [r,g,b] = sw.rgb;
+    const hex = rgbToHex(r, g, b).toUpperCase();
+    const cmyk = rgbToCmyk(r, g, b);
+    return `${sw.name}\t${hex}\trgb(${r}, ${g}, ${b})\tcmyk(${cmyk.join(", ")})`;
+  });
+  const text = `${paletteName}\n\n${lines.join("\n")}`;
+  await navigator.clipboard.writeText(text);
+}
+
+/* ---------- File handling ---------- */
+const sourceArea = document.getElementById("sourceArea");
+const fileInput = document.getElementById("fileInput");
+let sourcePrompt = document.getElementById("sourcePrompt");
+let currentThumbnail = null;
+
+function makeThumbnail(img, size = 360) {
+  const canvas = document.createElement("canvas");
+  const aspect = img.naturalWidth / img.naturalHeight;
+  let w, h;
+  if (aspect >= 1) { w = size; h = Math.round(size / aspect); }
+  else { h = size; w = Math.round(size * aspect); }
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL("image/jpeg", 0.78);
+}
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = async () => {
+      sourceArea.classList.add("has-image");
+      const promptEl = document.getElementById("sourcePrompt");
+      if (promptEl && promptEl.parentNode) promptEl.remove();
+      const existing = sourceArea.querySelector("img");
+      if (existing) existing.remove();
+      const imgEl = document.createElement("img");
+      imgEl.src = e.target.result;
+      sourceArea.insertBefore(imgEl, sourceArea.firstChild);
+      currentThumbnail = makeThumbnail(img);
+      lastResult = await extractPalette(img);
+      renderPhoto();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+fileInput.addEventListener("change", (e) => loadFile(e.target.files[0]));
+["dragenter", "dragover"].forEach(ev =>
+  sourceArea.addEventListener(ev, (e) => { e.preventDefault(); sourceArea.classList.add("dragover"); }));
+["dragleave", "drop"].forEach(ev =>
+  sourceArea.addEventListener(ev, (e) => { e.preventDefault(); sourceArea.classList.remove("dragover"); }));
+sourceArea.addEventListener("drop", (e) => loadFile(e.dataTransfer.files[0]));
+
+/* ---------- Library (localStorage) ---------- */
+const LIBRARY_KEY = "nnc_library_v1";
+
+function loadLibrary() {
+  try {
+    const raw = localStorage.getItem(LIBRARY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+function saveLibrary(items) {
+  try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(items)); }
+  catch (e) { console.error("library save failed", e); }
+}
+function savePaletteToLibrary(palette, thumb) {
+  const items = loadLibrary();
+  const item = {
+    id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+    ts: Date.now(),
+    palette: palette.map(sw => ({ rgb: sw.rgb, L: sw.L, chroma: sw.chroma })),
+    thumb,
+  };
+  items.unshift(item);
+  saveLibrary(items);
+  return item;
+}
+function deleteFromLibrary(id) {
+  saveLibrary(loadLibrary().filter(i => i.id !== id));
+}
+
+function renderLibrary() {
+  const items = loadLibrary();
+  const container = document.getElementById("libraryList");
+  if (!items.length) {
+    container.className = "";
+    container.innerHTML = `<div class="empty-large">
+      <p>Your saved palettes will live here.</p>
+      <p>extract a photo · save · come back</p>
+    </div>`;
+    return;
+  }
+  container.className = "library-list";
+  container.innerHTML = "";
+  for (const item of items) {
+    const date = new Date(item.ts).toISOString().slice(0, 10);
+    const card = document.createElement("div");
+    card.className = "library-card";
+    const swatchesHtml = item.palette
+      .map(p => `<span class="lib-sw" style="background:${rgbToHex(...p.rgb)}"></span>`)
+      .join("");
+    card.innerHTML = `
+      <button class="lib-delete" aria-label="Delete">×</button>
+      <img class="lib-thumb" src="${item.thumb}" alt="" />
+      <div class="lib-swatches">${swatchesHtml}</div>
+      <div class="lib-meta">
+        <span>${date}</span>
+        <span class="count">${item.palette.length} swatches</span>
+      </div>
+    `;
+    card.addEventListener("click", () => loadFromLibrary(item));
+    card.querySelector(".lib-delete").addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteFromLibrary(item.id);
+      renderLibrary();
+    });
+    container.appendChild(card);
+  }
+}
+
+function loadFromLibrary(item) {
+  lastResult = item.palette;
+  currentThumbnail = item.thumb;
+  sourceArea.classList.add("has-image");
+  const promptEl = document.getElementById("sourcePrompt");
+  if (promptEl && promptEl.parentNode) promptEl.remove();
+  const existing = sourceArea.querySelector("img");
+  if (existing) existing.remove();
+  const imgEl = document.createElement("img");
+  imgEl.src = item.thumb;
+  sourceArea.insertBefore(imgEl, sourceArea.firstChild);
+  renderPhoto();
+  setActiveTab("photo");
+}
+
+function wireSaveBtn(btnId, getResult, getThumb) {
+  const btn = document.getElementById(btnId);
+  btn.addEventListener("click", () => {
+    const result = getResult();
+    const thumb = getThumb();
+    if (!result || !thumb) return;
+    try {
+      savePaletteToLibrary(result, thumb);
+      const original = btn.textContent;
+      btn.textContent = "Saved";
+      setTimeout(() => { btn.textContent = original; }, 1400);
+    } catch (e) {
+      btn.textContent = "Save failed";
+      setTimeout(() => { btn.textContent = "Save to Library"; }, 1800);
+    }
+  });
+}
+wireSaveBtn("saveBtn",    () => lastResult, () => currentThumbnail);
+wireSaveBtn("saveBtnGen", () => genResult,  () => genResult ? makePaletteThumb(genResult) : null);
+
+/* ---------- Export menu ---------- */
+function wireExportMenu(btnId, menuId, getResult) {
+  const btn = document.getElementById(btnId);
+  const menu = document.getElementById(menuId);
+
+  btn.addEventListener("click", (e) => {
+    if (btn.disabled) return;
+    e.stopPropagation();
+    document.querySelectorAll(".export-menu").forEach(m => { if (m !== menu) m.classList.remove("open"); });
+    menu.classList.toggle("open");
+  });
+  menu.addEventListener("click", (e) => e.stopPropagation());
+
+  menu.querySelectorAll("button").forEach(menuBtn => {
+    menuBtn.addEventListener("click", async () => {
+      const fmt = menuBtn.dataset.format;
+      const result = getResult();
+      if (!result) return;
+
+      const transformed = result.map(sw => {
+        const rgb = PROFILES[currentProfile](sw.rgb).map(v => Math.round(Math.max(0, Math.min(255, v))));
+        return { rgb, name: nameForRGB(rgb[0], rgb[1], rgb[2]) };
+      });
+
+      const ts = new Date().toISOString().slice(0, 10);
+      const paletteName = `no noob color · ${ts}`;
+      const labelEl = menuBtn.querySelector("span");
+      const original = labelEl.textContent;
+
+      try {
+        if (fmt === "procreate") {
+          downloadBlob(buildSwatchesFile(transformed, paletteName), `palette-${ts}.swatches`);
+        } else if (fmt === "ase") {
+          downloadBlob(buildASE(transformed, paletteName), `palette-${ts}.ase`);
+        } else if (fmt === "text") {
+          await copyAsText(transformed, paletteName);
+          labelEl.textContent = "Copied";
+          setTimeout(() => { labelEl.textContent = original; }, 1500);
+        }
+      } catch (err) {
+        console.error("export failed", err);
+      }
+
+      if (fmt !== "text") menu.classList.remove("open");
+    });
+  });
+}
+wireExportMenu("exportBtn",    "exportMenu",    () => lastResult);
+wireExportMenu("exportBtnGen", "exportMenuGen", () => genResult);
+document.addEventListener("click", () => {
+  document.querySelectorAll(".export-menu").forEach(m => m.classList.remove("open"));
+});
+
+/* ---------- Mood selector + shuffle ---------- */
+(function setupMoodSelector() {
+  const popover = document.getElementById("moodPopover");
+  popover.innerHTML = MOODS.map((m, i) =>
+    `<button data-mood-idx="${i}"${i === 0 ? ' class="active"' : ''}>${m.name}</button>`
+  ).join("");
+
+  const moodPill = document.getElementById("moodPill");
+  moodPill.addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.querySelectorAll(".mood-popover, .profile-popover, .export-menu").forEach(m => {
+      if (m !== popover) m.classList.remove("open");
+    });
+    popover.classList.toggle("open");
+  });
+  popover.addEventListener("click", (e) => e.stopPropagation());
+
+  popover.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = +btn.dataset.moodIdx;
+      currentMood = MOODS[idx];
+      document.getElementById("moodLabel").textContent = currentMood.name;
+      popover.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+      popover.classList.remove("open");
+      genResult = generateMood(currentMood);
+      renderGen();
+    });
+  });
+
+  document.addEventListener("click", () => popover.classList.remove("open"));
+
+  document.getElementById("shuffleBtn").addEventListener("click", () => {
+    genResult = generateMood(currentMood);
+    renderGen();
+  });
+})();
+
+/* ---------- Profile pill ---------- */
+const pill = document.getElementById("profilePill");
+const popover = document.getElementById("profilePopover");
+pill.addEventListener("click", (e) => {
+  e.stopPropagation();
+  popover.classList.toggle("open");
+});
+document.addEventListener("click", () => popover.classList.remove("open"));
+popover.addEventListener("click", (e) => e.stopPropagation());
+popover.querySelectorAll("button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    setProfile(btn.dataset.profile);
+    popover.classList.remove("open");
+  });
+});
+
+/* ---------- Tab switching ---------- */
+const manifestoBtn = document.getElementById("manifestoBtn");
+function setActiveTab(name) {
+  document.querySelectorAll(".tab").forEach(t =>
+    t.classList.toggle("active", t.id === `tab-${name}`)
+  );
+  document.querySelectorAll(".nav-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.tab === name)
+  );
+  manifestoBtn.classList.toggle("active", name === "manifesto");
+  document.documentElement.dataset.activeTab = name;
+
+  if (name === "library") renderLibrary();
+  if (name === "manifesto") {
+    const source = (lastResult && lastResult.length) ? lastResult
+                 : (genResult && genResult.length) ? genResult : null;
+    if (source) {
+      const hexes = source.map(sw => rgbToHex(...sw.rgb));
+      ManifestoGrid.setPalette(hexes);
+      const sourceLabel = lastResult ? "your photo palette" : `${currentMood.name} mood`;
+      document.getElementById("manifestoSource").textContent = sourceLabel;
+    } else {
+      document.getElementById("manifestoSource").textContent = "default palette · load colors first";
+    }
+    ManifestoGrid.start();
+  } else {
+    ManifestoGrid.stop();
+  }
+}
+renderLibrary();
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) ManifestoGrid.stop();
+  else if (document.documentElement.dataset.activeTab === "manifesto") ManifestoGrid.start();
+});
+
+/* ---------- Manifesto: generative grid ---------- */
+const ManifestoGrid = (() => {
+  const canvas = document.getElementById("manifestoCanvas");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+
+  const PAPER = "#ffffff";
+  let PALETTE = [
+    "#f9fba8","#f654e1","#4d55ac","#6ffcf3","#0ab45c",
+    "#bdefd4","#2e1bac","#e8a4eb","#28e7f1","#f8171e"
+  ];
+  let PAPER_I = PALETTE.length;
+
+  const GRID_X = 40;
+  const GAP = 1;
+  const cell = Math.floor(canvas.width / GRID_X);
+  const W = Math.floor(canvas.width / cell);
+  const H = Math.floor(canvas.height / cell);
+  const size = cell - GAP;
+  const qW = Math.ceil(W / 2);
+  const qH = Math.ceil(H / 2);
+
+  function rng(seed) {
+    return () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+  }
+  let R = rng((Date.now() ^ ((Math.random() * 1e9) >>> 0)) >>> 0);
+
+  const mirror = (i, n) => (i < n / 2 ? i : n - 1 - i);
+  const idx2 = (x, y, w) => y * w + x;
+
+  function hash32(x, y, seed) {
+    let h = (x * 374761393 + y * 668265263 + seed * 2654435761) >>> 0;
+    h ^= h >>> 13; h = Math.imul(h, 1274126177) >>> 0;
+    h ^= h >>> 16;
+    return h >>> 0;
+  }
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  let state = new Uint8Array(qW * qH);
+  let nextState = new Uint8Array(qW * qH);
+
+  function randomColor() {
+    return (R() < 0.27) ? PAPER_I : Math.floor(R() * PALETTE.length);
+  }
+  function stampRect(target, minW, maxW, minH, maxH) {
+    const maxRW = Math.min(maxW, qW);
+    const maxRH = Math.min(maxH, qH);
+    const rw = Math.min(qW, minW + Math.floor(R() * (maxRW - minW + 1)));
+    const rh = Math.min(qH, minH + Math.floor(R() * (maxRH - minH + 1)));
+    const rx = Math.floor(R() * Math.max(1, (qW - rw + 1)));
+    const ry = Math.floor(R() * Math.max(1, (qH - rh + 1)));
+    const col = randomColor();
+    for (let y = ry; y < ry + rh; y++) {
+      for (let x = rx; x < rx + rw; x++) {
+        if (R() < 0.90) target[idx2(x, y, qW)] = col;
+      }
+    }
+  }
+  function initState() {
+    state.fill(PAPER_I);
+    for (let i = 0; i < 18; i++) stampRect(state, 2, 7, 2, 6);
+    for (let i = 0; i < 8; i++)  stampRect(state, 7, 15, 4, 10);
+    for (let i = 0; i < 3; i++)  stampRect(state, 10, 18, 6, 12);
+  }
+  function evolve(from, out) {
+    out.set(from);
+    const mutations = 7 + Math.floor(R() * 7);
+    for (let i = 0; i < mutations; i++) {
+      const x = Math.floor(R() * qW);
+      const y = Math.floor(R() * qH);
+      out[idx2(x, y, qW)] = randomColor();
+    }
+    if (R() < 0.82) stampRect(out, 2, 6, 2, 6);
+    if (R() < 0.30) stampRect(out, 8, 16, 4, 10);
+    const breaths = Math.floor(qW * qH * 0.022);
+    for (let i = 0; i < breaths; i++) {
+      const k = Math.floor(R() * qW * qH);
+      if (R() < 0.55) out[k] = PAPER_I;
+    }
+  }
+
+  const BLOCK = 5;
+  let revealSeed = (Date.now() >>> 0);
+
+  function drawBlockReveal(p01) {
+    const p = easeInOutCubic(p01);
+    ctx.fillStyle = PAPER;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let y = 0; y < H; y++) {
+      const qy = mirror(y, H);
+      const by = Math.floor(qy / BLOCK);
+      const py = y * cell;
+      for (let x = 0; x < W; x++) {
+        const qx = mirror(x, W);
+        const bx = Math.floor(qx / BLOCK);
+        const h = hash32(bx, by, revealSeed) / 4294967296;
+        const useNext = (h < p);
+        const k = idx2(qx, qy, qW);
+        const ci = useNext ? nextState[k] : state[k];
+        ctx.fillStyle = (ci === PAPER_I) ? PAPER : PALETTE[ci];
+        ctx.fillRect(x * cell, py, size, size);
+      }
+    }
+  }
+
+  const TRANSITION_MS = 1050;
+  const HOLD_MS = 260;
+  let t0 = performance.now();
+  let phase = "transition";
+  let rafId = null;
+  let running = false;
+  let initialized = false;
+
+  function tick(now) {
+    if (!running) return;
+    const dt = now - t0;
+    if (phase === "transition") {
+      const p = Math.min(1, dt / TRANSITION_MS);
+      drawBlockReveal(p);
+      if (p >= 1) {
+        const tmp = state; state = nextState; nextState = tmp;
+        evolve(state, nextState);
+        revealSeed = (revealSeed * 1103515245 + 12345) >>> 0;
+        phase = "hold";
+        t0 = now;
+      }
+    } else {
+      drawBlockReveal(1);
+      if (dt >= HOLD_MS) {
+        phase = "transition";
+        t0 = now;
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function reseed() {
+    R = rng((Date.now() ^ ((Math.random() * 1e9) >>> 0)) >>> 0);
+    revealSeed = (Date.now() >>> 0);
+    initState();
+    evolve(state, nextState);
+    phase = "transition";
+    t0 = performance.now();
+  }
+
+  return {
+    setPalette(hexColors) {
+      if (!hexColors || !hexColors.length) return;
+      PALETTE = hexColors.slice();
+      PAPER_I = PALETTE.length;
+      reseed();
+      initialized = true;
+    },
+    start() {
+      if (running) return;
+      if (!initialized) { reseed(); initialized = true; }
+      running = true;
+      t0 = performance.now();
+      rafId = requestAnimationFrame(tick);
+    },
+    stop() {
+      running = false;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    },
+    reseed,
+  };
+})();
+
+document.getElementById("manifestoCanvas").addEventListener("pointerdown", () => {
+  ManifestoGrid.reseed();
+});
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+});
+manifestoBtn.addEventListener("click", () => setActiveTab("manifesto"));
+
+/* ---------- Day/night theme toggle ---------- */
+const root = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const thumb = themeToggle.querySelector(".thumb");
+
+function setTheme(mode) {
+  if (mode === "dark") root.dataset.theme = "dark";
+  else delete root.dataset.theme;
+  try { localStorage.setItem("theme", mode); } catch (e) {}
+}
+function getTheme() { return root.dataset.theme === "dark" ? "dark" : "light"; }
+
+(function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  if (saved === "dark" || saved === "light") setTheme(saved);
+  else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
+})();
+
+let dragState = null;
+const TRACK_RANGE = 22;
+
+themeToggle.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  themeToggle.setPointerCapture(e.pointerId);
+  themeToggle.classList.add("dragging");
+  dragState = {
+    startX: e.clientX,
+    startTheme: getTheme(),
+    moved: false,
+  };
+});
+themeToggle.addEventListener("pointermove", (e) => {
+  if (!dragState) return;
+  const dx = e.clientX - dragState.startX;
+  if (Math.abs(dx) > 2) dragState.moved = true;
+  const baseOffset = dragState.startTheme === "dark" ? TRACK_RANGE : 0;
+  const newOffset = Math.max(0, Math.min(TRACK_RANGE, baseOffset + dx));
+  thumb.style.transform = `translateX(${newOffset}px)`;
+});
+themeToggle.addEventListener("pointerup", (e) => {
+  if (!dragState) return;
+  themeToggle.classList.remove("dragging");
+  thumb.style.transform = "";
+  if (!dragState.moved) {
+    setTheme(dragState.startTheme === "dark" ? "light" : "dark");
+  } else {
+    const dx = e.clientX - dragState.startX;
+    const baseOffset = dragState.startTheme === "dark" ? TRACK_RANGE : 0;
+    const finalOffset = baseOffset + dx;
+    setTheme(finalOffset > TRACK_RANGE / 2 ? "dark" : "light");
+  }
+  dragState = null;
+});
+themeToggle.addEventListener("pointercancel", () => {
+  themeToggle.classList.remove("dragging");
+  thumb.style.transform = "";
+  dragState = null;
+});
+</script>
+
+</body>
+</html>
