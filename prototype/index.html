@@ -2272,68 +2272,71 @@ function generateMood(mood) {
   const N = 5;
   const taste = loadTaste();
 
-  // If user has a saved taste profile, prefer their colors that fit the mood.
-  if (taste && taste.length) {
-    const pool = taste.map(hex => {
-      const rgb = hexToRgb(hex);
-      const [h, s, v] = rgbToHsv(...rgb);
-      return { rgb, hex, h, s: s * 100, v: v * 100 };
-    });
-    const fits = pool.filter(c => {
-      const inHue = mood.hues.some(([min, max]) => {
-        if (min <= max) return c.h >= min && c.h <= max;
-        return c.h >= min || c.h <= max;
-      });
-      const inSat = c.s >= mood.sat[0] - 8 && c.s <= mood.sat[1] + 8;
-      const inLit = c.v >= mood.lit[0] - 10 && c.v <= mood.lit[1] + 10;
-      return inHue && inSat && inLit;
-    });
-    if (fits.length >= N) {
-      // Shuffle and pick N
-      const shuffled = fits.slice().sort(() => Math.random() - 0.5);
-      const picked = shuffled.slice(0, N);
-      const out = picked.map(c => {
-        const [L, A, B] = rgbToLab(...c.rgb);
-        return { rgb: c.rgb, L, chroma: Math.sqrt(A*A + B*B) };
-      });
-      out.sort((a, b) => a.L - b.L);
-      return out;
+  // No taste profile yet → algorithmic fallback
+  if (!taste || !taste.length) {
+    const out = [];
+    const litStep = (mood.lit[1] - mood.lit[0]) / N;
+    for (let i = 0; i < N; i++) {
+      const hueRange = mood.hues[Math.floor(Math.random() * mood.hues.length)];
+      const h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
+      const s = mood.sat[0] + Math.random() * (mood.sat[1] - mood.sat[0]);
+      const baseL = mood.lit[0] + i * litStep + litStep / 2;
+      const l = Math.max(mood.lit[0], Math.min(mood.lit[1], baseL + (Math.random() - 0.5) * litStep * 0.55));
+      const [r, g, b] = hslToRgb(((h % 360) + 360) % 360 / 360, s / 100, l / 100);
+      const [L, A, B] = rgbToLab(r, g, b);
+      out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) });
     }
-    // Partial match — blend taste hits with mood-generated colors
-    if (fits.length > 0) {
-      const out = [];
-      const fitsShuffled = fits.slice().sort(() => Math.random() - 0.5);
-      for (const c of fitsShuffled) {
-        const [L, A, B] = rgbToLab(...c.rgb);
-        out.push({ rgb: c.rgb, L, chroma: Math.sqrt(A*A + B*B) });
-      }
-      while (out.length < N) {
-        const hueRange = mood.hues[Math.floor(Math.random() * mood.hues.length)];
-        const h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
-        const s = mood.sat[0] + Math.random() * (mood.sat[1] - mood.sat[0]);
-        const l = mood.lit[0] + Math.random() * (mood.lit[1] - mood.lit[0]);
-        const [r, g, b] = hslToRgb(((h % 360) + 360) % 360 / 360, s / 100, l / 100);
-        const [L, A, B] = rgbToLab(r, g, b);
-        out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) });
-      }
-      out.sort((a, b) => a.L - b.L);
-      return out;
-    }
+    out.sort((a, b) => a.L - b.L);
+    return out;
   }
 
-  // Fallback: pure algorithmic generation (no taste profile)
-  const out = [];
-  const litStep = (mood.lit[1] - mood.lit[0]) / N;
-  for (let i = 0; i < N; i++) {
-    const hueRange = mood.hues[Math.floor(Math.random() * mood.hues.length)];
-    const h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
-    const s = mood.sat[0] + Math.random() * (mood.sat[1] - mood.sat[0]);
-    const baseL = mood.lit[0] + i * litStep + litStep / 2;
-    const l = Math.max(mood.lit[0], Math.min(mood.lit[1], baseL + (Math.random() - 0.5) * litStep * 0.55));
-    const [r, g, b] = hslToRgb(((h % 360) + 360) % 360 / 360, s / 100, l / 100);
-    const [L, A, B] = rgbToLab(r, g, b);
-    out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) });
-  }
+  // Score every taste color by how well it fits the mood; lower score = better.
+  // The output is ALWAYS drawn from the user's pool — mood only re-ranks them.
+  const satCenter = (mood.sat[0] + mood.sat[1]) / 2;
+  const satRadius = (mood.sat[1] - mood.sat[0]) / 2;
+  const litCenter = (mood.lit[0] + mood.lit[1]) / 2;
+  const litRadius = (mood.lit[1] - mood.lit[0]) / 2;
+
+  const scored = taste.map(hex => {
+    const rgb = hexToRgb(hex);
+    const [h, s, v] = rgbToHsv(...rgb);
+    const sPct = s * 100;
+    const vPct = v * 100;
+
+    // Hue: shortest circular distance to nearest mood hue range
+    let hueDist = Infinity;
+    for (const [min, max] of mood.hues) {
+      let d;
+      if (h >= min && h <= max) d = 0;
+      else {
+        const dMin = Math.min(Math.abs(h - min), 360 - Math.abs(h - min));
+        const dMax = Math.min(Math.abs(h - max), 360 - Math.abs(h - max));
+        d = Math.min(dMin, dMax);
+      }
+      if (d < hueDist) hueDist = d;
+    }
+
+    // Saturation / lightness: how far outside the band
+    const satDist = Math.max(0, Math.abs(sPct - satCenter) - satRadius);
+    const litDist = Math.max(0, Math.abs(vPct - litCenter) - litRadius);
+
+    // Weighted score (hue is dominant signal for mood)
+    const score = hueDist * 1.0 + satDist * 0.55 + litDist * 0.45;
+    return { rgb, hex, score };
+  });
+
+  scored.sort((a, b) => a.score - b.score);
+
+  // Pick top 15 most mood-fitting, then shuffle and take 5 — gives variety on
+  // every shuffle while still respecting both the mood AND the user's palette.
+  const topPool = scored.slice(0, Math.min(15, scored.length));
+  const shuffled = topPool.slice().sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, Math.min(N, shuffled.length));
+
+  const out = picked.map(c => {
+    const [L, A, B] = rgbToLab(...c.rgb);
+    return { rgb: c.rgb, L, chroma: Math.sqrt(A * A + B * B) };
+  });
   out.sort((a, b) => a.L - b.L);
   return out;
 }
