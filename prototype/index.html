@@ -2920,14 +2920,33 @@ const SourceGrid = (() => {
   const PAPER = "#ffffff";
   let PAPER_I = PALETTE.length;
 
-  const GRID_X = 24;
+  // Dynamic grid — matches container aspect so cells render as squares
+  const GRID_X = 18;
   const GAP = 1;
-  const cell = Math.floor(canvas.width / GRID_X);
-  const W = Math.floor(canvas.width / cell);
-  const H = Math.floor(canvas.height / cell);
-  const size = cell - GAP;
-  const qW = Math.ceil(W / 2);
-  const qH = Math.ceil(H / 2);
+  let cell = 40, W = 18, H = 24, size = 39, qW = 9, qH = 12;
+  let state = new Uint8Array(qW * qH);
+  let nextState = new Uint8Array(qW * qH);
+
+  function fitToContainer() {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 4 || rect.height < 4) return false;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.round(rect.width * dpr);
+    const h = Math.round(rect.height * dpr);
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    cell = Math.max(8, Math.floor(canvas.width / GRID_X));
+    W = Math.floor(canvas.width / cell);
+    H = Math.floor(canvas.height / cell);
+    size = cell - GAP;
+    qW = Math.ceil(W / 2);
+    qH = Math.ceil(H / 2);
+    state = new Uint8Array(qW * qH);
+    nextState = new Uint8Array(qW * qH);
+    return true;
+  }
 
   function rng(seed) { return () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296; }
   let R = rng((Date.now() ^ ((Math.random() * 1e9) >>> 0)) >>> 0);
@@ -3028,14 +3047,24 @@ const SourceGrid = (() => {
     phase = "transition"; t0 = performance.now();
   }
 
+  // Refit grid when container resizes (window resize, layout shift)
+  if (typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(() => {
+      if (fitToContainer()) reseed();
+    });
+    ro.observe(canvas);
+  }
+
   return {
     setPalette(hexes) {
       if (!hexes || !hexes.length) return;
       PALETTE = hexes.slice(); PAPER_I = PALETTE.length;
+      fitToContainer();
       reseed(); initialized = true;
     },
     start() {
       if (running) return;
+      fitToContainer();
       if (!initialized) { reseed(); initialized = true; }
       running = true; t0 = performance.now();
       rafId = requestAnimationFrame(tick);
