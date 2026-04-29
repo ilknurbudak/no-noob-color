@@ -20,9 +20,6 @@ no-noob-color/
 - Brush preview per swatch (watercolor / pencil / ink / oil)
 - Direct `.swatches` export to Procreate
 
-## Pricing
-$6 one-time, no ads, no subscriptions, no tracking. Fully on-device.
-
 ## Tech
 - SwiftUI, iOS 17+
 - ZIPFoundation (MIT) for `.swatches` archive writing

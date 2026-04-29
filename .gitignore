@@ -54,3 +54,6 @@ secrets/
 # OS / misc
 Thumbs.db
 *.log
+
+# Test artifacts (regeneratable)
+tools/output/
