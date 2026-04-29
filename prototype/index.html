@@ -3355,6 +3355,9 @@ function setActiveTab(name) {
   document.documentElement.dataset.activeTab = name;
   if (name === "library") renderLibrary();
 }
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+});
 renderLibrary();
 
 
