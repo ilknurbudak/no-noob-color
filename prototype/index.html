@@ -142,28 +142,6 @@
     gap: 10px;
     position: relative;
   }
-  .manifesto-btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 7px 16px;
-    border: 1px solid var(--text);
-    background: var(--bg);
-    color: var(--text);
-    border-radius: 999px;
-    font-family: var(--sans);
-    font-style: italic;
-    font-weight: 500;
-    font-size: 12px;
-    letter-spacing: -.005em;
-    cursor: pointer;
-    user-select: none;
-    transition: background .15s, color .15s;
-  }
-  .manifesto-btn:hover, .manifesto-btn.active {
-    background: var(--text);
-    color: var(--bg);
-  }
-
   .theme-toggle {
     width: 52px;
     height: 28px;
@@ -1023,50 +1001,6 @@
     justify-content: center;
   }
 
-  /* manifesto canvas */
-  .canvas-wrap {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    border: 1px solid var(--hairline);
-    border-radius: 16px;
-    overflow: hidden;
-    background: #ffffff;
-  }
-  .canvas-wrap canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-  }
-  .manifesto-meta {
-    margin-top: 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-2);
-    text-transform: uppercase;
-    letter-spacing: .08em;
-  }
-  .manifesto-meta .live {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .manifesto-meta .live::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--text);
-    animation: livePulse 1.4s ease-in-out infinite;
-  }
-  @keyframes livePulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .25; }
-  }
   .btn {
     padding: 10px 20px;
     background: var(--bg);
@@ -1331,7 +1265,6 @@
     background: var(--grad-soft);
   }
   .nav-btn:hover:not(.active) { background: var(--surface-hover); }
-  .nav-btn-italic { font-style: italic; }
 
   /* ---- responsive ---- */
 
@@ -1438,14 +1371,11 @@
     }
     .nav-btn { padding: 10px 12px; font-size: 11px; }
 
-    /* manifesto canvas — tighter on phones */
-    .manifesto-meta { font-size: 9px; flex-wrap: wrap; gap: var(--s-2); }
   }
 
   /* very narrow */
   @media (max-width: 360px) {
     .brand { font-size: 28px; }
-    .controls-row .manifesto-btn { font-size: 10px; padding: 5px 10px; }
     .strip { flex: 0 0 110px; min-width: 110px; }
     .strip-hex-big { font-size: 36px; }
   }
@@ -1570,7 +1500,6 @@
         <button class="filter-chip active" data-filter="all">All <span class="count" data-count="all">0</span></button>
         <button class="filter-chip" data-filter="photo">Photo <span class="count" data-count="photo">0</span></button>
         <button class="filter-chip" data-filter="generate">Generate <span class="count" data-count="generate">0</span></button>
-        <button class="filter-chip" data-filter="manifesto">Manifesto <span class="count" data-count="manifesto">0</span></button>
       </div>
       <div id="libraryList"></div>
     </section>
@@ -1693,33 +1622,6 @@
       </div>
     </section>
 
-    <section class="tab" id="tab-manifesto">
-      <div class="palette-header">
-        <div class="section-label"><span class="num">∞</span>Generative grid</div>
-        <div class="palette-actions">
-          <button class="chip-btn" id="manifestoShuffleBtn" title="Shuffle harmonious colors">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M13.5 7 A5.5 5.5 0 1 0 13.3 9.8"/>
-              <path d="M13.5 4 V7 H10.5"/>
-            </svg>
-            Shuffle
-          </button>
-          <button class="chip-btn" id="manifestoSaveBtn" title="Save to Library">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
-              <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
-            </svg>
-            Save
-          </button>
-        </div>
-      </div>
-      <div class="canvas-wrap">
-        <canvas id="manifestoCanvas" width="1920" height="1080"></canvas>
-      </div>
-      <div class="manifesto-meta">
-        <span id="manifestoSource">harmonious · auto-cycling</span>
-        <span class="live">live</span>
-      </div>
-    </section>
 
   </main>
 </div>
@@ -1730,7 +1632,6 @@
   <button class="nav-btn" data-tab="generate">Generate</button>
   <button class="nav-btn active" data-tab="photo">Photo</button>
   <button class="nav-btn" data-tab="library">Library</button>
-  <button class="nav-btn nav-btn-italic" data-tab="manifesto">Manifesto</button>
 </nav>
 
 <script>
@@ -3165,7 +3066,7 @@ let libraryFilter = "all";
 
 function updateFilterCounts() {
   const all = loadLibrary();
-  const counts = { all: all.length, photo: 0, generate: 0, manifesto: 0 };
+  const counts = { all: all.length, photo: 0, generate: 0 };
   all.forEach(i => {
     const src = i.source || "photo";
     if (counts[src] !== undefined) counts[src]++;
@@ -3444,7 +3345,6 @@ popover.querySelectorAll("button").forEach(btn => {
 });
 
 /* ---------- Tab switching ---------- */
-const manifestoBtn = document.getElementById("manifestoBtn");
 function setActiveTab(name) {
   document.querySelectorAll(".tab").forEach(t =>
     t.classList.toggle("active", t.id === `tab-${name}`)
@@ -3452,215 +3352,11 @@ function setActiveTab(name) {
   document.querySelectorAll(".nav-btn").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === name)
   );
-  manifestoBtn.classList.toggle("active", name === "manifesto");
   document.documentElement.dataset.activeTab = name;
-
   if (name === "library") renderLibrary();
-  if (name === "manifesto") {
-    const source = (lastResult && lastResult.length) ? lastResult
-                 : (genResult && genResult.length) ? genResult : null;
-    if (source) {
-      const hexes = source.map(sw => rgbToHex(...sw.rgb));
-      ManifestoGrid.setPalette(hexes);
-      const sourceLabel = lastResult ? "your photo palette" : `${currentMood.name} mood`;
-      document.getElementById("manifestoSource").textContent = sourceLabel;
-    } else {
-      document.getElementById("manifestoSource").textContent = "default palette · load colors first";
-    }
-    ManifestoGrid.start();
-  } else {
-    ManifestoGrid.stop();
-  }
 }
 renderLibrary();
 
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) ManifestoGrid.stop();
-  else if (document.documentElement.dataset.activeTab === "manifesto") ManifestoGrid.start();
-});
-
-/* ---------- Manifesto: generative grid ---------- */
-const ManifestoGrid = (() => {
-  const canvas = document.getElementById("manifestoCanvas");
-  const ctx = canvas.getContext("2d", { alpha: false });
-  ctx.imageSmoothingEnabled = false;
-
-  const PAPER = "#ffffff";
-  let PALETTE = [
-    "#f9fba8","#f654e1","#4d55ac","#6ffcf3","#0ab45c",
-    "#bdefd4","#2e1bac","#e8a4eb","#28e7f1","#f8171e"
-  ];
-  let PAPER_I = PALETTE.length;
-
-  const GRID_X = 40;
-  const GAP = 1;
-  const cell = Math.floor(canvas.width / GRID_X);
-  const W = Math.floor(canvas.width / cell);
-  const H = Math.floor(canvas.height / cell);
-  const size = cell - GAP;
-  const qW = Math.ceil(W / 2);
-  const qH = Math.ceil(H / 2);
-
-  function rng(seed) {
-    return () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
-  }
-  let R = rng((Date.now() ^ ((Math.random() * 1e9) >>> 0)) >>> 0);
-
-  const mirror = (i, n) => (i < n / 2 ? i : n - 1 - i);
-  const idx2 = (x, y, w) => y * w + x;
-
-  function hash32(x, y, seed) {
-    let h = (x * 374761393 + y * 668265263 + seed * 2654435761) >>> 0;
-    h ^= h >>> 13; h = Math.imul(h, 1274126177) >>> 0;
-    h ^= h >>> 16;
-    return h >>> 0;
-  }
-  function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
-
-  let state = new Uint8Array(qW * qH);
-  let nextState = new Uint8Array(qW * qH);
-
-  function randomColor() {
-    return (R() < 0.27) ? PAPER_I : Math.floor(R() * PALETTE.length);
-  }
-  function stampRect(target, minW, maxW, minH, maxH) {
-    const maxRW = Math.min(maxW, qW);
-    const maxRH = Math.min(maxH, qH);
-    const rw = Math.min(qW, minW + Math.floor(R() * (maxRW - minW + 1)));
-    const rh = Math.min(qH, minH + Math.floor(R() * (maxRH - minH + 1)));
-    const rx = Math.floor(R() * Math.max(1, (qW - rw + 1)));
-    const ry = Math.floor(R() * Math.max(1, (qH - rh + 1)));
-    const col = randomColor();
-    for (let y = ry; y < ry + rh; y++) {
-      for (let x = rx; x < rx + rw; x++) {
-        if (R() < 0.90) target[idx2(x, y, qW)] = col;
-      }
-    }
-  }
-  function initState() {
-    state.fill(PAPER_I);
-    for (let i = 0; i < 18; i++) stampRect(state, 2, 7, 2, 6);
-    for (let i = 0; i < 8; i++)  stampRect(state, 7, 15, 4, 10);
-    for (let i = 0; i < 3; i++)  stampRect(state, 10, 18, 6, 12);
-  }
-  function evolve(from, out) {
-    out.set(from);
-    const mutations = 7 + Math.floor(R() * 7);
-    for (let i = 0; i < mutations; i++) {
-      const x = Math.floor(R() * qW);
-      const y = Math.floor(R() * qH);
-      out[idx2(x, y, qW)] = randomColor();
-    }
-    if (R() < 0.82) stampRect(out, 2, 6, 2, 6);
-    if (R() < 0.30) stampRect(out, 8, 16, 4, 10);
-    const breaths = Math.floor(qW * qH * 0.022);
-    for (let i = 0; i < breaths; i++) {
-      const k = Math.floor(R() * qW * qH);
-      if (R() < 0.55) out[k] = PAPER_I;
-    }
-  }
-
-  const BLOCK = 5;
-  let revealSeed = (Date.now() >>> 0);
-
-  function drawBlockReveal(p01) {
-    const p = easeInOutCubic(p01);
-    ctx.fillStyle = PAPER;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    for (let y = 0; y < H; y++) {
-      const qy = mirror(y, H);
-      const by = Math.floor(qy / BLOCK);
-      const py = y * cell;
-      for (let x = 0; x < W; x++) {
-        const qx = mirror(x, W);
-        const bx = Math.floor(qx / BLOCK);
-        const h = hash32(bx, by, revealSeed) / 4294967296;
-        const useNext = (h < p);
-        const k = idx2(qx, qy, qW);
-        const ci = useNext ? nextState[k] : state[k];
-        ctx.fillStyle = (ci === PAPER_I) ? PAPER : PALETTE[ci];
-        ctx.fillRect(x * cell, py, size, size);
-      }
-    }
-  }
-
-  const TRANSITION_MS = 1050;
-  const HOLD_MS = 260;
-  let t0 = performance.now();
-  let phase = "transition";
-  let rafId = null;
-  let running = false;
-  let initialized = false;
-
-  function tick(now) {
-    if (!running) return;
-    const dt = now - t0;
-    if (phase === "transition") {
-      const p = Math.min(1, dt / TRANSITION_MS);
-      drawBlockReveal(p);
-      if (p >= 1) {
-        const tmp = state; state = nextState; nextState = tmp;
-        evolve(state, nextState);
-        revealSeed = (revealSeed * 1103515245 + 12345) >>> 0;
-        phase = "hold";
-        t0 = now;
-      }
-    } else {
-      drawBlockReveal(1);
-      if (dt >= HOLD_MS) {
-        phase = "transition";
-        t0 = now;
-      }
-    }
-    rafId = requestAnimationFrame(tick);
-  }
-
-  function reseed() {
-    R = rng((Date.now() ^ ((Math.random() * 1e9) >>> 0)) >>> 0);
-    revealSeed = (Date.now() >>> 0);
-    initState();
-    evolve(state, nextState);
-    phase = "transition";
-    t0 = performance.now();
-  }
-
-  return {
-    setPalette(hexColors) {
-      if (!hexColors || !hexColors.length) return;
-      PALETTE = hexColors.slice();
-      PAPER_I = PALETTE.length;
-      reseed();
-      initialized = true;
-    },
-    getCurrentPalette() { return PALETTE.slice(); },
-    snapshot() {
-      try { return canvas.toDataURL("image/jpeg", 0.82); }
-      catch (e) { return null; }
-    },
-    start() {
-      if (running) return;
-      if (!initialized) { reseed(); initialized = true; }
-      running = true;
-      t0 = performance.now();
-      rafId = requestAnimationFrame(tick);
-    },
-    stop() {
-      running = false;
-      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    },
-    reseed,
-  };
-})();
-
-document.getElementById("manifestoCanvas").addEventListener("pointerdown", () => {
-  ManifestoGrid.reseed();
-});
-document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
-});
-manifestoBtn.addEventListener("click", () => setActiveTab("manifesto"));
 
 /* ---------- Day/night theme toggle ---------- */
 const root = document.documentElement;
