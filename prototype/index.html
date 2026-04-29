@@ -85,8 +85,13 @@
     object-fit: contain;
     user-select: none;
     -webkit-user-drag: none;
+    mix-blend-mode: multiply;
+    pointer-events: none;
   }
-  [data-theme="dark"] .brand-lockup { filter: invert(1); }
+  [data-theme="dark"] .brand-lockup {
+    filter: invert(1);
+    mix-blend-mode: screen;
+  }
   .brand {
     display: block;
     font-family: var(--sans);
@@ -124,6 +129,7 @@
     display: flex;
     align-items: center;
     gap: var(--s-3);
+    z-index: 10;
   }
 
   .tab { display: none; }
