@@ -67,26 +67,26 @@
     min-height: 100vh;
   }
 
-  /* brand — flat structure, every child stacks naturally */
+  /* brand — single lockup image */
   .brand-header {
     text-align: center;
-    padding: var(--s-6) 0 var(--s-4);
+    padding: var(--s-5) 0 var(--s-4);
     margin-bottom: var(--s-6);
     border-bottom: 1px solid var(--hairline);
     position: relative;
+    min-height: 200px;
   }
-  .brand-spacer, .brand-block, .brand-text, .brand-left { all: unset; display: contents; }
-  .logo-mark {
+  .brand-lockup {
     display: block;
-    width: 132px;
-    height: 70px;
-    margin: 0 auto var(--s-3);
-    background-image: url('logo.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 200% auto;
+    height: 200px;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
   }
-  [data-theme="dark"] .logo-mark { filter: invert(1); }
+  [data-theme="dark"] .brand-lockup { filter: invert(1); }
   .brand {
     display: block;
     font-family: var(--sans);
@@ -1190,11 +1190,10 @@
     .brand-header {
       padding: var(--s-4) 0 var(--s-3);
       margin-bottom: var(--s-5);
+      min-height: 160px;
     }
+    .brand-lockup { height: 160px; }
     .header-controls { bottom: var(--s-3); }
-    .brand { font-size: 26px; }
-    .logo-mark { width: 110px; height: 60px; }
-    .brand-tagline { font-size: 8px; letter-spacing: .14em; }
 
     .controls-row { margin-bottom: var(--s-5); }
 
@@ -1245,15 +1244,14 @@
       padding: var(--s-3) 0 var(--s-2);
       margin-bottom: var(--s-4);
       text-align: center;
+      min-height: auto;
     }
+    .brand-lockup { height: 130px; }
     .header-controls {
       position: static;
       justify-content: center;
       margin-top: var(--s-3);
     }
-    .logo-mark { width: 90px; height: 48px; }
-    .brand { font-size: 22px; }
-    .brand-tagline { font-size: 7px; }
 
     .header-controls { gap: var(--s-2); }
     .profile-pill { font-size: 10px; padding: 6px 10px; }
@@ -1301,9 +1299,7 @@
 <div class="app">
 
   <header class="brand-header">
-    <span class="logo-mark" role="img" aria-label="no noob color"></span>
-    <h1 class="brand">no noob <span class="grad-text">color</span></h1>
-    <div class="brand-tagline">capture · curate · export</div>
+    <img class="brand-lockup" src="logo-lockup.png" alt="no noob color · capture · curate · export" />
 
     <div class="header-controls">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
