@@ -632,10 +632,99 @@
     margin: 0 -2px;
   }
   .copyable:hover { opacity: .55; }
-  .copyable.copied {
-    font-style: italic;
-    opacity: .85;
+
+  /* toast notification */
+  .toast {
+    position: fixed;
+    bottom: 96px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--text);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    white-space: nowrap;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    font-weight: 500;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* variation cards under the palette */
+  .variations-section {
+    margin-top: var(--s-7);
+  }
+  .variations-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--s-3);
+  }
+  .variation-card {
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--bg);
+    padding: 10px;
+    cursor: pointer;
+    transition: border-color .15s, transform .15s;
+    text-align: left;
+    font-family: var(--sans);
+  }
+  .variation-card:hover {
+    border-color: var(--text);
+    transform: translateY(-2px);
+  }
+  .variation-card.active {
+    border-color: var(--text);
+    background: var(--surface-2);
+  }
+  .vari-strip {
+    display: flex;
+    height: 28px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .vari-strip span { flex: 1; }
+  .vari-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -.005em;
+  }
+  .vari-meta {
+    display: block;
+    font-size: 9px;
+    color: var(--text-3);
+    font-family: var(--mono);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  /* WCAG inline badge */
+  .wcag-line {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin-top: 4px;
+  }
+  .wcag-line .wcag-badge {
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
     background: rgba(255,255,255,.18);
+    letter-spacing: .04em;
   }
   .strip-bottom {
     z-index: 2;
@@ -1229,6 +1318,11 @@
             </div>
           </div>
 
+          <div class="variations-section" id="variationsSection" style="display:none">
+            <div class="section-label"><span class="num">03</span>Variations</div>
+            <div class="variations-list" id="variationsList"></div>
+          </div>
+
           <div class="palette-footer">
             <button class="chip-btn" id="saveBtn" disabled title="Save to Library">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
@@ -1355,6 +1449,8 @@
   </main>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <nav class="bottom-nav" aria-label="Sections">
   <button class="nav-btn" data-tab="generate">Generate</button>
   <button class="nav-btn active" data-tab="photo">Photo</button>
@@ -1443,6 +1539,47 @@ function relativeLuminance(r, g, b) {
 }
 function textColorFor(r, g, b) {
   return relativeLuminance(r, g, b) > 145 ? "#000000" : "#ffffff";
+}
+
+/* WCAG sRGB relative luminance (linearized) and contrast ratio */
+function srgbLum(r, g, b) {
+  const ch = (c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b);
+}
+function wcagContrast(rgb1, rgb2) {
+  const l1 = srgbLum(...rgb1);
+  const l2 = srgbLum(...rgb2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+function wcagBadge(c) {
+  if (c >= 7)   return "AAA";
+  if (c >= 4.5) return "AA";
+  if (c >= 3)   return "AA·LG";
+  return "FAIL";
+}
+
+/* HSV → RGB (used by variations) */
+function hsvToRgb(h, s, v) {
+  const c = v * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60)       [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else              [r, g, b] = [c, 0, x];
+  return [
+    Math.round((r + m) * 255),
+    Math.round((g + m) * 255),
+    Math.round((b + m) * 255),
+  ];
 }
 
 /* ---------- Color naming ---------- */
@@ -1711,12 +1848,20 @@ function renderPaletteInto(container, palette, emptyMsg) {
     strip.className = "strip";
     strip.style.background = hex;
     strip.style.color = textColor;
+    const cW = wcagContrast([r, g, b], [255, 255, 255]);
+    const cB = wcagContrast([r, g, b], [0, 0, 0]);
+    const bestC = Math.max(cW, cB);
+    const badge = wcagBadge(bestC);
     strip.innerHTML = `
       <div class="strip-top">
         <div class="strip-name">${name}</div>
         <div class="strip-meta">RGB: <span class="copyable" data-copy="rgb(${rgbStr})">${rgbStr}</span></div>
         <div class="strip-meta">CMYK: <span class="copyable" data-copy="cmyk(${cmyk[0]}%, ${cmyk[1]}%, ${cmyk[2]}%, ${cmyk[3]}%)">${cmykStr}</span></div>
         <div class="strip-meta">HEX: <span class="copyable" data-copy="${HEX}">${HEX}</span></div>
+        <div class="wcag-line">
+          <span class="strip-meta">WCAG ${bestC.toFixed(1)}:1</span>
+          <span class="wcag-badge">${badge}</span>
+        </div>
       </div>
       <div class="strip-hex-big copyable" data-copy="${HEX}">${HEX}</div>
       <div class="strip-bottom">${desc}</div>
@@ -1726,30 +1871,128 @@ function renderPaletteInto(container, palette, emptyMsg) {
   return true;
 }
 
+let originalPhotoResult = null;
+let activeVariation = "Dominant";
+
 function renderPhoto() {
   const ok = renderPaletteInto(document.getElementById("palette-photo"), lastResult, "load a photo to see the palette");
   document.getElementById("exportBtn").disabled = !ok;
   document.getElementById("saveBtn").disabled = !ok;
+  renderVariations(originalPhotoResult);
 }
 function renderGen() {
   const ok = renderPaletteInto(document.getElementById("palette-gen"), genResult, "pick a mood, hit shuffle");
   document.getElementById("exportBtnGen").disabled = !ok;
   document.getElementById("saveBtnGen").disabled = !ok;
 }
+
+/* ---------- Color theory variations ---------- */
+function shiftPaletteHue(palette, degrees) {
+  return palette.map(sw => {
+    const [h, s, v] = rgbToHsv(...sw.rgb);
+    const newH = ((h + degrees) % 360 + 360) % 360;
+    const [r, g, b] = hsvToRgb(newH, s, v);
+    const [L, A, B] = rgbToLab(r, g, b);
+    return { rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) };
+  });
+}
+function makeMonochromatic(palette) {
+  let dominant = palette[0];
+  for (const sw of palette) if (sw.chroma > dominant.chroma) dominant = sw;
+  const [h] = rgbToHsv(...dominant.rgb);
+  const out = [];
+  const N = palette.length;
+  for (let i = 0; i < N; i++) {
+    const t = i / Math.max(1, N - 1);
+    const s = 0.25 + t * 0.55;
+    const v = 0.92 - t * 0.78;
+    const [r, g, b] = hsvToRgb(h, s, v);
+    const [L, A, B] = rgbToLab(r, g, b);
+    out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) });
+  }
+  return out;
+}
+function makeAnalogous(palette) {
+  const offsets = [-30, -15, 0, 15, 30];
+  return palette.map((sw, i) => {
+    const [h, s, v] = rgbToHsv(...sw.rgb);
+    const newH = ((h + offsets[i % offsets.length]) % 360 + 360) % 360;
+    const [r, g, b] = hsvToRgb(newH, s, v);
+    const [L, A, B] = rgbToLab(r, g, b);
+    return { rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) };
+  });
+}
+function makeSplitComplementary(palette) {
+  const offsets = [0, 150, 210, 30, 330];
+  return palette.map((sw, i) => {
+    const [h, s, v] = rgbToHsv(...sw.rgb);
+    const newH = ((h + offsets[i % offsets.length]) % 360 + 360) % 360;
+    const [r, g, b] = hsvToRgb(newH, s, v);
+    const [L, A, B] = rgbToLab(r, g, b);
+    return { rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) };
+  });
+}
+
+function computeVariations(palette) {
+  return [
+    { name: "Dominant",          colors: palette },
+    { name: "Complementary",     colors: shiftPaletteHue(palette, 180) },
+    { name: "Monochromatic",     colors: makeMonochromatic(palette) },
+    { name: "Triadic",           colors: shiftPaletteHue(palette, 120) },
+    { name: "Analogous",         colors: makeAnalogous(palette) },
+    { name: "Split-Complementary", colors: makeSplitComplementary(palette) },
+  ];
+}
+
+function renderVariations(palette) {
+  const list = document.getElementById("variationsList");
+  if (!list) return;
+  if (!palette || !palette.length) {
+    list.innerHTML = "";
+    document.getElementById("variationsSection").style.display = "none";
+    return;
+  }
+  document.getElementById("variationsSection").style.display = "";
+  const variations = computeVariations(palette);
+  list.innerHTML = "";
+  for (const v of variations) {
+    const card = document.createElement("button");
+    card.className = "variation-card" + (v.name === activeVariation ? " active" : "");
+    card.type = "button";
+    const stripsHtml = v.colors.slice(0, 5).map(c =>
+      `<span style="background:${rgbToHex(...c.rgb)}"></span>`
+    ).join("");
+    card.innerHTML = `
+      <div class="vari-strip">${stripsHtml}</div>
+      <span class="vari-name">${v.name}</span>
+      <span class="vari-meta">${v.colors.length} swatches</span>
+    `;
+    card.addEventListener("click", () => {
+      activeVariation = v.name;
+      lastResult = v.colors;
+      renderPhoto();
+    });
+    list.appendChild(card);
+  }
+}
 function render() { renderPhoto(); }
+
+function showToast(text) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = text;
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove("show"), 1800);
+}
 
 async function copyValue(text, el) {
   try {
     await navigator.clipboard.writeText(text);
-    const original = el.textContent;
-    el.classList.add("copied");
-    el.textContent = "copied";
-    setTimeout(() => {
-      el.classList.remove("copied");
-      el.textContent = original;
-    }, 1100);
+    showToast(`Copied ${text}`);
   } catch (e) {
     console.error("copy failed", e);
+    showToast("Copy failed");
   }
 }
 
@@ -2035,6 +2278,8 @@ function loadFile(file) {
       sourceArea.insertBefore(imgEl, sourceArea.firstChild);
       currentThumbnail = makeThumbnail(img);
       lastResult = await extractPalette(img);
+      originalPhotoResult = lastResult.slice();
+      activeVariation = "Dominant";
       renderPhoto();
       if (loadingEl) loadingEl.classList.remove("active");
     };
@@ -2104,6 +2349,8 @@ function loadDemo() {
     sourceArea.insertBefore(imgEl, sourceArea.firstChild);
     currentThumbnail = makeThumbnail(img);
     lastResult = await extractPalette(img);
+    originalPhotoResult = lastResult.slice();
+    activeVariation = "Dominant";
     renderPhoto();
     if (loadingEl) loadingEl.classList.remove("active");
   };
@@ -2215,6 +2462,8 @@ function renderLibrary() {
 
 function loadFromLibrary(item) {
   lastResult = item.palette;
+  originalPhotoResult = item.palette.slice();
+  activeVariation = "Dominant";
   currentThumbnail = item.thumb;
   sourceArea.classList.add("has-image");
   const promptEl = document.getElementById("sourcePrompt");
