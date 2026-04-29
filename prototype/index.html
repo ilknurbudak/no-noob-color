@@ -83,11 +83,21 @@
     user-select: none;
   }
   .brand .grad-text {
-    background: var(--grad);
+    background: linear-gradient(110deg,
+      #ff8fa8 0%,
+      #ffae72 22%,
+      #f3d370 42%,
+      #82d6a4 60%,
+      #7eaef4 80%,
+      #b894f7 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     color: transparent;
+    filter:
+      saturate(0.88)
+      drop-shadow(0 1px 0 rgba(255, 255, 255, .55))
+      drop-shadow(0 2px 8px rgba(150, 130, 200, .12));
   }
   .brand-tagline {
     margin-top: 6px;
@@ -314,17 +324,30 @@
   .mood-popover button:hover { background: var(--surface-hover); }
   .mood-popover button.active { background: var(--text); color: var(--bg); }
 
-  /* photo tab — two-column grid */
+  /* photo tab — two-column grid, equal height columns */
   .photo-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     gap: var(--s-6);
-    align-items: start;
+    align-items: stretch;
   }
-  .photo-col-source, .photo-col-palette { min-width: 0; }
+  .photo-col-source, .photo-col-palette {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
   .photo-col-source .section-label:first-child,
-  .photo-col-palette .palette-header .section-label {
+  .photo-col-palette > .palette-header:first-child {
     margin-top: 0;
+  }
+  .photo-col-palette > .palette-header:first-child .section-label {
+    margin-top: 0;
+  }
+  .photo-col-source .source-strip,
+  .photo-col-palette .palette-strips {
+    flex: 1;
+    height: auto;
+    min-height: 460px;
   }
 
   /* palette header — section label + chip actions */
@@ -763,6 +786,48 @@
     font-weight: 400;
   }
 
+  /* library filters — sub-tab chips */
+  .library-filters {
+    display: flex;
+    gap: var(--s-2);
+    margin-bottom: var(--s-5);
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--hairline);
+    background: var(--bg);
+    color: var(--text-2);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .filter-chip:hover {
+    color: var(--text);
+    border-color: var(--text);
+  }
+  .filter-chip.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .filter-chip .count {
+    font-size: 9px;
+    opacity: .7;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(127,127,127,.15);
+    margin-left: 2px;
+  }
+
   /* library grid — compact cards */
   .library-list {
     display: grid;
@@ -904,6 +969,7 @@
     background: var(--grad-soft);
   }
   .nav-btn:hover:not(.active) { background: var(--surface-hover); }
+  .nav-btn-italic { font-style: italic; }
 
   /* ---- responsive ---- */
 
@@ -1027,7 +1093,7 @@
   </header>
 
   <div class="controls-row">
-    <button class="manifesto-btn" id="manifestoBtn" type="button">Manifesto</button>
+    <div></div>
     <div class="controls-right">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
           <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
@@ -1145,6 +1211,12 @@
     </section>
 
     <section class="tab" id="tab-library">
+      <div class="library-filters" id="libraryFilters">
+        <button class="filter-chip active" data-filter="all">All <span class="count" data-count="all">0</span></button>
+        <button class="filter-chip" data-filter="photo">Photo <span class="count" data-count="photo">0</span></button>
+        <button class="filter-chip" data-filter="generate">Generate <span class="count" data-count="generate">0</span></button>
+        <button class="filter-chip" data-filter="manifesto">Manifesto <span class="count" data-count="manifesto">0</span></button>
+      </div>
       <div id="libraryList"></div>
     </section>
 
@@ -1212,12 +1284,29 @@
     </section>
 
     <section class="tab" id="tab-manifesto">
-      <div class="section-label"><span class="num">∞</span>Generative grid</div>
+      <div class="palette-header">
+        <div class="section-label"><span class="num">∞</span>Generative grid</div>
+        <div class="palette-actions">
+          <button class="chip-btn" id="manifestoShuffleBtn" title="Shuffle harmonious colors">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13.5 7 A5.5 5.5 0 1 0 13.3 9.8"/>
+              <path d="M13.5 4 V7 H10.5"/>
+            </svg>
+            Shuffle
+          </button>
+          <button class="chip-btn" id="manifestoSaveBtn" title="Save to Library">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+              <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
+            </svg>
+            Save
+          </button>
+        </div>
+      </div>
       <div class="canvas-wrap">
         <canvas id="manifestoCanvas" width="1920" height="1080"></canvas>
       </div>
       <div class="manifesto-meta">
-        <span id="manifestoSource">paper · default palette</span>
+        <span id="manifestoSource">harmonious · auto-cycling</span>
         <span class="live">live</span>
       </div>
     </section>
@@ -1229,6 +1318,7 @@
   <button class="nav-btn" data-tab="generate">Generate</button>
   <button class="nav-btn active" data-tab="photo">Photo</button>
   <button class="nav-btn" data-tab="library">Library</button>
+  <button class="nav-btn nav-btn-italic" data-tab="manifesto">Manifesto</button>
 </nav>
 
 <script>
@@ -2020,15 +2110,36 @@ function deleteFromLibrary(id) {
   saveLibrary(loadLibrary().filter(i => i.id !== id));
 }
 
+let libraryFilter = "all";
+
+function updateFilterCounts() {
+  const all = loadLibrary();
+  const counts = { all: all.length, photo: 0, generate: 0, manifesto: 0 };
+  all.forEach(i => {
+    const src = i.source || "photo";
+    if (counts[src] !== undefined) counts[src]++;
+  });
+  document.querySelectorAll(".filter-chip [data-count]").forEach(el => {
+    el.textContent = counts[el.dataset.count] ?? 0;
+  });
+}
+
 function renderLibrary() {
-  const items = loadLibrary();
+  updateFilterCounts();
+  const allItems = loadLibrary();
+  const items = libraryFilter === "all"
+    ? allItems
+    : allItems.filter(i => (i.source || "photo") === libraryFilter);
   const container = document.getElementById("libraryList");
   if (!items.length) {
     container.className = "";
-    container.innerHTML = `<div class="empty-large">
-      <p>Your saved palettes will live here.</p>
-      <p>extract a photo · save · come back</p>
-    </div>`;
+    const msg = libraryFilter === "all"
+      ? "Your saved palettes will live here."
+      : `No ${libraryFilter} palettes saved yet.`;
+    const sub = libraryFilter === "all"
+      ? "extract a photo · save · come back"
+      : `save from ${libraryFilter} to populate this tab`;
+    container.innerHTML = `<div class="empty-large"><p>${msg}</p><p>${sub}</p></div>`;
     return;
   }
   container.className = "library-list";
@@ -2392,6 +2503,11 @@ const ManifestoGrid = (() => {
       PAPER_I = PALETTE.length;
       reseed();
       initialized = true;
+    },
+    getCurrentPalette() { return PALETTE.slice(); },
+    snapshot() {
+      try { return canvas.toDataURL("image/jpeg", 0.82); }
+      catch (e) { return null; }
     },
     start() {
       if (running) return;
