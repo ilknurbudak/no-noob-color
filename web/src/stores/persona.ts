@@ -1,0 +1,36 @@
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import type { Persona } from "@/types";
+
+const KEY = "nnc_persona_v1";
+
+export const PERSONAS: Persona[] = [
+  { id: "ui",          name: "UI / Web Designer",    desc: "Web apps, interfaces, dashboards. AA contrast, sRGB, Tailwind & CSS exports.",          profile: "sRGB",       wcagMin: 4.5, preferred: "tailwind",  bias: "professional", size: 5,  creativity: 10, variations: "off"   },
+  { id: "illustrator", name: "Illustrator & Artist", desc: "Procreate, painting, comics. Wide palettes, tints/shades/tones, prompt-driven.",         profile: "Display P3", wcagMin: 0,   preferred: "procreate", bias: "",             size: 12, creativity: 45, variations: "all"   },
+  { id: "print",       name: "Print Designer",       desc: "Posters, editorial, packaging. CMYK gamut preview, Adobe .ase priority.",              profile: "CMYK",       wcagMin: 0,   preferred: "ase",       bias: "vintage",      size: 6,  creativity: 15, variations: "off"   },
+  { id: "brand",       name: "Brand Designer",       desc: "Identity, logos, campaigns. Versatile multi-format exports, AA enforcement.",           profile: "sRGB",       wcagMin: 4.5, preferred: "ase",       bias: "elegant",      size: 5,  creativity: 5,  variations: "off"   },
+  { id: "game",        name: "Game / Motion Artist", desc: "Game UI, characters, motion. Display P3, vibrant defaults, JSON tokens.",               profile: "Display P3", wcagMin: 0,   preferred: "json",      bias: "vibrant",      size: 8,  creativity: 60, variations: "tints" },
+  { id: "editorial",   name: "Editorial / Photo",    desc: "Magazines, photography, mood boards. sRGB, muted tendencies.",                          profile: "sRGB",       wcagMin: 0,   preferred: "text",      bias: "muted",        size: 5,  creativity: 25, variations: "off"   },
+];
+
+export const usePersonaStore = defineStore("persona", () => {
+  const activeId = ref<string | null>((() => {
+    try { return localStorage.getItem(KEY); } catch { return null; }
+  })());
+
+  const active = computed<Persona | null>(() =>
+    PERSONAS.find(p => p.id === activeId.value) ?? null,
+  );
+
+  function set(id: string) {
+    activeId.value = id;
+    try { localStorage.setItem(KEY, id); } catch {}
+  }
+
+  function clear() {
+    activeId.value = null;
+    try { localStorage.removeItem(KEY); } catch {}
+  }
+
+  return { activeId, active, set, clear, PERSONAS };
+});
