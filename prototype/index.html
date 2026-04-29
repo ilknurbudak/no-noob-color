@@ -1223,6 +1223,70 @@
     backdrop-filter: blur(4px);
   }
 
+  /* black info section under each tab */
+  .tab-info {
+    margin-top: var(--s-7);
+    padding: var(--s-6) var(--s-5);
+    background: #0a0a0a;
+    color: #ffffff;
+    border-radius: 16px;
+    display: block;
+  }
+  .tab-info-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.55);
+    margin-bottom: var(--s-2);
+    font-weight: 500;
+  }
+  .tab-info-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-style: italic;
+    font-size: 24px;
+    letter-spacing: -.02em;
+    margin: 0 0 var(--s-3);
+    color: #ffffff;
+  }
+  .tab-info-lead {
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgba(255,255,255,.82);
+    max-width: 700px;
+    margin: 0 0 var(--s-5);
+  }
+  .tab-info-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--s-4);
+  }
+  .tab-info-grid li {
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgba(255,255,255,.72);
+    padding-left: var(--s-3);
+    border-left: 1px solid rgba(255,255,255,.18);
+  }
+  .tab-info-grid li strong {
+    display: block;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-family: var(--mono);
+  }
+  @media (max-width: 720px) {
+    .tab-info { padding: var(--s-5) var(--s-4); border-radius: 12px; }
+    .tab-info-title { font-size: 20px; }
+  }
+
   /* placeholder tabs */
   .empty-large {
     text-align: center;
@@ -1508,6 +1572,30 @@
           </div>
         </div>
       </div>
+
+      <section class="tab-info">
+        <div class="tab-info-eyebrow">How it works</div>
+        <h2 class="tab-info-title">From photo to palette</h2>
+        <p class="tab-info-lead">Drop any image and five dominant colors are extracted using k-means clustering in perceptual L*a*b* color space — the math behind how human eyes actually group color, not raw RGB distance.</p>
+        <ul class="tab-info-grid">
+          <li>
+            <strong>Honest swatches</strong>
+            Each swatch snaps to an actual pixel from your photo, never a muddy averaged centroid. The colors are real, not synthesized.
+          </li>
+          <li>
+            <strong>WCAG inline</strong>
+            Every swatch shows its contrast ratio against black/white with AA · AAA · FAIL badges right on the strip.
+          </li>
+          <li>
+            <strong>Color profile</strong>
+            Switch output between sRGB, Display P3, Adobe RGB or CMYK to match the medium you're designing for.
+          </li>
+          <li>
+            <strong>Export anywhere</strong>
+            Procreate .swatches, Adobe .ase, or copy as text. Generated client-side, no server, no telemetry.
+          </li>
+        </ul>
+      </section>
     </section>
 
     <section class="tab" id="tab-library">
@@ -1634,6 +1722,34 @@
         </div>
       </div>
       </div>
+
+      <section class="tab-info">
+        <div class="tab-info-eyebrow">How it works</div>
+        <h2 class="tab-info-title">Trained on your taste</h2>
+        <p class="tab-info-lead">You pick 30 colors you love from a slow auto-scrolling carousel — those become your taste profile, saved locally. Every palette generated here is drawn from your own colors. Color theory just decides which 5.</p>
+        <ul class="tab-info-grid">
+          <li>
+            <strong>Harmonies</strong>
+            Auto, Monochromatic, Analogous, Complementary, Triadic, Split-Complementary or Tetradic. Hover any option for what it does.
+          </li>
+          <li>
+            <strong>Temperature</strong>
+            Filter your taste pool by warm hues (red · orange · yellow), cool (blue · green · violet), or any.
+          </li>
+          <li>
+            <strong>Keyword bias</strong>
+            Type a feeling — energy, calm, gold, sunset, neon, lüks, gece, deniz — 100+ EN/TR keywords map to hue/sat/lit ranges.
+          </li>
+          <li>
+            <strong>WCAG enforcement</strong>
+            Pick a minimum contrast (3:1 / 4.5:1 / 7:1). Adjacent swatches always meet your threshold.
+          </li>
+          <li>
+            <strong>Re-trainable</strong>
+            Hit "Retrain my taste" anytime. The 30 colors define everything — change them, change every output.
+          </li>
+        </ul>
+      </section>
     </section>
 
 
