@@ -311,7 +311,7 @@
     padding: 14px 4px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
   }
   .training-carousel::-webkit-scrollbar { display: none; }
   .training-track {
@@ -2137,7 +2137,8 @@ function makeRandomColorPool(count = 80) {
 }
 
 const TRAINING_CARD_WIDTH = 132;
-const TRAINING_SLIDE_MS = 8000;
+const TRAINING_SLIDE_TICK_MS = 8;     // continuous smooth scroll cadence
+const TRAINING_SLIDE_PX_PER_TICK = 1; // ~125 px/sec
 let trainingSlideTimer = null;
 
 function createTrainingCard(hex) {
@@ -2180,14 +2181,16 @@ function appendTrainingColors(count) {
 
 function startTrainingSlide() {
   stopTrainingSlide();
+  const carousel = document.getElementById("trainingCarousel");
+  if (carousel) carousel.style.scrollBehavior = "auto";
   trainingSlideTimer = setInterval(() => {
-    const carousel = document.getElementById("trainingCarousel");
-    if (!carousel || carousel.offsetParent === null) return;
-    carousel.scrollBy({ left: TRAINING_CARD_WIDTH, behavior: "smooth" });
-    if (carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - TRAINING_CARD_WIDTH * 4) {
+    const c = document.getElementById("trainingCarousel");
+    if (!c || c.offsetParent === null) return;
+    c.scrollLeft += TRAINING_SLIDE_PX_PER_TICK;
+    if (c.scrollLeft + c.clientWidth >= c.scrollWidth - TRAINING_CARD_WIDTH * 4) {
       appendTrainingColors(10);
     }
-  }, TRAINING_SLIDE_MS);
+  }, TRAINING_SLIDE_TICK_MS);
 }
 function stopTrainingSlide() {
   if (trainingSlideTimer) { clearInterval(trainingSlideTimer); trainingSlideTimer = null; }
