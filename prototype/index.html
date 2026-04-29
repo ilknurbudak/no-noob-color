@@ -616,13 +616,16 @@
   }
   .demo-link:hover { color: var(--text); }
   .drop-icon {
-    width: 36px;
-    height: 36px;
+    width: 56px;
+    height: 56px;
     margin: 0 auto 22px;
     display: block;
-    color: var(--text);
+    object-fit: contain;
     animation: dropBounce 2.4s ease-in-out infinite;
+    user-select: none;
+    -webkit-user-drag: none;
   }
+  [data-theme="dark"] .drop-icon { filter: invert(1); }
   .source-strip.dragover .drop-icon {
     animation-duration: .7s;
   }
@@ -1354,11 +1357,8 @@
           <div class="section-label"><span class="num">01</span>Source</div>
           <label class="source-strip" id="sourceArea">
             <div class="source-prompt" id="sourcePrompt">
-              <svg class="drop-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M16 5 V21"/>
-                <path d="M9 15 L16 22 L23 15"/>
-                <line x1="6" y1="27" x2="26" y2="27"/>
-              </svg>
+              <img class="drop-icon" src="drop-arrow.png" alt="" aria-hidden="true" />
+
               drop a photo
               <div class="small">or click anywhere</div>
             </div>
