@@ -1538,11 +1538,6 @@
             </div>
           </div>
 
-          <div class="variations-section" id="variationsSection" style="display:none">
-            <div class="section-label"><span class="num">03</span>Variations</div>
-            <div class="variations-list" id="variationsList"></div>
-          </div>
-
           <div class="palette-footer">
             <button class="chip-btn" id="saveBtn" disabled title="Save to Library">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
@@ -2158,7 +2153,6 @@ function renderPhoto() {
   const ok = renderPaletteInto(document.getElementById("palette-photo"), lastResult, "load a photo to see the palette");
   document.getElementById("exportBtn").disabled = !ok;
   document.getElementById("saveBtn").disabled = !ok;
-  renderVariations(originalPhotoResult);
 }
 function renderGen() {
   const ok = renderPaletteInto(document.getElementById("palette-gen"), genResult, "pick a mood, hit shuffle");
