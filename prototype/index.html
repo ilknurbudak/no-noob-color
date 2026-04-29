@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,500;1,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+<script defer src="https://unpkg.com/@popperjs/core@2"></script>
+<script defer src="https://unpkg.com/tippy.js@6"></script>
 <style>
   :root {
     --bg: #ffffff;
@@ -388,6 +391,146 @@
     padding: 18px 0;
     position: relative;
   }
+
+  /* mood studio — color harmonies + temperature + keyword + wcag */
+  .mood-studio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--s-3);
+    padding: var(--s-3) 0 var(--s-2);
+    position: relative;
+  }
+  .mood-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .mood-control-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-weight: 500;
+  }
+  .mood-select-btn {
+    padding: 9px 14px;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color .15s, background .15s;
+    position: relative;
+    min-width: 140px;
+  }
+  .mood-select-btn:hover { border-color: var(--text); }
+  .mood-select-btn .chev { font-size: 9px; opacity: .55; margin-left: auto; }
+  .mood-select-btn.open { border-color: var(--text); background: var(--surface-hover); }
+
+  .mood-popover-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: var(--bg);
+    border: 1px solid var(--text);
+    border-radius: 10px;
+    z-index: 150;
+    display: none;
+    overflow: hidden;
+    min-width: 220px;
+    box-shadow: 0 10px 32px rgba(0,0,0,.10);
+  }
+  .mood-popover-list.open { display: block; }
+  .mood-popover-list button {
+    width: 100%;
+    text-align: left;
+    padding: 11px 14px;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .mood-popover-list button:last-child { border-bottom: none; }
+  .mood-popover-list button:hover { background: var(--surface-hover); }
+  .mood-popover-list button.active { background: var(--text); color: var(--bg); }
+
+  .seg-control {
+    display: flex;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .seg-control button {
+    padding: 9px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border-right: 1px solid var(--hairline);
+    transition: background .15s, color .15s;
+  }
+  .seg-control button:last-child { border-right: none; }
+  .seg-control button:hover { background: var(--surface-hover); color: var(--text); }
+  .seg-control button.active {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .mood-input {
+    padding: 9px 12px;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    min-width: 160px;
+    outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  .mood-input::placeholder { color: var(--text-3); font-style: italic; }
+  .mood-input:focus { border-color: var(--text); background: var(--surface-hover); }
+
+  .mood-shuffle-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--s-2);
+  }
+
+  /* tippy custom theme */
+  .tippy-box[data-theme~='nnc'] {
+    background: var(--text);
+    color: var(--bg);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    padding: 4px 2px;
+    border-radius: 6px;
+    max-width: 240px !important;
+  }
+  .tippy-box[data-theme~='nnc'][data-placement^='top'] > .tippy-arrow::before { border-top-color: var(--text); }
+  .tippy-box[data-theme~='nnc'][data-placement^='bottom'] > .tippy-arrow::before { border-bottom-color: var(--text); }
+  .tippy-box[data-theme~='nnc'][data-placement^='left'] > .tippy-arrow::before { border-left-color: var(--text); }
+  .tippy-box[data-theme~='nnc'][data-placement^='right'] > .tippy-arrow::before { border-right-color: var(--text); }
   .mood-pill { font-size: 13px; padding: 9px 18px; }
   .btn-icon {
     width: 36px;
@@ -1461,19 +1604,54 @@
 
       <div class="mood-area" id="moodArea" style="display:none">
         <div class="section-label"><span class="num">01</span>Mood</div>
-      <div class="generate-controls">
-        <button class="profile-pill mood-pill" id="moodPill">
-          <span id="moodLabel">warm winter</span>
-          <span class="chev">▾</span>
-        </button>
-        <button class="btn-icon" id="shuffleBtn" aria-label="Shuffle palette">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M13.5 7 A5.5 5.5 0 1 0 13.3 9.8"/>
-            <path d="M13.5 4 V7 H10.5"/>
-          </svg>
-        </button>
-        <div class="mood-popover" id="moodPopover"></div>
-      </div>
+        <div class="mood-studio">
+          <div class="mood-control">
+            <label class="mood-control-label">Harmony</label>
+            <button class="mood-select-btn" id="harmonyBtn"
+              data-tippy-content="Color theory pattern that determines hue relationships in your palette.">
+              <span id="harmonyLabel">Auto</span>
+              <span class="chev">▾</span>
+            </button>
+            <div class="mood-popover-list" id="harmonyPopover"></div>
+          </div>
+
+          <div class="mood-control">
+            <label class="mood-control-label">Temperature</label>
+            <div class="seg-control" id="tempControl"
+              data-tippy-content="Filter your taste by warm hues (red/orange/yellow) or cool (blue/green/violet).">
+              <button data-temp="any" class="active">Any</button>
+              <button data-temp="warm">Warm</button>
+              <button data-temp="cool">Cool</button>
+            </div>
+          </div>
+
+          <div class="mood-control">
+            <label class="mood-control-label">Keyword</label>
+            <input type="text" class="mood-input" id="keywordInput"
+              placeholder="energy · calm · trust · health…"
+              data-tippy-content="Single-word mood (energy, calm, trust, finance, health, luxury, playful…). Biases the palette toward that feeling." />
+          </div>
+
+          <div class="mood-control">
+            <label class="mood-control-label">Min WCAG</label>
+            <button class="mood-select-btn" id="wcagBtn"
+              data-tippy-content="Minimum contrast ratio between adjacent swatches. Higher = more legible side-by-side.">
+              <span id="wcagLabel">Off</span>
+              <span class="chev">▾</span>
+            </button>
+            <div class="mood-popover-list" id="wcagPopover"></div>
+          </div>
+
+          <div class="mood-shuffle-wrap">
+            <button class="btn-icon" id="shuffleBtn" aria-label="Shuffle"
+              data-tippy-content="Re-roll the palette with current settings.">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13.5 7 A5.5 5.5 0 1 0 13.3 9.8"/>
+                <path d="M13.5 4 V7 H10.5"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
       <div class="palette-header">
         <div class="section-label"><span class="num">02</span>Palette</div>
@@ -2252,94 +2430,182 @@ document.getElementById("retrainBtn").addEventListener("click", () => {
   showTrainingPhase();
 });
 
-/* ---------- Mood-based generator ---------- */
-const MOODS = [
-  { name: "warm winter",       hues: [[10, 35], [205, 220]],         sat: [12, 45], lit: [25, 78] },
-  { name: "summer afternoon",  hues: [[35, 60], [180, 200]],         sat: [40, 80], lit: [50, 85] },
-  { name: "oxide grey",        hues: [[195, 220]],                   sat: [3, 15],  lit: [22, 80] },
-  { name: "rainy day",         hues: [[200, 240], [180, 200]],       sat: [10, 35], lit: [35, 72] },
-  { name: "forest floor",      hues: [[55, 110], [25, 50]],          sat: [20, 55], lit: [18, 58] },
-  { name: "desert dusk",       hues: [[15, 35], [340, 360], [0, 15]], sat: [35, 72], lit: [40, 78] },
-  { name: "midnight bloom",    hues: [[260, 310], [220, 260]],       sat: [25, 65], lit: [12, 50] },
-  { name: "bone & ash",        hues: [[25, 50]],                     sat: [3, 15],  lit: [55, 95] },
-  { name: "citrus",            hues: [[40, 75]],                     sat: [65, 95], lit: [50, 78] },
-  { name: "monochrome",        hues: [[0, 360]],                     sat: [0, 4],   lit: [10, 95] },
+/* ---------- Color Harmony + Mood Studio ---------- */
+const HARMONIES = [
+  { id: "auto",               label: "Auto",               desc: "Random 5 from your taste — no harmony rule applied." },
+  { id: "monochromatic",      label: "Monochromatic",      desc: "Variations of one hue at different lightness/saturation. Calm, refined, unified." },
+  { id: "analogous",          label: "Analogous",          desc: "Hues adjacent on the wheel (~±30°). Natural, harmonious, low contrast." },
+  { id: "complementary",      label: "Complementary",      desc: "Hues opposite each other (~180°). High contrast, bold tension." },
+  { id: "triadic",            label: "Triadic",            desc: "Three hues evenly spaced (120° apart). Vibrant, balanced trio." },
+  { id: "split-complementary", label: "Split-Complementary", desc: "Base hue + two flanking its complement (~150°/210°). Softer than full complementary." },
+  { id: "tetradic",           label: "Tetradic",           desc: "Two complementary pairs (90° apart). Rich, demanding careful balance." },
 ];
-let currentMood = MOODS[0];
+
+const KEYWORD_BIAS = {
+  energy:       { sat: [55, 100], lit: [40, 85] },
+  movement:     { sat: [55, 95],  lit: [35, 80] },
+  trust:        { hues: [[200, 240]], sat: [30, 70], lit: [30, 70] },
+  calm:         { sat: [10, 45],  lit: [55, 90] },
+  serene:       { sat: [10, 40],  lit: [60, 92] },
+  finance:      { hues: [[200, 240], [100, 150]], sat: [20, 60], lit: [25, 65] },
+  professional: { sat: [10, 50],  lit: [25, 65] },
+  health:       { hues: [[80, 150]], sat: [30, 75], lit: [35, 75] },
+  nature:       { hues: [[60, 150]], sat: [25, 70], lit: [25, 75] },
+  luxury:       { sat: [8, 38],   lit: [12, 50] },
+  playful:      { sat: [60, 100], lit: [55, 88] },
+  warm:         { hues: [[0, 60], [330, 360]] },
+  cool:         { hues: [[150, 280]] },
+  passion:      { hues: [[0, 25], [340, 360]], sat: [55, 100] },
+  growth:       { hues: [[80, 150]], sat: [40, 80] },
+  vintage:      { sat: [15, 55],  lit: [30, 70] },
+};
+
+function matchKeyword(input) {
+  if (!input) return null;
+  const k = String(input).toLowerCase().trim();
+  if (!k) return null;
+  if (KEYWORD_BIAS[k]) return KEYWORD_BIAS[k];
+  for (const [key, bias] of Object.entries(KEYWORD_BIAS)) {
+    if (k.includes(key) || key.includes(k)) return bias;
+  }
+  return null;
+}
+
+const moodSettings = {
+  harmony: "auto",
+  temperature: "any",
+  keyword: "",
+  wcagMin: 0,
+};
 let genResult = null;
 
-function generateMood(mood) {
-  const N = 5;
-  const taste = loadTaste();
-
-  // No taste profile yet → algorithmic fallback
-  if (!taste || !taste.length) {
-    const out = [];
-    const litStep = (mood.lit[1] - mood.lit[0]) / N;
-    for (let i = 0; i < N; i++) {
-      const hueRange = mood.hues[Math.floor(Math.random() * mood.hues.length)];
-      const h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
-      const s = mood.sat[0] + Math.random() * (mood.sat[1] - mood.sat[0]);
-      const baseL = mood.lit[0] + i * litStep + litStep / 2;
-      const l = Math.max(mood.lit[0], Math.min(mood.lit[1], baseL + (Math.random() - 0.5) * litStep * 0.55));
-      const [r, g, b] = hslToRgb(((h % 360) + 360) % 360 / 360, s / 100, l / 100);
-      const [L, A, B] = rgbToLab(r, g, b);
-      out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) });
-    }
-    out.sort((a, b) => a.L - b.L);
-    return out;
+function pickByHarmony(pool, harmonyId) {
+  if (!pool.length) return [];
+  if (harmonyId === "auto") {
+    return pool.slice().sort(() => Math.random() - 0.5).slice(0, 5);
   }
+  const anchor = pool[Math.floor(Math.random() * pool.length)];
+  const a = anchor.h;
+  let targetHues;
+  switch (harmonyId) {
+    case "monochromatic":      targetHues = [a, a, a, a, a]; break;
+    case "analogous":          targetHues = [a - 30, a - 15, a, a + 15, a + 30]; break;
+    case "complementary":      targetHues = [a, a, a + 180, a + 180, a]; break;
+    case "triadic":            targetHues = [a, a + 120, a + 240, a, a + 120]; break;
+    case "split-complementary": targetHues = [a, a + 150, a + 210, a, a + 150]; break;
+    case "tetradic":           targetHues = [a, a + 90, a + 180, a + 270, a]; break;
+    default:                   targetHues = [a, a, a, a, a];
+  }
+  targetHues = targetHues.map(h => ((h % 360) + 360) % 360);
 
-  // Score every taste color by how well it fits the mood; lower score = better.
-  // The output is ALWAYS drawn from the user's pool — mood only re-ranks them.
-  const satCenter = (mood.sat[0] + mood.sat[1]) / 2;
-  const satRadius = (mood.sat[1] - mood.sat[0]) / 2;
-  const litCenter = (mood.lit[0] + mood.lit[1]) / 2;
-  const litRadius = (mood.lit[1] - mood.lit[0]) / 2;
+  const used = new Set();
+  const picked = [];
+  for (const targetH of targetHues) {
+    let bestIdx = -1, bestDist = Infinity;
+    for (let i = 0; i < pool.length; i++) {
+      if (used.has(i)) continue;
+      const diff = Math.abs(pool[i].h - targetH);
+      const d = Math.min(diff, 360 - diff);
+      // For monochromatic, also bias by lightness diversity
+      let score = d;
+      if (harmonyId === "monochromatic" && picked.length > 0) {
+        const lDiff = picked.reduce((min, p) => Math.min(min, Math.abs(p.v - pool[i].v)), Infinity);
+        score = d - lDiff * 0.3;
+      }
+      if (score < bestDist) { bestDist = score; bestIdx = i; }
+    }
+    if (bestIdx >= 0) { picked.push(pool[bestIdx]); used.add(bestIdx); }
+    if (picked.length >= 5) break;
+  }
+  return picked;
+}
 
-  const scored = taste.map(hex => {
+function generateFromSettings(settings) {
+  const taste = loadTaste();
+  if (!taste || !taste.length) return null;
+
+  let pool = taste.map(hex => {
     const rgb = hexToRgb(hex);
     const [h, s, v] = rgbToHsv(...rgb);
-    const sPct = s * 100;
-    const vPct = v * 100;
-
-    // Hue: shortest circular distance to nearest mood hue range
-    let hueDist = Infinity;
-    for (const [min, max] of mood.hues) {
-      let d;
-      if (h >= min && h <= max) d = 0;
-      else {
-        const dMin = Math.min(Math.abs(h - min), 360 - Math.abs(h - min));
-        const dMax = Math.min(Math.abs(h - max), 360 - Math.abs(h - max));
-        d = Math.min(dMin, dMax);
-      }
-      if (d < hueDist) hueDist = d;
-    }
-
-    // Saturation / lightness: how far outside the band
-    const satDist = Math.max(0, Math.abs(sPct - satCenter) - satRadius);
-    const litDist = Math.max(0, Math.abs(vPct - litCenter) - litRadius);
-
-    // Weighted score (hue is dominant signal for mood)
-    const score = hueDist * 1.0 + satDist * 0.55 + litDist * 0.45;
-    return { rgb, hex, score };
+    return { rgb, hex, h, s: s * 100, v: v * 100 };
   });
 
-  scored.sort((a, b) => a.score - b.score);
+  if (settings.temperature === "warm") {
+    const warm = pool.filter(c => c.h < 60 || c.h > 300);
+    if (warm.length >= 5) pool = warm;
+  } else if (settings.temperature === "cool") {
+    const cool = pool.filter(c => c.h >= 90 && c.h <= 270);
+    if (cool.length >= 5) pool = cool;
+  }
 
-  // Pick top 15 most mood-fitting, then shuffle and take 5 — gives variety on
-  // every shuffle while still respecting both the mood AND the user's palette.
-  const topPool = scored.slice(0, Math.min(15, scored.length));
-  const shuffled = topPool.slice().sort(() => Math.random() - 0.5);
-  const picked = shuffled.slice(0, Math.min(N, shuffled.length));
+  const bias = matchKeyword(settings.keyword);
+  if (bias) {
+    const filtered = pool.filter(c => {
+      if (bias.hues && !bias.hues.some(([min, max]) => c.h >= min && c.h <= max)) return false;
+      if (bias.sat && (c.s < bias.sat[0] - 10 || c.s > bias.sat[1] + 10)) return false;
+      if (bias.lit && (c.v < bias.lit[0] - 10 || c.v > bias.lit[1] + 10)) return false;
+      return true;
+    });
+    if (filtered.length >= 5) pool = filtered;
+    else if (filtered.length > 0) {
+      // augment with rest sorted by closeness
+      const rest = pool.filter(c => !filtered.includes(c));
+      pool = [...filtered, ...rest];
+    }
+  }
 
-  const out = picked.map(c => {
+  let picked = pickByHarmony(pool, settings.harmony);
+
+  // WCAG enforcement: try to reorder/swap so adjacent contrast >= min
+  if (settings.wcagMin > 0 && picked.length === 5) {
+    picked.sort((a, b) => srgbLum(...a.rgb) - srgbLum(...b.rgb));
+    let attempts = 0;
+    while (attempts < 30) {
+      let allOk = true;
+      for (let i = 0; i < picked.length - 1; i++) {
+        const c = wcagContrast(picked[i].rgb, picked[i + 1].rgb);
+        if (c < settings.wcagMin) {
+          // try swap with another from remaining pool
+          const replacement = pool.find(p => !picked.includes(p) &&
+            wcagContrast(p.rgb, picked[i].rgb) >= settings.wcagMin &&
+            (i + 2 >= picked.length || wcagContrast(p.rgb, picked[i + 2].rgb) >= settings.wcagMin));
+          if (replacement) picked[i + 1] = replacement;
+          allOk = false;
+          break;
+        }
+      }
+      if (allOk) break;
+      attempts++;
+    }
+  }
+
+  const out = picked.slice(0, 5).map(c => {
     const [L, A, B] = rgbToLab(...c.rgb);
     return { rgb: c.rgb, L, chroma: Math.sqrt(A * A + B * B) };
   });
   out.sort((a, b) => a.L - b.L);
   return out;
 }
+
+// Compatibility shim — old code paths call generateMood(mood)
+function generateMood(_unused) {
+  const result = generateFromSettings(moodSettings);
+  if (result) return result;
+  // Fallback: no taste → light algorithmic palette
+  const out = [];
+  for (let i = 0; i < 5; i++) {
+    const h = Math.random() * 360;
+    const s = 40 + Math.random() * 50;
+    const l = 30 + i * 12 + Math.random() * 10;
+    const [r, g, b] = hslToRgb(h / 360, s / 100, l / 100);
+    const [L, A, B] = rgbToLab(r, g, b);
+    out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A * A + B * B) });
+  }
+  out.sort((a, b) => a.L - b.L);
+  return out;
+}
+
+// Old legacy generator removed — replaced by generateFromSettings + pickByHarmony
 
 function makePaletteThumb(palette, w = 360, h = 270) {
   // Procedural mini block-art using palette colors — distinct from the
@@ -2845,41 +3111,118 @@ document.addEventListener("click", () => {
   document.querySelectorAll(".export-menu").forEach(m => m.classList.remove("open"));
 });
 
-/* ---------- Mood selector + shuffle ---------- */
-(function setupMoodSelector() {
-  const popover = document.getElementById("moodPopover");
-  popover.innerHTML = MOODS.map((m, i) =>
-    `<button data-mood-idx="${i}"${i === 0 ? ' class="active"' : ''}>${m.name}</button>`
+/* ---------- Mood Studio (harmony + temperature + keyword + wcag) ---------- */
+(function setupMoodStudio() {
+  // Harmony popover
+  const harmonyBtn = document.getElementById("harmonyBtn");
+  const harmonyPopover = document.getElementById("harmonyPopover");
+  const harmonyLabel = document.getElementById("harmonyLabel");
+  harmonyPopover.innerHTML = HARMONIES.map(h =>
+    `<button data-harmony="${h.id}" data-tippy-content="${h.desc.replace(/"/g, "&quot;")}"${h.id === "auto" ? ' class="active"' : ''}>${h.label}</button>`
   ).join("");
 
-  const moodPill = document.getElementById("moodPill");
-  moodPill.addEventListener("click", (e) => {
-    e.stopPropagation();
-    document.querySelectorAll(".mood-popover, .profile-popover, .export-menu").forEach(m => {
-      if (m !== popover) m.classList.remove("open");
-    });
-    popover.classList.toggle("open");
-  });
-  popover.addEventListener("click", (e) => e.stopPropagation());
+  function closeAllPopovers() {
+    document.querySelectorAll(".mood-popover-list, .profile-popover, .export-menu").forEach(p => p.classList.remove("open"));
+    document.querySelectorAll(".mood-select-btn.open").forEach(b => b.classList.remove("open"));
+  }
 
-  popover.querySelectorAll("button").forEach(btn => {
+  function bindDropdown(btn, popover, onPick) {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const wasOpen = popover.classList.contains("open");
+      closeAllPopovers();
+      if (!wasOpen) {
+        popover.classList.add("open");
+        btn.classList.add("open");
+      }
+    });
+    popover.addEventListener("click", (e) => e.stopPropagation());
+    popover.querySelectorAll("button").forEach(opt => {
+      opt.addEventListener("click", () => {
+        popover.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === opt));
+        onPick(opt);
+        closeAllPopovers();
+      });
+    });
+  }
+
+  bindDropdown(harmonyBtn, harmonyPopover, (opt) => {
+    moodSettings.harmony = opt.dataset.harmony;
+    harmonyLabel.textContent = opt.textContent;
+    runShuffle();
+  });
+
+  // WCAG popover
+  const wcagBtn = document.getElementById("wcagBtn");
+  const wcagPopover = document.getElementById("wcagPopover");
+  const wcagLabel = document.getElementById("wcagLabel");
+  const WCAG_OPTIONS = [
+    { value: 0,   label: "Off",          tip: "No contrast enforcement." },
+    { value: 3,   label: "3:1 (AA·LG)",  tip: "Minimum for large text. Loose enforcement." },
+    { value: 4.5, label: "4.5:1 (AA)",   tip: "Standard accessible body-text contrast." },
+    { value: 7,   label: "7:1 (AAA)",    tip: "Strictest. Maximum legibility." },
+  ];
+  wcagPopover.innerHTML = WCAG_OPTIONS.map(o =>
+    `<button data-wcag="${o.value}" data-tippy-content="${o.tip}"${o.value === 0 ? ' class="active"' : ''}>${o.label}</button>`
+  ).join("");
+  bindDropdown(wcagBtn, wcagPopover, (opt) => {
+    moodSettings.wcagMin = parseFloat(opt.dataset.wcag);
+    wcagLabel.textContent = opt.textContent;
+    runShuffle();
+  });
+
+  // Temperature seg control
+  const tempControl = document.getElementById("tempControl");
+  tempControl.querySelectorAll("button").forEach(btn => {
     btn.addEventListener("click", () => {
-      const idx = +btn.dataset.moodIdx;
-      currentMood = MOODS[idx];
-      document.getElementById("moodLabel").textContent = currentMood.name;
-      popover.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
-      popover.classList.remove("open");
-      genResult = generateMood(currentMood);
-      renderGen();
+      tempControl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+      moodSettings.temperature = btn.dataset.temp;
+      runShuffle();
     });
   });
 
-  document.addEventListener("click", () => popover.classList.remove("open"));
-
-  document.getElementById("shuffleBtn").addEventListener("click", () => {
-    genResult = generateMood(currentMood);
-    renderGen();
+  // Keyword input
+  const keywordInput = document.getElementById("keywordInput");
+  let keywordTimer = null;
+  keywordInput.addEventListener("input", (e) => {
+    moodSettings.keyword = e.target.value;
+    if (keywordTimer) clearTimeout(keywordTimer);
+    keywordTimer = setTimeout(runShuffle, 350);
   });
+  keywordInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); runShuffle(); }
+  });
+
+  // Shuffle button
+  function runShuffle() {
+    genResult = generateFromSettings(moodSettings);
+    if (!genResult) {
+      // No taste yet — fall back to legacy random
+      genResult = generateMood();
+    }
+    renderGen();
+  }
+  document.getElementById("shuffleBtn").addEventListener("click", runShuffle);
+
+  document.addEventListener("click", closeAllPopovers);
+
+  // Initialize Tippy tooltips after libraries load
+  function initTippies() {
+    if (typeof tippy === "undefined") {
+      setTimeout(initTippies, 200);
+      return;
+    }
+    tippy("[data-tippy-content]", {
+      delay: [300, 0],
+      duration: [180, 100],
+      theme: "nnc",
+      arrow: true,
+      placement: "top",
+      animation: "fade",
+      maxWidth: 240,
+    });
+  }
+  initTippies();
 })();
 
 /* ---------- Profile pill ---------- */
