@@ -439,6 +439,42 @@
     position: relative;
   }
 
+  /* api status indicator */
+  .api-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--text-3);
+    background: var(--bg);
+    user-select: none;
+  }
+  .api-status .api-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+  }
+  .api-status.connected {
+    color: var(--text);
+    border-color: var(--text);
+  }
+  .api-status.connected .api-dot {
+    background: #2ea043;
+    box-shadow: 0 0 0 2px rgba(46,160,67,.18);
+    animation: livePulseGreen 1.6s ease-in-out infinite;
+  }
+  @keyframes livePulseGreen {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .55; }
+  }
+
   /* sliders + ref-image + cb-preview (illustrator extras, available to all) */
   .mood-slider {
     -webkit-appearance: none;
@@ -1762,6 +1798,10 @@
     <img class="brand-lockup" id="brandLockup" src="logo-lockup.png" alt="no noob color · capture · curate · export" />
 
     <div class="header-controls">
+      <div class="api-status" id="apiStatus" data-tippy-content="Python color science microservice. Connected = palettes use scikit-learn k-means + colour-science via /api/extract/kmeans. Disconnected = local in-browser k-means.">
+        <span class="api-dot"></span>
+        <span id="apiStatusLabel">offline</span>
+      </div>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
         <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
           <circle cx="8" cy="8" r="3" fill="currentColor"/>
@@ -3927,6 +3967,67 @@ document.addEventListener("visibilitychange", () => {
   else if (sourceArea.classList.contains("has-anim")) SourceGrid.start();
 });
 
+/* ---------- API bridge: prefer Python microservice if reachable ---------- */
+const API_URLS = [
+  // Try in order. First reachable wins.
+  "http://localhost:8000",
+  "http://127.0.0.1:8000",
+];
+let apiBaseUrl = null;
+
+async function pingApi(url, timeoutMs = 1500) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(url + "/", { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data && data.name && data.name.includes("noob");
+  } catch (e) {
+    return false;
+  }
+}
+
+async function detectApi() {
+  for (const u of API_URLS) {
+    if (await pingApi(u)) {
+      apiBaseUrl = u;
+      const status = document.getElementById("apiStatus");
+      const label = document.getElementById("apiStatusLabel");
+      if (status) status.classList.add("connected");
+      if (label) label.textContent = "api · live";
+      return;
+    }
+  }
+  apiBaseUrl = null;
+  const status = document.getElementById("apiStatus");
+  if (status) status.classList.remove("connected");
+}
+
+async function extractViaAPI(blob, n = 5, colorSpace = "lab") {
+  if (!apiBaseUrl) throw new Error("api not connected");
+  const fd = new FormData();
+  fd.append("image", blob, "upload.jpg");
+  fd.append("n", String(n));
+  fd.append("color_space", colorSpace);
+  const res = await fetch(apiBaseUrl + "/extract/kmeans", { method: "POST", body: fd });
+  if (!res.ok) throw new Error("api extract failed: " + res.status);
+  const data = await res.json();
+  // Adapt API response to local palette format: [{rgb: [r,g,b], L, chroma}, ...]
+  return data.palette.map(sw => ({
+    rgb: [sw.rgb.r, sw.rgb.g, sw.rgb.b],
+    L: sw.lab.L,
+    chroma: Math.sqrt(sw.lab.a * sw.lab.a + sw.lab.b * sw.lab.b),
+    weight: sw.weight,
+    apiMeta: sw,
+  }));
+}
+
+// Detect API availability on load (and re-check every 30s)
+detectApi();
+setInterval(detectApi, 30000);
+
 /* ---------- File handling ---------- */
 const sourceArea = document.getElementById("sourceArea");
 const fileInput = document.getElementById("fileInput");
@@ -3973,7 +4074,14 @@ function loadFile(file) {
       imgEl.src = e.target.result;
       sourceArea.insertBefore(imgEl, sourceArea.firstChild);
       currentThumbnail = makeThumbnail(img);
-      lastResult = await extractPalette(img);
+      // Prefer API extraction if reachable, fallback to local k-means
+      let extracted = null;
+      if (apiBaseUrl) {
+        try { extracted = await extractViaAPI(file, 5, "lab"); }
+        catch (err) { console.warn("API extract failed, falling back:", err); }
+      }
+      if (!extracted) extracted = await extractPalette(img);
+      lastResult = extracted;
       originalPhotoResult = lastResult.slice();
       activeVariation = "Dominant";
       renderPhoto();

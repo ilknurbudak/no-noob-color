@@ -1,0 +1,17 @@
+# Render.com Blueprint — one-click deploy
+# Connect this repo on https://dashboard.render.com → New → Blueprint → pick this file
+# Free tier: spins down after 15 min idle, cold-starts in ~30s. Free 750 hr/mo.
+
+services:
+  - type: web
+    name: nnc-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: api
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000

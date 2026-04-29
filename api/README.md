@@ -64,6 +64,35 @@ async function extractPaletteFromAPI(file, n = 5) {
 
 For production, swap the URL for the deployed service (Render / HuggingFace Spaces / Fly.io / Cloud Run).
 
+## Deployment
+
+### Render.com (recommended for free, persistent URL)
+
+1. Push this repo to GitHub (already done).
+2. Go to <https://dashboard.render.com> → **New** → **Blueprint**.
+3. Connect this repo, point to `api/render.yaml` — Render reads it and provisions a free Docker web service.
+4. After ~3 minutes, you get `https://nnc-api.onrender.com` (or similar).
+5. In the frontend, set `API_URLS` to include that origin.
+
+Free plan: spins down after 15 min idle, cold-start ~30s, 750 hr/mo. Plenty for a prototype.
+
+### HuggingFace Spaces (alternative, ML-friendly)
+
+1. Create a new Space at <https://huggingface.co/new-space>, pick **Docker** SDK.
+2. Clone this repo's `api/` directory into the Space repo.
+3. Rename `api/space-README.md` → `README.md` in the Space (the YAML frontmatter is what HF reads).
+4. Push — Spaces builds the Dockerfile automatically. URL: `https://huggingface.co/spaces/<user>/<space>`.
+
+### Self-host (any Docker host)
+
+```sh
+cd api
+docker build -t nnc-api .
+docker run -p 8000:8000 nnc-api
+```
+
+Works on Fly.io, Railway, Cloud Run, your VPS, anywhere Docker runs.
+
 ## Roadmap
 
 - `/extract/colorthief` — done (uses Pillow median-cut)

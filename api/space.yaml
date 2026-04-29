@@ -1,0 +1,14 @@
+# HuggingFace Spaces config (Docker SDK)
+# How to deploy:
+#   1. Create new Space at https://huggingface.co/new-space
+#   2. Pick "Docker" SDK
+#   3. Push api/ contents to the Space repo
+#   4. Spaces uses port 7860 by default — Dockerfile already honors $PORT
+#
+# This file is informational only — the actual config goes in the
+# Space's README.md frontmatter (see api/space-README.md template).
+
+title: no noob color API
+sdk: docker
+app_port: 7860
+license: mit
