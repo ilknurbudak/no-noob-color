@@ -2663,18 +2663,7 @@ function showMoodPhase() {
   else showTrainingPhase();
 })();
 
-// Initialize persona grid + apply saved persona (if any) when entering mood phase
-renderPersonaGrid();
-const _savedPersona = loadPersona();
-if (_savedPersona) {
-  const _p = PERSONAS.find(p => p.id === _savedPersona);
-  if (_p) {
-    activePersonaId = _p.id;
-    moodSettings.wcagMin = _p.wcagMin || 0;
-    if (_p.bias) moodSettings.keyword = _p.bias;
-    if (_p.profile && PROFILES[_p.profile]) currentProfile = _p.profile;
-  }
-}
+// Persona init moved to bottom of script after PERSONAS const is initialized.
 
 document.getElementById("trainingShuffleBtn").addEventListener("click", () => {
   renderTrainingGrid();
@@ -4148,6 +4137,27 @@ themeToggle.addEventListener("pointercancel", () => {
   thumb.style.transform = "";
   dragState = null;
 });
+
+/* ---------- Persona init (must run AFTER PERSONAS const declaration) ---------- */
+try {
+  if (typeof PERSONAS !== "undefined" && typeof renderPersonaGrid === "function") {
+    renderPersonaGrid();
+    const _savedPersona = (typeof loadPersona === "function") ? loadPersona() : null;
+    if (_savedPersona) {
+      const _p = PERSONAS.find(p => p.id === _savedPersona);
+      if (_p) {
+        activePersonaId = _p.id;
+        if (typeof moodSettings !== "undefined") {
+          moodSettings.wcagMin = _p.wcagMin || 0;
+          if (_p.bias) moodSettings.keyword = _p.bias;
+        }
+        if (_p.profile && PROFILES[_p.profile]) currentProfile = _p.profile;
+      }
+    }
+  }
+} catch (e) {
+  console.error("persona init failed:", e);
+}
 </script>
 
 </body>
