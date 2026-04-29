@@ -681,7 +681,7 @@
   }
   .source-canvas {
     position: absolute;
-    inset: 0;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
     display: none;
@@ -2957,7 +2957,7 @@ const SourceGrid = (() => {
   }
   function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
-  function randomColor() { return (R() < 0.45) ? PAPER_I : Math.floor(R() * PALETTE.length); }
+  function randomColor() { return (R() < 0.22) ? PAPER_I : Math.floor(R() * PALETTE.length); }
   function stampRect(target, minW, maxW, minH, maxH) {
     const rw = Math.min(W, minW + Math.floor(R() * (Math.min(maxW, W) - minW + 1)));
     const rh = Math.min(H, minH + Math.floor(R() * (Math.min(maxH, H) - minH + 1)));
@@ -2975,27 +2975,25 @@ const SourceGrid = (() => {
   }
   function initState() {
     state.fill(PAPER_I);
-    // Scattered single cells (asymmetric noise)
-    scatter(state, Math.floor(W * H * 0.35));
-    // A few small clumps
+    // Dense scatter — fills more of the grid to avoid empty bands
+    scatter(state, Math.floor(W * H * 0.65));
     for (let i = 0; i < 4; i++) stampRect(state, 1, 3, 1, 3);
     for (let i = 0; i < 2; i++) stampRect(state, 2, 4, 2, 3);
   }
   function evolve(from, out) {
     out.set(from);
-    // Heavy random mutations — drives the chaotic feel
-    const muts = Math.floor(W * H * 0.18) + Math.floor(R() * 8);
+    const muts = Math.floor(W * H * 0.22) + Math.floor(R() * 8);
     for (let i = 0; i < muts; i++) {
       const x = Math.floor(R() * W), y = Math.floor(R() * H);
       out[idx2(x, y, W)] = randomColor();
     }
-    if (R() < 0.55) stampRect(out, 1, 3, 1, 3);
-    if (R() < 0.20) stampRect(out, 2, 5, 2, 3);
-    // Erosion to white
-    const breaths = Math.floor(W * H * 0.10);
+    if (R() < 0.60) stampRect(out, 1, 3, 1, 3);
+    if (R() < 0.25) stampRect(out, 2, 5, 2, 3);
+    // Light erosion (was too aggressive — caused empty stripes)
+    const breaths = Math.floor(W * H * 0.05);
     for (let i = 0; i < breaths; i++) {
       const k = Math.floor(R() * W * H);
-      if (R() < 0.55) out[k] = PAPER_I;
+      if (R() < 0.45) out[k] = PAPER_I;
     }
   }
 
