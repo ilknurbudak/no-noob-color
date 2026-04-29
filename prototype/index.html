@@ -257,6 +257,73 @@
     font-weight: 500;
   }
 
+  /* persona picker — step 01 */
+  .persona-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--s-3);
+    margin-top: var(--s-2);
+  }
+  .persona-card {
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: var(--s-4);
+    background: var(--bg);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s, transform .15s, box-shadow .2s;
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+  }
+  .persona-card:hover {
+    border-color: var(--text);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0,0,0,.06);
+  }
+  .persona-card.active {
+    border-color: var(--text);
+    background: var(--surface-2);
+  }
+  .persona-card.active::after {
+    content: "Active";
+    position: absolute;
+    top: 10px; right: 10px;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    background: var(--text);
+    color: var(--bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .persona-card h4 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -.01em;
+    margin: 0;
+  }
+  .persona-card p {
+    font-size: 11.5px;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .persona-card .persona-meta {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-top: 4px;
+  }
+
   /* taste training — 30-color taste profile */
   .training-area { padding-top: var(--s-2); }
   .training-area .section-label {
@@ -1708,6 +1775,10 @@
               <div class="export-menu" id="exportMenu">
                 <button data-format="procreate"><span>Procreate</span><span class="ext">.swatches</span></button>
                 <button data-format="ase"><span>Adobe</span><span class="ext">.ase</span></button>
+                <button data-format="tailwind"><span>Tailwind config</span><span class="ext">copy</span></button>
+                <button data-format="css"><span>CSS variables</span><span class="ext">copy</span></button>
+                <button data-format="json"><span>JSON</span><span class="ext">copy</span></button>
+                <button data-format="svg"><span>SVG poster</span><span class="ext">.svg</span></button>
                 <button data-format="text"><span>Copy as text</span><span class="ext">clipboard</span></button>
               </div>
             </div>
@@ -1771,7 +1842,10 @@
       </div>
 
       <div class="mood-area" id="moodArea" style="display:none">
-        <div class="section-label"><span class="num">01</span>Mood</div>
+        <div class="section-label"><span class="num">01</span>Who is this for?</div>
+        <div class="persona-grid" id="personaGrid"></div>
+
+        <div class="section-label"><span class="num">02</span>Mood</div>
         <div class="mood-studio">
           <div class="mood-control">
             <label class="mood-control-label">Harmony</label>
@@ -1822,7 +1896,7 @@
         </div>
 
       <div class="palette-header">
-        <div class="section-label"><span class="num">02</span>Palette</div>
+        <div class="section-label"><span class="num">03</span>Palette</div>
       </div>
       <div class="palette-strips" id="palette-gen">
         <div class="palette-empty">
@@ -1859,6 +1933,10 @@
           <div class="export-menu" id="exportMenuGen">
             <button data-format="procreate"><span>Procreate</span><span class="ext">.swatches</span></button>
             <button data-format="ase"><span>Adobe</span><span class="ext">.ase</span></button>
+            <button data-format="tailwind"><span>Tailwind config</span><span class="ext">copy</span></button>
+            <button data-format="css"><span>CSS variables</span><span class="ext">copy</span></button>
+            <button data-format="json"><span>JSON</span><span class="ext">copy</span></button>
+            <button data-format="svg"><span>SVG poster</span><span class="ext">.svg</span></button>
             <button data-format="text"><span>Copy as text</span><span class="ext">clipboard</span></button>
           </div>
         </div>
@@ -1901,7 +1979,8 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <nav class="bottom-nav" aria-label="Sections">
-  <button class="nav-btn" data-tab="generate">Generate</button>
+  <button class="nav-btn" data-tab="generate">Generate</button><!-- "for Design" implied; bottom nav stays short -->
+
   <button class="nav-btn" data-tab="photo">Photo</button>
   <button class="nav-btn" data-tab="library">Library</button>
 </nav>
@@ -2584,6 +2663,19 @@ function showMoodPhase() {
   else showTrainingPhase();
 })();
 
+// Initialize persona grid + apply saved persona (if any) when entering mood phase
+renderPersonaGrid();
+const _savedPersona = loadPersona();
+if (_savedPersona) {
+  const _p = PERSONAS.find(p => p.id === _savedPersona);
+  if (_p) {
+    activePersonaId = _p.id;
+    moodSettings.wcagMin = _p.wcagMin || 0;
+    if (_p.bias) moodSettings.keyword = _p.bias;
+    if (_p.profile && PROFILES[_p.profile]) currentProfile = _p.profile;
+  }
+}
+
 document.getElementById("trainingShuffleBtn").addEventListener("click", () => {
   renderTrainingGrid();
 });
@@ -2596,6 +2688,79 @@ document.getElementById("retrainBtn").addEventListener("click", () => {
   clearTaste();
   showTrainingPhase();
 });
+
+/* ---------- Personas (step 01) ---------- */
+const PERSONAS = [
+  { id: "ui",         name: "UI / Web Designer",   desc: "Web apps, interfaces, dashboards. AA contrast, sRGB, Tailwind & CSS exports.",     profile: "sRGB",       wcagMin: 4.5, preferred: "tailwind",  bias: "professional" },
+  { id: "illustrator",name: "Illustrator",         desc: "Procreate, painting, comics. Display P3 native, .swatches priority, no contrast lock.", profile: "Display P3", wcagMin: 0,   preferred: "procreate", bias: "" },
+  { id: "print",      name: "Print Designer",      desc: "Posters, editorial, packaging. CMYK gamut preview, Adobe .ase priority.",         profile: "CMYK",       wcagMin: 0,   preferred: "ase",       bias: "vintage" },
+  { id: "brand",      name: "Brand Designer",      desc: "Identity, logos, campaigns. Versatile multi-format exports, AA enforcement.",      profile: "sRGB",       wcagMin: 4.5, preferred: "ase",       bias: "elegant" },
+  { id: "game",       name: "Game / Motion Artist",desc: "Game UI, characters, motion. Display P3, vibrant defaults, JSON tokens.",          profile: "Display P3", wcagMin: 0,   preferred: "json",      bias: "vibrant" },
+  { id: "editorial",  name: "Editorial / Photo",   desc: "Magazines, photography, mood boards. sRGB, muted tendencies.",                     profile: "sRGB",       wcagMin: 0,   preferred: "text",      bias: "muted" },
+];
+const PERSONA_KEY = "nnc_persona_v1";
+let activePersonaId = null;
+
+function loadPersona() {
+  try { return localStorage.getItem(PERSONA_KEY); } catch (e) { return null; }
+}
+function savePersona(id) {
+  try { localStorage.setItem(PERSONA_KEY, id); } catch (e) {}
+}
+
+function applyPersona(p) {
+  if (!p) return;
+  activePersonaId = p.id;
+  savePersona(p.id);
+  // Apply color profile
+  if (p.profile && PROFILES[p.profile]) setProfile(p.profile);
+  // Apply WCAG min
+  moodSettings.wcagMin = p.wcagMin || 0;
+  const wcagLabel = document.getElementById("wcagLabel");
+  if (wcagLabel) {
+    const label = (p.wcagMin === 7) ? "7:1 (AAA)"
+                : (p.wcagMin === 4.5) ? "4.5:1 (AA)"
+                : (p.wcagMin === 3) ? "3:1 (AA·LG)"
+                : "Off";
+    wcagLabel.textContent = label;
+  }
+  document.querySelectorAll("#wcagPopover button").forEach(b => {
+    b.classList.toggle("active", parseFloat(b.dataset.wcag) === p.wcagMin);
+  });
+  // Apply mood bias as keyword if set
+  if (p.bias) {
+    moodSettings.keyword = p.bias;
+    const kwInput = document.getElementById("keywordInput");
+    if (kwInput) kwInput.value = p.bias;
+  }
+  // Re-shuffle with new settings
+  if (typeof renderGen === "function") {
+    genResult = generateFromSettings(moodSettings);
+    if (genResult) renderGen();
+  }
+  // Update active state on cards
+  document.querySelectorAll(".persona-card").forEach(c => c.classList.toggle("active", c.dataset.persona === p.id));
+}
+
+function renderPersonaGrid() {
+  const grid = document.getElementById("personaGrid");
+  if (!grid) return;
+  const saved = loadPersona();
+  grid.innerHTML = "";
+  PERSONAS.forEach(p => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "persona-card" + (saved === p.id ? " active" : "");
+    card.dataset.persona = p.id;
+    card.innerHTML = `
+      <h4>${p.name}</h4>
+      <p>${p.desc}</p>
+      <div class="persona-meta">${p.profile} · WCAG ${p.wcagMin || "off"} · ${p.preferred}</div>
+    `;
+    card.addEventListener("click", () => applyPersona(p));
+    grid.appendChild(card);
+  });
+}
 
 /* ---------- Color Harmony + Mood Studio ---------- */
 const HARMONIES = [
@@ -3168,6 +3333,81 @@ async function copyAsText(palette, paletteName) {
   await navigator.clipboard.writeText(text);
 }
 
+function slug(name, fallback) {
+  return (name || fallback || "color").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function buildTailwind(palette, paletteName) {
+  const colors = {};
+  const seen = {};
+  palette.forEach((sw, i) => {
+    let key = slug(sw.name, `color-${i + 1}`);
+    seen[key] = (seen[key] || 0) + 1;
+    if (seen[key] > 1) key = `${key}-${seen[key]}`;
+    colors[key] = rgbToHex(...sw.rgb).toLowerCase();
+  });
+  const colorLines = Object.entries(colors).map(([k, v]) => `        "${k}": "${v}"`).join(",\n");
+  return `// ${paletteName}\n// tailwind.config.js — extend.colors\n\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n${colorLines}\n      }\n    }\n  }\n};\n`;
+}
+
+function buildCSSVars(palette, paletteName) {
+  const lines = [`/* ${paletteName} */`, `:root {`];
+  const seen = {};
+  palette.forEach((sw, i) => {
+    let key = slug(sw.name, `color-${i + 1}`);
+    seen[key] = (seen[key] || 0) + 1;
+    if (seen[key] > 1) key = `${key}-${seen[key]}`;
+    lines.push(`  --${key}: ${rgbToHex(...sw.rgb).toLowerCase()};`);
+  });
+  lines.push(`}`);
+  return lines.join("\n");
+}
+
+function buildJSON(palette, paletteName) {
+  return JSON.stringify({
+    name: paletteName,
+    generatedAt: new Date().toISOString(),
+    palette: palette.map((sw, i) => {
+      const [r, g, b] = sw.rgb;
+      const cmyk = rgbToCmyk(r, g, b);
+      return {
+        name: sw.name || `color-${i + 1}`,
+        hex: rgbToHex(r, g, b).toUpperCase(),
+        rgb: { r, g, b },
+        cmyk: { c: cmyk[0], m: cmyk[1], y: cmyk[2], k: cmyk[3] },
+      };
+    }),
+  }, null, 2);
+}
+
+function buildSVGPoster(palette, paletteName) {
+  const w = 1000, h = 600;
+  const stripW = w / palette.length;
+  const parts = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">`];
+  palette.forEach((sw, i) => {
+    const [r, g, b] = sw.rgb;
+    const hex = rgbToHex(r, g, b).toUpperCase();
+    const fg = textColorFor(r, g, b);
+    const x = i * stripW;
+    parts.push(`<rect x="${x}" y="0" width="${stripW}" height="${h}" fill="${hex.toLowerCase()}"/>`);
+    parts.push(`<text x="${x + 24}" y="40" fill="${fg}" font-family="ui-sans-serif,Helvetica" font-size="18" font-weight="700">${(sw.name || "color").replace(/&/g, "&amp;").replace(/</g, "&lt;")}</text>`);
+    parts.push(`<text x="${x + 24}" y="64" fill="${fg}" font-family="ui-monospace,Menlo" font-size="12" opacity="0.7">${hex}</text>`);
+    parts.push(`<text x="${x + 24}" y="${h - 24}" fill="${fg}" font-family="ui-monospace,Menlo" font-size="42" font-weight="700">${hex}</text>`);
+  });
+  parts.push(`<text x="24" y="${h - 24}" font-family="ui-sans-serif,Helvetica" font-size="14" font-weight="700" fill="#000" opacity="0.85">${paletteName}</text>`);
+  parts.push(`</svg>`);
+  return parts.join("");
+}
+
+async function copyOrDownloadText(text, filename, label, isCopy) {
+  if (isCopy) {
+    try { await navigator.clipboard.writeText(text); showToast(`Copied ${label} to clipboard`); }
+    catch (e) { downloadBlob(new TextEncoder().encode(text), filename); }
+  } else {
+    downloadBlob(new TextEncoder().encode(text), filename);
+  }
+}
+
 /* ---------- Source generative grid (block-reveal animation) ---------- */
 const SourceGrid = (() => {
   const canvas = document.getElementById("sourceCanvas");
@@ -3658,6 +3898,14 @@ function wireExportMenu(btnId, menuId, getResult) {
           downloadBlob(buildSwatchesFile(transformed, paletteName), `palette-${ts}.swatches`);
         } else if (fmt === "ase") {
           downloadBlob(buildASE(transformed, paletteName), `palette-${ts}.ase`);
+        } else if (fmt === "tailwind") {
+          await copyOrDownloadText(buildTailwind(transformed, paletteName), `tailwind-${ts}.config.js`, "Tailwind config", true);
+        } else if (fmt === "css") {
+          await copyOrDownloadText(buildCSSVars(transformed, paletteName), `palette-${ts}.css`, "CSS variables", true);
+        } else if (fmt === "json") {
+          await copyOrDownloadText(buildJSON(transformed, paletteName), `palette-${ts}.json`, "JSON", true);
+        } else if (fmt === "svg") {
+          downloadBlob(new TextEncoder().encode(buildSVGPoster(transformed, paletteName)), `palette-${ts}.svg`);
         } else if (fmt === "text") {
           await copyAsText(transformed, paletteName);
           labelEl.textContent = "Copied";
