@@ -67,40 +67,28 @@
     min-height: 100vh;
   }
 
-  /* brand — centered logo+text block, controls floating top-right */
+  /* brand — flat structure, every child stacks naturally */
   .brand-header {
     text-align: center;
-    padding: var(--s-5) 0 var(--s-4);
+    padding: var(--s-6) 0 var(--s-4);
     margin-bottom: var(--s-6);
     border-bottom: 1px solid var(--hairline);
     position: relative;
   }
-  .brand-spacer { display: none; }
-  .brand-block {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--s-2);
-  }
+  .brand-spacer, .brand-block, .brand-text { all: unset; display: contents; }
   .logo-mark {
+    display: block;
     width: 132px;
     height: 70px;
-    flex-shrink: 0;
-    display: block;
+    margin: 0 auto var(--s-3);
     background-image: url('logo.png');
     background-repeat: no-repeat;
     background-position: center;
     background-size: 200% auto;
   }
   [data-theme="dark"] .logo-mark { filter: invert(1); }
-  .brand-text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    line-height: 1;
-  }
   .brand {
+    display: block;
     font-family: var(--sans);
     font-weight: 800;
     font-style: italic;
@@ -110,6 +98,7 @@
     line-height: 1;
     user-select: none;
     text-align: center;
+    margin: 0 0 var(--s-1);
   }
   .brand .grad-text {
     background: linear-gradient(110deg,
@@ -129,6 +118,7 @@
       drop-shadow(0 2px 8px rgba(150, 130, 200, .12));
   }
   .brand-tagline {
+    display: block;
     margin: 0;
     font-family: var(--mono);
     font-size: 9px;
@@ -136,6 +126,7 @@
     text-transform: uppercase;
     letter-spacing: .18em;
     opacity: .8;
+    text-align: center;
   }
   .header-controls {
     position: absolute;
