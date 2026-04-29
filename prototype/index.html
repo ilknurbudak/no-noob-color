@@ -272,6 +272,91 @@
     font-weight: 500;
   }
 
+  /* taste training — 30-color taste profile */
+  .training-area { padding-top: var(--s-2); }
+  .training-area .section-label {
+    margin-top: 0;
+    margin-bottom: var(--s-2);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: -.005em;
+    font-family: var(--sans);
+  }
+  .training-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--s-3);
+  }
+  .training-progress {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+  .training-progress .full { color: var(--text); }
+  .training-hint {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin-bottom: var(--s-5);
+    max-width: 520px;
+  }
+  .training-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+    gap: 6px;
+    margin-bottom: var(--s-5);
+  }
+  .training-swatch {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s, box-shadow .15s;
+    position: relative;
+    padding: 0;
+  }
+  .training-swatch:hover { transform: scale(1.06); }
+  .training-swatch.selected {
+    border-color: var(--text);
+    transform: scale(.92);
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  }
+  .training-swatch.selected::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.95);
+    transform: translate(-50%, -50%);
+    box-shadow: inset 0 0 0 1.5px var(--text);
+  }
+  .training-actions {
+    display: flex;
+    gap: var(--s-3);
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .retrain-link {
+    background: none;
+    border: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: 4px 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .retrain-link:hover { color: var(--text); }
+
   /* generate controls — mood + shuffle */
   .generate-controls {
     width: 100%;
@@ -1327,7 +1412,27 @@
     </section>
 
     <section class="tab" id="tab-generate">
-      <div class="section-label"><span class="num">01</span>Mood</div>
+      <div class="training-area" id="trainingArea" style="display:none">
+        <div class="training-header">
+          <div class="section-label">Pick 30 colors you love</div>
+          <div class="training-progress"><span id="trainingCount">0</span> / 30</div>
+        </div>
+        <p class="training-hint">Tap colors that feel right. The app learns your taste from these and generates palettes that match the moods you pick — instead of generic random output.</p>
+        <div class="training-grid" id="trainingGrid"></div>
+        <div class="training-actions">
+          <button class="chip-btn" id="trainingShuffleBtn" type="button">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13.5 7 A5.5 5.5 0 1 0 13.3 9.8"/>
+              <path d="M13.5 4 V7 H10.5"/>
+            </svg>
+            New colors
+          </button>
+          <button class="btn" id="trainingDoneBtn" type="button" disabled>Save my taste</button>
+        </div>
+      </div>
+
+      <div class="mood-area" id="moodArea" style="display:none">
+        <div class="section-label"><span class="num">01</span>Mood</div>
       <div class="generate-controls">
         <button class="profile-pill mood-pill" id="moodPill">
           <span id="moodLabel">warm winter</span>
@@ -1360,6 +1465,8 @@
       </div>
 
       <div class="palette-footer">
+        <button class="retrain-link" id="retrainBtn" type="button">Retrain my taste</button>
+        <div style="flex:1"></div>
         <button class="chip-btn" id="saveBtnGen" disabled title="Save to Library">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
             <path d="M4 2 H12 V14 L8 11 L4 14 Z"/>
@@ -1381,6 +1488,7 @@
             <button data-format="text"><span>Copy as text</span><span class="ext">clipboard</span></button>
           </div>
         </div>
+      </div>
       </div>
     </section>
 
@@ -1981,6 +2089,106 @@ function setProfile(name) {
   if (genResult) renderGen();
 }
 
+/* ---------- Taste training (Khroma-style 30-color profile) ---------- */
+const TASTE_KEY = "nnc_taste_v1";
+function loadTaste() {
+  try {
+    const raw = localStorage.getItem(TASTE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function saveTaste(colors) {
+  try { localStorage.setItem(TASTE_KEY, JSON.stringify(colors)); } catch (e) {}
+}
+function clearTaste() {
+  try { localStorage.removeItem(TASTE_KEY); } catch (e) {}
+}
+
+let tasteSelection = [];
+
+function makeRandomColorPool(count = 80) {
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const h = Math.random() * 360;
+    const s = 18 + Math.random() * 75;
+    const l = 22 + Math.random() * 60;
+    const [r, g, b] = hslToRgb(h / 360, s / 100, l / 100);
+    out.push(rgbToHex(r, g, b));
+  }
+  return out;
+}
+
+function renderTrainingGrid() {
+  const grid = document.getElementById("trainingGrid");
+  if (!grid) return;
+  const pool = makeRandomColorPool(80);
+  grid.innerHTML = "";
+  pool.forEach(hex => {
+    const sw = document.createElement("button");
+    sw.type = "button";
+    sw.className = "training-swatch" + (tasteSelection.includes(hex) ? " selected" : "");
+    sw.style.background = hex;
+    sw.dataset.hex = hex;
+    sw.addEventListener("click", () => {
+      const idx = tasteSelection.indexOf(hex);
+      if (idx >= 0) {
+        tasteSelection.splice(idx, 1);
+        sw.classList.remove("selected");
+      } else {
+        if (tasteSelection.length >= 30) return;
+        tasteSelection.push(hex);
+        sw.classList.add("selected");
+      }
+      updateTrainingProgress();
+    });
+    grid.appendChild(sw);
+  });
+}
+function updateTrainingProgress() {
+  const countEl = document.getElementById("trainingCount");
+  const doneBtn = document.getElementById("trainingDoneBtn");
+  if (countEl) {
+    countEl.textContent = tasteSelection.length;
+    countEl.classList.toggle("full", tasteSelection.length >= 30);
+  }
+  if (doneBtn) doneBtn.disabled = tasteSelection.length < 30;
+}
+
+function showTrainingPhase() {
+  const train = document.getElementById("trainingArea");
+  const mood = document.getElementById("moodArea");
+  if (train) train.style.display = "block";
+  if (mood) mood.style.display = "none";
+  tasteSelection = [];
+  renderTrainingGrid();
+  updateTrainingProgress();
+}
+function showMoodPhase() {
+  const train = document.getElementById("trainingArea");
+  const mood = document.getElementById("moodArea");
+  if (train) train.style.display = "none";
+  if (mood) mood.style.display = "block";
+}
+
+(function initTaste() {
+  const t = loadTaste();
+  if (t && Array.isArray(t) && t.length === 30) showMoodPhase();
+  else showTrainingPhase();
+})();
+
+document.getElementById("trainingShuffleBtn").addEventListener("click", () => {
+  renderTrainingGrid();
+});
+document.getElementById("trainingDoneBtn").addEventListener("click", () => {
+  if (tasteSelection.length < 30) return;
+  saveTaste(tasteSelection);
+  showMoodPhase();
+});
+document.getElementById("retrainBtn").addEventListener("click", () => {
+  clearTaste();
+  showTrainingPhase();
+});
+
 /* ---------- Mood-based generator ---------- */
 const MOODS = [
   { name: "warm winter",       hues: [[10, 35], [205, 220]],         sat: [12, 45], lit: [25, 78] },
@@ -1999,6 +2207,58 @@ let genResult = null;
 
 function generateMood(mood) {
   const N = 5;
+  const taste = loadTaste();
+
+  // If user has a saved taste profile, prefer their colors that fit the mood.
+  if (taste && taste.length) {
+    const pool = taste.map(hex => {
+      const rgb = hexToRgb(hex);
+      const [h, s, v] = rgbToHsv(...rgb);
+      return { rgb, hex, h, s: s * 100, v: v * 100 };
+    });
+    const fits = pool.filter(c => {
+      const inHue = mood.hues.some(([min, max]) => {
+        if (min <= max) return c.h >= min && c.h <= max;
+        return c.h >= min || c.h <= max;
+      });
+      const inSat = c.s >= mood.sat[0] - 8 && c.s <= mood.sat[1] + 8;
+      const inLit = c.v >= mood.lit[0] - 10 && c.v <= mood.lit[1] + 10;
+      return inHue && inSat && inLit;
+    });
+    if (fits.length >= N) {
+      // Shuffle and pick N
+      const shuffled = fits.slice().sort(() => Math.random() - 0.5);
+      const picked = shuffled.slice(0, N);
+      const out = picked.map(c => {
+        const [L, A, B] = rgbToLab(...c.rgb);
+        return { rgb: c.rgb, L, chroma: Math.sqrt(A*A + B*B) };
+      });
+      out.sort((a, b) => a.L - b.L);
+      return out;
+    }
+    // Partial match — blend taste hits with mood-generated colors
+    if (fits.length > 0) {
+      const out = [];
+      const fitsShuffled = fits.slice().sort(() => Math.random() - 0.5);
+      for (const c of fitsShuffled) {
+        const [L, A, B] = rgbToLab(...c.rgb);
+        out.push({ rgb: c.rgb, L, chroma: Math.sqrt(A*A + B*B) });
+      }
+      while (out.length < N) {
+        const hueRange = mood.hues[Math.floor(Math.random() * mood.hues.length)];
+        const h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
+        const s = mood.sat[0] + Math.random() * (mood.sat[1] - mood.sat[0]);
+        const l = mood.lit[0] + Math.random() * (mood.lit[1] - mood.lit[0]);
+        const [r, g, b] = hslToRgb(((h % 360) + 360) % 360 / 360, s / 100, l / 100);
+        const [L, A, B] = rgbToLab(r, g, b);
+        out.push({ rgb: [r, g, b], L, chroma: Math.sqrt(A*A + B*B) });
+      }
+      out.sort((a, b) => a.L - b.L);
+      return out;
+    }
+  }
+
+  // Fallback: pure algorithmic generation (no taste profile)
   const out = [];
   const litStep = (mood.lit[1] - mood.lit[0]) / N;
   for (let i = 0; i < N; i++) {
