@@ -51,6 +51,8 @@ def root():
             "POST /harmonize":          "base color + rule → palette of N derivatives",
             "POST /contrast/wcag":      "WCAG 2.1 contrast analysis between two colors",
             "POST /contrast/audit":     "audit a whole palette against AA/AAA",
+            "POST /contrast/delta-e":   "perceptual difference (CIE76/94/CIEDE2000)",
+            "POST /contrast/delta-e/matrix": "pairwise delta-e matrix for a palette",
             "POST /convert/spaces":     "convert RGB - Lab - OKLab - CMYK - HSL",
             "POST /auth/signup":        "create account in PocketBase users collection",
             "POST /auth/login":         "exchange email+password for a bearer token",

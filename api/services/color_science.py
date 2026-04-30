@@ -111,6 +111,37 @@ def rgb_to_hsl(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
     return (h * 60, s * 100, l * 100)
 
 
+# ---------- Delta E (perceptual color difference) ----------
+
+def delta_e(rgb1: tuple[int, int, int], rgb2: tuple[int, int, int],
+            method: str = "CIEDE2000") -> float:
+    """Perceptual difference between two sRGB colors.
+
+    method: 'CIE76', 'CIE94', 'CIEDE2000' (default).
+    < 1.0 — imperceptible. 1-2 — close inspection only. 2-10 — at a glance.
+    11+ — distinct colors.
+    """
+    lab1 = rgb_to_lab(rgb1)
+    lab2 = rgb_to_lab(rgb2)
+    if HAS_COLOUR:
+        a = np.array(lab1, dtype=np.float64)
+        b = np.array(lab2, dtype=np.float64)
+        try:
+            return float(colour.delta_E(a, b, method=method))
+        except Exception:
+            pass
+    # Fallback: CIE76 only (simple Euclidean in Lab).
+    return float(np.sqrt(sum((x - y) ** 2 for x, y in zip(lab1, lab2))))
+
+
+def delta_e_grade(de: float) -> str:
+    if de < 1.0:  return "imperceptible"
+    if de < 2.0:  return "close"
+    if de < 10.0: return "perceptible"
+    if de < 49.0: return "distinct"
+    return "opposite"
+
+
 # ---------- Convenience metadata bundle ----------
 
 def metadata(rgb: tuple[int, int, int]) -> dict:
