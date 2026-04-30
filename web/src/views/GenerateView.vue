@@ -12,7 +12,9 @@ import { harmonize as apiHarmonize, getApiUrl } from "@/services/api";
 import { hexToRgb, rgbToHex, rgbToHsv, hsvToRgb, rgbToLab } from "@/services/color";
 import { CB_MODES, type CBMode } from "@/services/colorblind";
 import { useRefImage } from "@/composables/useRefImage";
-import { parsePrompt, biasToPalette } from "@/services/promptBias";
+import { parsePrompt, biasToPalette, type Bias } from "@/services/promptBias";
+import { useTasteStore } from "@/stores/taste";
+import TasteTrainer from "@/components/TasteTrainer.vue";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -27,14 +29,38 @@ const cbMode = ref<CBMode>("normal");
 const refImg = useRefImage(1);
 const prompt = ref("");
 const promptInfo = computed(() => parsePrompt(prompt.value));
+const taste = useTasteStore();
+const useTaste = ref(false);
+const showTrainer = ref(false);
+
+function combineBias(a: Bias, b: Bias): Bias {
+  const out: Bias = { ...a };
+  if (b.hue) out.hue = b.hue;
+  if (b.sat) {
+    out.sat = a.sat
+      ? [Math.max(a.sat[0], b.sat[0]), Math.min(a.sat[1], b.sat[1])]
+      : b.sat;
+    if (out.sat[0] > out.sat[1]) out.sat = [out.sat[1], out.sat[0]];
+  }
+  if (b.val) {
+    out.val = a.val
+      ? [Math.max(a.val[0], b.val[0]), Math.min(a.val[1], b.val[1])]
+      : b.val;
+    if (out.val[0] > out.val[1]) out.val = [out.val[1], out.val[0]];
+  }
+  return out;
+}
 
 function generateFromPrompt() {
   const info = promptInfo.value;
-  if (!info.matched.length) {
+  let bias: Bias = info.bias;
+  if (useTaste.value && taste.trained) bias = combineBias(bias, taste.bias);
+  const matchCount = info.matched.length + (useTaste.value && taste.trained ? 1 : 0);
+  if (!matchCount) {
     toast.show("No keywords matched");
     return;
   }
-  palette.value = biasToPalette(info.bias, n.value);
+  palette.value = biasToPalette(bias, n.value);
 }
 
 async function onRefDrop(e: DragEvent) {
@@ -222,7 +248,18 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
           <div v-if="prompt && promptInfo.unknown.length" class="prompt-unknown">
             ignored: {{ promptInfo.unknown.join(", ") }}
           </div>
+          <div class="taste-row">
+            <label class="taste-toggle">
+              <input type="checkbox" v-model="useTaste" :disabled="!taste.trained" />
+              <span>use my taste{{ taste.trained ? ` · ${taste.state.count} liked` : " · not trained" }}</span>
+            </label>
+            <button class="prompt-btn ghost" @click.prevent="showTrainer = !showTrainer">
+              {{ showTrainer ? "hide" : (taste.trained ? "retrain" : "train") }}
+            </button>
+          </div>
         </label>
+
+        <TasteTrainer v-if="showTrainer" class="trainer-slot" />
 
         <div class="ref-zone"
           @click="onRefClick"
@@ -507,6 +544,33 @@ input[type="range"] {
   color: var(--text-3);
   letter-spacing: .04em;
 }
+.taste-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.taste-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  letter-spacing: .04em;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+.taste-toggle input { accent-color: var(--text); cursor: pointer; }
+.taste-toggle input:disabled + span { opacity: .55; cursor: not-allowed; }
+.prompt-btn.ghost {
+  border-color: var(--hairline);
+  color: var(--text-2);
+}
+.prompt-btn.ghost:hover { color: var(--text); border-color: var(--text); background: var(--bg); }
+.trainer-slot { margin-top: var(--s-3); }
 
 .palette-header {
   display: flex;

@@ -1,88 +1,118 @@
+// Taste profile — built up by liking/disliking sample swatches.
+// Stored as histograms over hue (12 bins), saturation, lightness.
+// Used as an extra bias when generating palettes.
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
-import type { RGB } from "@/types";
-import { rgbToHsv } from "@/services/color";
+import { ref, computed } from "vue";
+import { hsvToRgb, rgbToHex, rgbToHsv, hexToRgb } from "@/services/color";
+import type { Bias } from "@/services/promptBias";
 
 const KEY = "nnc_taste_v1";
+const HUE_BINS = 12;
+const SV_BINS = 5;
 
-interface Vote {
-  rgb: RGB;
-  liked: boolean;
+interface TasteState {
+  hue: number[];
+  sat: number[];
+  val: number[];
+  count: number;
 }
 
-interface Stored {
-  votes: Vote[];
+function blank(): TasteState {
+  return {
+    hue: new Array(HUE_BINS).fill(0),
+    sat: new Array(SV_BINS).fill(0),
+    val: new Array(SV_BINS).fill(0),
+    count: 0,
+  };
 }
 
-function load(): Stored {
+function load(): TasteState {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : { votes: [] };
-  } catch { return { votes: [] }; }
-}
-function persist(s: Stored) {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.hue) && parsed.hue.length === HUE_BINS) return parsed;
+    }
+  } catch {}
+  return blank();
 }
 
-export interface TasteProfile {
-  hueWeights: number[];           // 12-bin histogram (30° each)
-  satRange: [number, number];     // 0-1 — central tendency band
-  litRange: [number, number];
-  sampleCount: number;
-  ready: boolean;                 // ≥ 8 votes recommended
+function persist(state: TasteState) {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+}
+
+function dominantBin(arr: number[]): number {
+  let max = -1, idx = 0;
+  for (let i = 0; i < arr.length; i++) if (arr[i] > max) { max = arr[i]; idx = i; }
+  return idx;
+}
+
+function topRange(arr: number[], spread = 1): [number, number] {
+  // Find the top bin and a small window around it.
+  const idx = dominantBin(arr);
+  const lo = Math.max(0, idx - spread);
+  const hi = Math.min(arr.length - 1, idx + spread);
+  return [lo / arr.length, (hi + 1) / arr.length];
+}
+
+// Generate a 30-swatch sampling carousel deterministically by index.
+export function trainingSwatches(): { hex: string; h: number; s: number; v: number }[] {
+  const out: { hex: string; h: number; s: number; v: number }[] = [];
+  const sweeps = [
+    { s: 0.85, v: 0.85 },   // vivid
+    { s: 0.55, v: 0.95 },   // light
+    { s: 0.40, v: 0.55 },   // muted-mid
+    { s: 0.25, v: 0.85 },   // pastel
+    { s: 0.85, v: 0.45 },   // deep
+  ];
+  for (const sw of sweeps) {
+    for (let h = 0; h < 360; h += 60) {
+      const rgb = hsvToRgb(h, sw.s, sw.v);
+      out.push({ hex: rgbToHex(...rgb), h, s: sw.s, v: sw.v });
+    }
+  }
+  return out;
 }
 
 export const useTasteStore = defineStore("taste", () => {
-  const stored = ref<Stored>(load());
+  const state = ref<TasteState>(load());
 
-  const liked = computed(() => stored.value.votes.filter(v => v.liked));
+  const trained = computed(() => state.value.count > 0);
 
-  const profile = computed<TasteProfile>(() => {
-    const bins = new Array(12).fill(0);
-    const sats: number[] = [];
-    const lits: number[] = [];
-    for (const v of liked.value) {
-      const [h, s, val] = rgbToHsv(...v.rgb);
-      bins[Math.floor(h / 30) % 12] += 1;
-      sats.push(s);
-      lits.push(val);
-    }
-    const total = bins.reduce((a, b) => a + b, 0) || 1;
-    const hueWeights = bins.map(b => b / total);
+  function like(hex: string) {
+    const rgb = hexToRgb(hex);
+    const [h, s, v] = rgbToHsv(...rgb);
+    const hueIdx = Math.min(HUE_BINS - 1, Math.floor((h / 360) * HUE_BINS));
+    const satIdx = Math.min(SV_BINS - 1, Math.floor(s * SV_BINS));
+    const valIdx = Math.min(SV_BINS - 1, Math.floor(v * SV_BINS));
+    state.value.hue[hueIdx]++;
+    state.value.sat[satIdx]++;
+    state.value.val[valIdx]++;
+    state.value.count++;
+    persist(state.value);
+  }
 
-    const med = (xs: number[], q: number) => {
-      if (!xs.length) return q;
-      const s = [...xs].sort((a, b) => a - b);
-      return s[Math.floor(s.length / 2)];
-    };
-    const ms = med(sats, 0.5), ml = med(lits, 0.5);
-    const spread = 0.2;
-    return {
-      hueWeights,
-      satRange: [Math.max(0, ms - spread), Math.min(1, ms + spread)],
-      litRange: [Math.max(0, ml - spread), Math.min(1, ml + spread)],
-      sampleCount: liked.value.length,
-      ready: liked.value.length >= 8,
-    };
-  });
-
-  function vote(rgb: RGB, liked: boolean) {
-    stored.value.votes.push({ rgb, liked });
-    persist(stored.value);
+  function skip(_hex: string) {
+    // For now a skip just costs nothing — could subtract weight in v2.
   }
 
   function reset() {
-    stored.value = { votes: [] };
-    persist(stored.value);
+    state.value = blank();
+    persist(state.value);
   }
 
-  function preferredHue(): number {
-    const w = profile.value.hueWeights;
-    if (!w.some(v => v > 0)) return 200;
-    const max = Math.max(...w);
-    const idx = w.indexOf(max);
-    return idx * 30 + 15;
-  }
+  // Convert profile into a Bias suitable for promptBias.biasToPalette.
+  const bias = computed<Bias>(() => {
+    if (!state.value.count) return {};
+    const [hLo, hHi] = topRange(state.value.hue, 1);
+    const [sLo, sHi] = topRange(state.value.sat, 1);
+    const [vLo, vHi] = topRange(state.value.val, 1);
+    return {
+      hue: [hLo * 360, hHi * 360],
+      sat: [sLo, sHi],
+      val: [vLo, vHi],
+    };
+  });
 
-  return { profile, vote, reset, preferredHue, sampleCount: computed(() => liked.value.length) };
+  return { state, trained, like, skip, reset, bias };
 });
