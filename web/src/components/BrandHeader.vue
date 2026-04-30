@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useThemeStore } from "@/stores/theme";
+import { useAuthStore } from "@/stores/auth";
+import AuthDialog from "@/components/AuthDialog.vue";
 
 const router = useRouter();
 const theme = useThemeStore();
+const auth = useAuthStore();
+const showAuth = ref(false);
 
 function goHome() {
   router.push("/");
@@ -19,10 +24,16 @@ function goHome() {
       @click="goHome"
     />
     <div class="header-controls">
+      <button v-if="auth.isAuthed" class="user-pill" @click="auth.logout" :title="`Sign out · ${auth.user?.email}`">
+        <span class="dot"></span>
+        {{ auth.user?.email.split("@")[0] }}
+      </button>
+      <button v-else class="user-pill ghost" @click="showAuth = true">Sign in</button>
       <button class="theme-toggle" :class="{ dark: theme.mode === 'dark' }" @click="theme.toggle" aria-label="Toggle theme">
         <span class="thumb"></span>
       </button>
     </div>
+    <AuthDialog :open="showAuth" @close="showAuth = false" />
   </header>
 </template>
 
@@ -77,6 +88,37 @@ function goHome() {
   transition: transform .25s cubic-bezier(.45, 0, .25, 1);
 }
 .theme-toggle.dark .thumb { transform: translateX(22px); }
+
+.user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--text);
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: .04em;
+  cursor: pointer;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: inline-block;
+}
+.user-pill.ghost {
+  background: var(--bg);
+  color: var(--text);
+}
 
 @media (max-width: 720px) {
   .brand-lockup { height: 160px; }

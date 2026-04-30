@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useLibraryStore } from "@/stores/library";
+import { useAuthStore } from "@/stores/auth";
 import { rgbToHex } from "@/services/color";
 
 const lib = useLibraryStore();
+const auth = useAuthStore();
 const filter = ref<"photo" | "generate">("photo");
 const items = computed(() => lib.bySource(filter.value));
 </script>
@@ -25,6 +27,12 @@ const items = computed(() => lib.bySource(filter.value));
       >
         Generate <span class="count">{{ lib.bySource("generate").length }}</span>
       </button>
+      <span class="sync-state" :class="{ remote: lib.isRemote, syncing: lib.syncing }">
+        <span class="dot"></span>
+        <template v-if="lib.syncing">syncing</template>
+        <template v-else-if="lib.isRemote">cloud · {{ auth.user?.email.split("@")[0] }}</template>
+        <template v-else>local only</template>
+      </span>
     </div>
 
     <div v-if="items.length === 0" class="empty-large">
@@ -85,6 +93,31 @@ const items = computed(() => lib.bySource(filter.value));
   padding: 2px 6px;
   border-radius: 999px;
   background: rgba(127, 127, 127, .15);
+}
+.sync-state {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-3);
+}
+.sync-state .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.sync-state.remote .dot { background: #2db573; }
+.sync-state.syncing .dot {
+  background: var(--text-2);
+  animation: syncPulse 1s infinite;
+}
+@keyframes syncPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
 }
 .empty-large {
   text-align: center;

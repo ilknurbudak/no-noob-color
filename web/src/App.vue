@@ -4,10 +4,17 @@ import BrandHeader from "@/components/BrandHeader.vue";
 import BottomNav from "@/components/BottomNav.vue";
 import Toast from "@/components/Toast.vue";
 import { detectApi } from "@/services/api";
+import { useAuthStore } from "@/stores/auth";
+import { useLibraryStore } from "@/stores/library";
 
-onMounted(() => {
-  detectApi();
+const auth = useAuthStore();
+const lib = useLibraryStore();
+
+onMounted(async () => {
+  await detectApi();
   setInterval(() => detectApi(true), 30_000);
+  await auth.refresh();
+  if (auth.isAuthed) await lib.sync();
 });
 </script>
 
