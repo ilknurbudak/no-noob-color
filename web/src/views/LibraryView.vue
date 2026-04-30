@@ -12,7 +12,9 @@ const items = computed(() => lib.items);
 <template>
   <section>
     <div class="library-filters">
-      <span class="lib-count">{{ items.length }} palette{{ items.length === 1 ? "" : "s" }}</span>
+      <span class="library-count">
+        <strong>{{ items.length }}</strong> {{ items.length === 1 ? "palette" : "palettes" }}
+      </span>
       <span class="sync-state" :class="{ remote: lib.isRemote, syncing: lib.syncing }">
         <span class="dot"></span>
         <template v-if="lib.syncing">syncing</template>
@@ -23,14 +25,14 @@ const items = computed(() => lib.items);
 
     <div v-if="items.length === 0" class="empty-large">
       <p>No palettes saved yet.</p>
-      <p>save a palette from generate to populate this tab</p>
+      <p>generate or drop a reference image, then save</p>
     </div>
 
     <div v-else class="library-list">
       <div v-for="item in items" :key="item.id" class="library-card">
         <button class="lib-delete" @click="lib.remove(item.id)" aria-label="Delete">×</button>
-        <span class="lib-tag">{{ item.source === "generate" ? "Generated" : "Photo" }}</span>
-        <img class="lib-thumb" :src="item.thumb" alt="" />
+        <img v-if="item.thumb" class="lib-thumb" :src="item.thumb" alt="" />
+        <div v-else class="lib-thumb-fallback"></div>
         <div class="lib-swatches">
           <span
             v-for="(p, i) in item.palette"
@@ -51,18 +53,20 @@ const items = computed(() => lib.items);
 <style scoped>
 .library-filters {
   display: flex;
-  gap: var(--s-3);
+  gap: var(--s-2);
   margin-bottom: var(--s-5);
-  align-items: center;
   flex-wrap: wrap;
 }
-.lib-count {
+.library-count {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .12em;
   color: var(--text-2);
-  font-weight: 500;
+}
+.library-count strong {
+  color: var(--text);
+  font-weight: 700;
 }
 .sync-state {
   margin-left: auto;
@@ -124,7 +128,8 @@ const items = computed(() => lib.items);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
 }
-.lib-thumb {
+.lib-thumb,
+.lib-thumb-fallback {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
@@ -146,20 +151,6 @@ const items = computed(() => lib.items);
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-.lib-tag {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  padding: 3px 8px;
-  background: rgba(255, 255, 255, .85);
-  color: #000;
-  font-family: var(--mono);
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  border-radius: 4px;
-  z-index: 5;
 }
 .lib-delete {
   position: absolute;
