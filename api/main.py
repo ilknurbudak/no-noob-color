@@ -53,6 +53,8 @@ def root():
         "endpoints": {
             "POST /extract/kmeans":     "image → N dominant colors via k-means in Lab/RGB/OKLab",
             "POST /extract/colorthief": "image → palette via median-cut (colorthief-style, mode-snapped)",
+            "POST /extract/segment":    "SLIC superpixel + weighted k-means (small regions preserved)",
+            "POST /extract/skin-aware": "extract while excluding/keeping/annotating skin tones",
             "POST /harmonize":          "base color + rule → palette of N derivatives",
             "POST /contrast/wcag":      "WCAG 2.1 contrast analysis between two colors",
             "POST /contrast/audit":     "audit a whole palette against AA/AAA",
