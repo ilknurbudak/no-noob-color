@@ -1,12 +1,18 @@
 # no noob color — API
 
-Python microservice that owns the color science layer. Frontend (browser HTML/JS) calls these REST endpoints instead of hand-rolling color math in JavaScript.
+Python microservice that owns the color science layer **plus** the BaaS bridge to PocketBase. Frontend (Vue, vanilla JS, future iOS app) calls one REST surface — color math runs in Python, auth + palette storage + thumbnails live in PocketBase.
+
+```
+   browser  ────►  FastAPI (Python)  ────►  PocketBase
+                   color science           auth · records · files
+```
 
 ## Why a microservice
 
 - **colour-science** is the de-facto industry standard for color math (CIE, ICC, OKLab, CIECAM, etc.). No JS equivalent matches its rigor.
 - **scikit-learn** k-means is faster and more robust than rolling our own.
 - **scikit-image** has working Lab / OKLab transforms backed by NumPy.
+- **PocketBase** ships auth, file storage, realtime, and an admin UI in a single Go binary. We don't reinvent user management; Python forwards bearer tokens and PocketBase enforces row-level ownership.
 - Decoupled: frontend stack can be anything — vanilla JS, Vue, Svelte, a Figma plugin, an iOS app — they all hit the same API.
 
 ## Stack
@@ -18,15 +24,49 @@ Python microservice that owns the color science layer. Frontend (browser HTML/JS
 | Numerics | NumPy | Required by sklearn / scikit-image |
 | Clustering | scikit-learn | k-means with smart init |
 | Color science | colour-science (rigor) + hand-rolled fallbacks | Best of both |
+| BaaS | PocketBase | Auth, palette records, file storage, admin UI in one binary |
+| HTTP client | requests | For Python → PocketBase calls |
 | Server | Uvicorn | ASGI, fast, hot reload |
 
 ## Run locally
+
+You need **two** processes: PocketBase (BaaS) and the FastAPI service.
+
+### 1. Start PocketBase
+
+Download the binary from <https://pocketbase.io/docs/> (single Go executable, ~15 MB).
+
+```sh
+./pocketbase serve
+# Server: http://127.0.0.1:8090
+# Admin:  http://127.0.0.1:8090/_/    (create admin on first visit)
+```
+
+Set up the `palettes` collection (one-time):
+
+1. Open the admin UI, **Collections** → **New collection** → name it `palettes`.
+2. Add fields:
+   - `name` — Plain text, required, max 120
+   - `swatches` — JSON, required
+   - `source` — Select (single), values: `photo, generate, prompt, ref`
+   - `thumbnail` — File (single), max size ~2 MB, MIME types `image/png, image/jpeg, image/webp`
+   - `owner` — Relation → `users`, single, required, **cascade delete on**
+3. **API rules** (all five — list, view, create, update, delete):
+   ```
+   owner = @request.auth.id
+   ```
+4. Save.
+
+The built-in `users` collection already provides email/password auth — no setup needed.
+
+### 2. Start the Python service
 
 ```sh
 cd api
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env   # then edit if PocketBase isn't on the default port
 uvicorn main:app --reload --port 8000
 ```
 
@@ -34,6 +74,7 @@ Then:
 - API root + endpoint list:    <http://localhost:8000/>
 - Interactive Swagger UI:      <http://localhost:8000/docs>
 - ReDoc:                       <http://localhost:8000/redoc>
+- PocketBase reachability:     <http://localhost:8000/auth/health>
 
 ## Endpoints
 
@@ -45,6 +86,18 @@ Then:
 | `POST` | `/contrast/wcag` | Foreground vs background → WCAG ratio + grade + AA/AAA pass flags |
 | `POST` | `/contrast/audit` | Audit a whole palette → contrast matrix + best/worst pairs |
 | `POST` | `/convert/spaces` | Single color → metadata in RGB / HEX / CMYK / HSL / Lab / OKLab / luminance / WCAG-vs-white/black |
+| `POST` | `/auth/signup` | Create user in PocketBase + return bearer token |
+| `POST` | `/auth/login` | Email + password → bearer token |
+| `GET`  | `/auth/me` | Resolve current user from `Authorization: Bearer <token>` |
+| `GET`  | `/auth/health` | PocketBase liveness probe |
+| `GET`  | `/palettes` | List the current user's saved palettes (paginated) |
+| `POST` | `/palettes` | Save a palette (JSON body) |
+| `POST` | `/palettes/with-thumbnail` | Save a palette + thumbnail (multipart) |
+| `GET`  | `/palettes/{id}` | Fetch a single palette |
+| `PATCH`| `/palettes/{id}` | Rename a palette / change source |
+| `DELETE` | `/palettes/{id}` | Delete a palette |
+
+All `/palettes/*` and `/auth/me` calls require an `Authorization: Bearer <token>` header where the token came from `/auth/login` or `/auth/signup`.
 
 ## Frontend integration sketch
 
@@ -100,7 +153,9 @@ Works on Fly.io, Railway, Cloud Run, your VPS, anywhere Docker runs.
 - `/harmonize` — done (6 rules, N-aware)
 - `/contrast/wcag` + `/contrast/audit` — done
 - `/convert/spaces` — done
+- `/auth/*` + `/palettes/*` — done (PocketBase BaaS)
 - `/extract/segment` — TODO: scikit-image SLIC segmentation, give weighted palette per region
 - `/extract/skin-aware` — TODO: OpenCV face detection → exclude/include skin tones
 - `/prompt-to-palette` — TODO: integrate Claude/OpenAI for free-text prompts
 - `/colorblind/simulate` — TODO: rigorous Brettel/Vienot via colour-science
+- realtime palette sync via PocketBase websocket — TODO

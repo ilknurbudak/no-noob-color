@@ -94,3 +94,121 @@ export async function auditPalette(hexes: string[]) {
   if (!res.ok) throw new Error(`audit failed: ${res.status}`);
   return res.json();
 }
+
+// ---------- auth + palettes (PocketBase via Python) ----------
+
+const TOKEN_KEY = "nnc:token";
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+export function setToken(token: string | null) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
+function requireBase(): string {
+  if (!baseUrl) throw new Error("API not connected");
+  return baseUrl;
+}
+
+function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const t = getToken();
+  return t ? { ...extra, Authorization: `Bearer ${t}` } : extra;
+}
+
+async function jsonOrThrow(res: Response): Promise<any> {
+  if (!res.ok) {
+    let msg = `${res.status}`;
+    try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+export async function signup(email: string, password: string) {
+  const res = await fetch(requireBase() + "/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await jsonOrThrow(res);
+  setToken(data.token);
+  return data;
+}
+
+export async function login(email: string, password: string) {
+  const res = await fetch(requireBase() + "/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await jsonOrThrow(res);
+  setToken(data.token);
+  return data;
+}
+
+export function logout() {
+  setToken(null);
+}
+
+export async function me() {
+  const res = await fetch(requireBase() + "/auth/me", { headers: authHeaders() });
+  return jsonOrThrow(res);
+}
+
+export interface RemotePalette {
+  id: string;
+  name: string;
+  source: string;
+  swatches: Array<{ hex: string; rgb: [number, number, number]; name?: string }>;
+  thumbnail: string | null;
+  created: string;
+  updated: string;
+}
+
+export async function listPalettes(): Promise<RemotePalette[]> {
+  const res = await fetch(requireBase() + "/palettes", { headers: authHeaders() });
+  const data = await jsonOrThrow(res);
+  return data.items;
+}
+
+export async function savePalette(
+  name: string,
+  swatches: Swatch[],
+  source: "photo" | "generate" | "prompt" | "ref" = "photo",
+  thumbnail?: Blob,
+): Promise<RemotePalette> {
+  const payload = swatches.map((s) => ({
+    hex: "#" + s.rgb.map((v) => v.toString(16).padStart(2, "0")).join(""),
+    rgb: s.rgb,
+    name: (s as any).name,
+  }));
+  if (thumbnail) {
+    const fd = new FormData();
+    fd.append("name", name);
+    fd.append("swatches", JSON.stringify(payload));
+    fd.append("source", source);
+    fd.append("thumbnail", thumbnail, "thumb.png");
+    const res = await fetch(requireBase() + "/palettes/with-thumbnail", {
+      method: "POST",
+      headers: authHeaders(),
+      body: fd,
+    });
+    return jsonOrThrow(res);
+  }
+  const res = await fetch(requireBase() + "/palettes", {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ name, swatches: payload, source }),
+  });
+  return jsonOrThrow(res);
+}
+
+export async function deletePalette(id: string): Promise<void> {
+  const res = await fetch(requireBase() + `/palettes/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  await jsonOrThrow(res);
+}
