@@ -15,7 +15,7 @@ Docs:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones, material
+from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones, material, llm
 
 app = FastAPI(
     title="no noob color API",
@@ -41,6 +41,7 @@ app.include_router(palettes.router, prefix="/palettes", tags=["palettes"])
 app.include_router(colorblind.router, prefix="/colorblind", tags=["colorblind"])
 app.include_router(tones.router, prefix="/tones", tags=["tones"])
 app.include_router(material.router, prefix="/material", tags=["material"])
+app.include_router(llm.router, prefix="/llm", tags=["llm"])
 
 
 @app.get("/")
@@ -61,6 +62,8 @@ def root():
             "POST /tones/tailwind":     "tonal scale + Tailwind config snippet",
             "POST /material/theme":     "Material 3 theme — roles + 16-stop tonal palettes + light/dark",
             "POST /material/css-variables": "Material 3 theme as CSS variables",
+            "POST /llm/prompt-to-palette": "freeform prompt → palette via OpenAI/Apify",
+            "GET  /llm/status":         "which LLM providers are configured",
             "POST /convert/spaces":     "convert RGB - Lab - OKLab - CMYK - HSL",
             "POST /auth/signup":        "create account in PocketBase users collection",
             "POST /auth/login":         "exchange email+password for a bearer token",
