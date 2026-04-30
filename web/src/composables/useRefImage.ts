@@ -1,56 +1,58 @@
 import { ref } from "vue";
 import type { Swatch } from "@/types";
-import { extractPalette, makeThumbnail } from "@/services/extract";
 import { extractKMeans, getApiUrl } from "@/services/api";
+import { extractPalette, makeThumbnail } from "@/services/extract";
 
+// Drop/select a reference image, get back a palette + dataURL thumbnail.
+// API-first, local k-means fallback. Used by Photo view and Generate's
+// "use as seed" flow.
 export function useRefImage(defaultN = 5) {
   const palette = ref<Swatch[]>([]);
-  const thumbnail = ref<string | null>(null);
-  const imageSrc = ref<string | null>(null);
+  const dataUrl = ref<string | null>(null);
+  const thumb = ref<string | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  async function loadFile(file: File, n = defaultN) {
+  async function load(file: File, n = defaultN): Promise<Swatch[]> {
     loading.value = true;
     error.value = null;
     try {
-      const dataUrl: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
+      const url = await new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result as string);
+        r.onerror = () => rej(r.error);
+        r.readAsDataURL(file);
       });
-
-      const img: HTMLImageElement = await new Promise((resolve, reject) => {
+      const img = await new Promise<HTMLImageElement>((res, rej) => {
         const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = dataUrl;
+        i.onload = () => res(i);
+        i.onerror = () => rej(new Error("image load failed"));
+        i.src = url;
       });
-
-      imageSrc.value = dataUrl;
-      thumbnail.value = makeThumbnail(img);
-
-      let result: Swatch[] | null = null;
+      dataUrl.value = url;
+      thumb.value = makeThumbnail(img);
+      let extracted: Swatch[] | null = null;
       if (getApiUrl()) {
-        try { result = await extractKMeans(file, n, "lab"); }
-        catch (e) { console.warn("API extract failed, falling back:", e); }
+        try { extracted = await extractKMeans(file, n, "lab"); }
+        catch (e) { console.warn("API ref extract failed, fallback:", e); }
       }
-      if (!result) result = await extractPalette(img, n);
-      palette.value = result;
+      if (!extracted) extracted = await extractPalette(img, n);
+      palette.value = extracted;
+      return extracted;
     } catch (e: any) {
-      error.value = e?.message || "extract failed";
+      error.value = e.message || "ref image failed";
+      throw e;
     } finally {
       loading.value = false;
     }
   }
 
-  function reset() {
+  function clear() {
     palette.value = [];
-    thumbnail.value = null;
-    imageSrc.value = null;
+    dataUrl.value = null;
+    thumb.value = null;
     error.value = null;
   }
 
-  return { palette, thumbnail, imageSrc, loading, error, loadFile, reset };
+  return { palette, dataUrl, thumb, loading, error, load, clear };
 }

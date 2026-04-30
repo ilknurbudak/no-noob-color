@@ -11,6 +11,7 @@ import { useToastStore } from "@/stores/toast";
 import { harmonize as apiHarmonize, getApiUrl } from "@/services/api";
 import { hexToRgb, rgbToHex, rgbToHsv, hsvToRgb, rgbToLab } from "@/services/color";
 import { CB_MODES, type CBMode } from "@/services/colorblind";
+import { useRefImage } from "@/composables/useRefImage";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -22,6 +23,35 @@ const n = ref(5);
 const palette = ref<Swatch[]>([]);
 const loading = ref(false);
 const cbMode = ref<CBMode>("normal");
+const refImg = useRefImage(1);
+
+async function onRefDrop(e: DragEvent) {
+  e.preventDefault();
+  const f = e.dataTransfer?.files?.[0];
+  if (!f) return;
+  const extracted = await refImg.load(f, 5);
+  if (extracted.length) {
+    const sw = extracted[0];
+    const hex = "#" + sw.rgb.map(v => v.toString(16).padStart(2, "0")).join("");
+    baseHex.value = hex;
+    palette.value = extracted;
+  }
+}
+function onRefClick(e: MouseEvent) {
+  const input = (e.currentTarget as HTMLElement).querySelector("input") as HTMLInputElement;
+  input?.click();
+}
+async function onRefChange(e: Event) {
+  const f = (e.target as HTMLInputElement).files?.[0];
+  if (!f) return;
+  const extracted = await refImg.load(f, 5);
+  if (extracted.length) {
+    const sw = extracted[0];
+    const hex = "#" + sw.rgb.map(v => v.toString(16).padStart(2, "0")).join("");
+    baseHex.value = hex;
+    palette.value = extracted;
+  }
+}
 
 const HARMONY_OPTIONS: { id: Harmony; label: string }[] = [
   { id: "auto", label: "auto" },
@@ -158,6 +188,18 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
         <button class="generate-btn" :disabled="loading" @click="generate">
           {{ loading ? "generating…" : "Generate" }}
         </button>
+
+        <div class="ref-zone"
+          @click="onRefClick"
+          @dragover.prevent
+          @drop="onRefDrop"
+          :class="{ has: !!refImg.dataUrl.value, busy: refImg.loading.value }"
+        >
+          <img v-if="refImg.dataUrl.value" :src="refImg.dataUrl.value" alt="" />
+          <span v-else-if="refImg.loading.value">extracting…</span>
+          <span v-else>drop ref image · seeds palette</span>
+          <input type="file" accept="image/*" @change="onRefChange" hidden />
+        </div>
       </div>
 
       <div class="studio-output">
@@ -362,6 +404,31 @@ input[type="range"] {
   transition: opacity .15s;
 }
 .generate-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.ref-zone {
+  margin-top: var(--s-3);
+  border: 1.5px dashed var(--hairline);
+  border-radius: 10px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color .15s, background .15s;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  text-align: center;
+  padding: 0 8px;
+}
+.ref-zone:hover { border-color: var(--text); color: var(--text); }
+.ref-zone.has { border-style: solid; padding: 0; }
+.ref-zone.busy { opacity: .7; }
+.ref-zone img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .palette-header {
   display: flex;

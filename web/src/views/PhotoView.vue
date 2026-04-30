@@ -1,53 +1,28 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { Swatch } from "@/types";
 import DropZone from "@/components/DropZone.vue";
 import PaletteStrips from "@/components/PaletteStrips.vue";
 import ProfilePill from "@/components/ProfilePill.vue";
 import ExportMenu from "@/components/ExportMenu.vue";
 import TabInfo from "@/components/TabInfo.vue";
-import { extractPalette, makeThumbnail } from "@/services/extract";
-import { extractKMeans, getApiUrl } from "@/services/api";
 import { useLibraryStore } from "@/stores/library";
 import { useToastStore } from "@/stores/toast";
 import { CB_MODES, type CBMode } from "@/services/colorblind";
+import { useRefImage } from "@/composables/useRefImage";
 
-const palette = ref<Swatch[]>([]);
-const imageSrc = ref<string | null>(null);
-const thumbnail = ref<string | null>(null);
-const loading = ref(false);
 const cbMode = ref<CBMode>("normal");
+const refImg = useRefImage(5);
 
 const lib = useLibraryStore();
 const toast = useToastStore();
 
 async function onFile(file: File) {
-  loading.value = true;
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const dataUrl = e.target?.result as string;
-    const img = new Image();
-    img.onload = async () => {
-      imageSrc.value = dataUrl;
-      thumbnail.value = makeThumbnail(img);
-      // Prefer API extraction if reachable, fall back to local k-means
-      let extracted: Swatch[] | null = null;
-      if (getApiUrl()) {
-        try { extracted = await extractKMeans(file, 5, "lab"); }
-        catch (err) { console.warn("API extract failed, falling back:", err); }
-      }
-      if (!extracted) extracted = await extractPalette(img, 5);
-      palette.value = extracted;
-      loading.value = false;
-    };
-    img.src = dataUrl;
-  };
-  reader.readAsDataURL(file);
+  await refImg.load(file);
 }
 
 function onSave() {
-  if (!palette.value.length || !thumbnail.value) return;
-  lib.save(palette.value, thumbnail.value, "photo");
+  if (!refImg.palette.value.length || !refImg.thumb.value) return;
+  lib.save(refImg.palette.value, refImg.thumb.value, "photo");
   toast.show("Saved to Library");
 }
 </script>
@@ -57,8 +32,9 @@ function onSave() {
     <div class="photo-grid">
       <div class="photo-col-source">
         <div class="section-label"><span class="num">01</span>Source</div>
-        <DropZone :image-src="imageSrc" @file="onFile" />
-        <div v-if="loading" class="loading-note">extracting palette…</div>
+        <DropZone :image-src="refImg.dataUrl.value" @file="onFile" />
+        <div v-if="refImg.loading.value" class="loading-note">extracting palette…</div>
+        <div v-if="refImg.error.value" class="loading-note err">{{ refImg.error.value }}</div>
       </div>
 
       <div class="photo-col-palette">
@@ -82,7 +58,7 @@ function onSave() {
         </div>
 
         <PaletteStrips
-          :palette="palette"
+          :palette="refImg.palette.value"
           :cb-mode="cbMode"
           :empty-mini="['#e8d5b7', '#c19a6b', '#8b5d33', '#4a3520', '#1f1410']"
           empty-tag="example · earth"
@@ -90,13 +66,13 @@ function onSave() {
         />
 
         <div class="palette-footer">
-          <button class="chip-btn ghost" :disabled="!palette.length" @click="onSave">
+          <button class="chip-btn ghost" :disabled="!refImg.palette.value.length" @click="onSave">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
               <path d="M4 2 H12 V14 L8 11 L4 14 Z" />
             </svg>
             Save
           </button>
-          <ExportMenu :palette="palette" :disabled="!palette.length" />
+          <ExportMenu :palette="refImg.palette.value" :disabled="!refImg.palette.value.length" />
         </div>
       </div>
     </div>
