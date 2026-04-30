@@ -81,6 +81,7 @@ async function copy(text: string) {
   justify-content: space-between;
   overflow: hidden;
   min-width: 0;
+  container-type: inline-size;
 }
 .strip-top { z-index: 2; position: relative; }
 .strip-name {
@@ -103,7 +104,7 @@ async function copy(text: string) {
   top: 62%;
   transform: translate(-50%, -50%) rotate(-90deg);
   font-family: var(--mono);
-  font-size: 42px;
+  font-size: clamp(14px, 11cqw, 42px);
   font-weight: 700;
   white-space: nowrap;
   letter-spacing: -.04em;
