@@ -19,7 +19,7 @@ const transformed = computed(() => {
     Math.round(Math.max(0, Math.min(255, t[1]))),
     Math.round(Math.max(0, Math.min(255, t[2]))),
   ];
-  return simulate(clamped, props.cbMode ?? "normal");
+  return props.cbMode && props.cbMode !== "normal" ? simulate(clamped, props.cbMode) : clamped;
 });
 const hex = computed(() => rgbToHex(...transformed.value).toUpperCase());
 const rgbStr = computed(() => transformed.value.join(", "));

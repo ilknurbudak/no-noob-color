@@ -1,27 +1,49 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { CBMode } from "@/services/colorblind";
+import type { Swatch } from "@/types";
 import DropZone from "@/components/DropZone.vue";
 import PaletteStrips from "@/components/PaletteStrips.vue";
 import ProfilePill from "@/components/ProfilePill.vue";
 import ExportMenu from "@/components/ExportMenu.vue";
 import TabInfo from "@/components/TabInfo.vue";
-import { useRefImage } from "@/composables/useRefImage";
+import { extractPalette, makeThumbnail } from "@/services/extract";
+import { extractKMeans, getApiUrl } from "@/services/api";
 import { useLibraryStore } from "@/stores/library";
 import { useToastStore } from "@/stores/toast";
+import { CB_MODES, type CBMode } from "@/services/colorblind";
 
+const palette = ref<Swatch[]>([]);
+const imageSrc = ref<string | null>(null);
+const thumbnail = ref<string | null>(null);
+const loading = ref(false);
 const cbMode = ref<CBMode>("normal");
 
-const CB_OPTIONS: { id: CBMode; label: string }[] = [
-  { id: "normal",       label: "normal" },
-  { id: "protanopia",   label: "protan" },
-  { id: "deuteranopia", label: "deuter" },
-  { id: "tritanopia",   label: "tritan" },
-];
-
-const { palette, imageSrc, thumbnail, loading, loadFile } = useRefImage(5);
 const lib = useLibraryStore();
 const toast = useToastStore();
+
+async function onFile(file: File) {
+  loading.value = true;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target?.result as string;
+    const img = new Image();
+    img.onload = async () => {
+      imageSrc.value = dataUrl;
+      thumbnail.value = makeThumbnail(img);
+      // Prefer API extraction if reachable, fall back to local k-means
+      let extracted: Swatch[] | null = null;
+      if (getApiUrl()) {
+        try { extracted = await extractKMeans(file, 5, "lab"); }
+        catch (err) { console.warn("API extract failed, falling back:", err); }
+      }
+      if (!extracted) extracted = await extractPalette(img, 5);
+      palette.value = extracted;
+      loading.value = false;
+    };
+    img.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
 
 function onSave() {
   if (!palette.value.length || !thumbnail.value) return;
@@ -35,7 +57,7 @@ function onSave() {
     <div class="photo-grid">
       <div class="photo-col-source">
         <div class="section-label"><span class="num">01</span>Source</div>
-        <DropZone :image-src="imageSrc" @file="loadFile" />
+        <DropZone :image-src="imageSrc" @file="onFile" />
         <div v-if="loading" class="loading-note">extracting palette…</div>
       </div>
 
@@ -45,6 +67,20 @@ function onSave() {
           <ProfilePill />
         </div>
 
+        <div class="cb-row">
+          <span class="cb-lbl">Color blindness preview</span>
+          <div class="cb-chips">
+            <button
+              v-for="m in CB_MODES"
+              :key="m.id"
+              class="cb-chip"
+              :class="{ active: cbMode === m.id }"
+              :title="m.desc"
+              @click="cbMode = m.id"
+            >{{ m.label }}</button>
+          </div>
+        </div>
+
         <PaletteStrips
           :palette="palette"
           :cb-mode="cbMode"
@@ -52,17 +88,6 @@ function onSave() {
           empty-tag="example · earth"
           empty-message="Drop a photo to see colors extracted via k-means in L*a*b* space."
         />
-
-        <div class="cb-row">
-          <span class="cb-label">vision preview</span>
-          <button
-            v-for="o in CB_OPTIONS"
-            :key="o.id"
-            class="cb-chip"
-            :class="{ active: cbMode === o.id }"
-            @click="cbMode = o.id"
-          >{{ o.label }}</button>
-        </div>
 
         <div class="palette-footer">
           <button class="chip-btn ghost" :disabled="!palette.length" @click="onSave">
@@ -141,20 +166,20 @@ function onSave() {
   letter-spacing: .12em;
 }
 .cb-row {
-  margin-top: var(--s-3);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-3);
   flex-wrap: wrap;
+  margin-bottom: var(--s-3);
 }
-.cb-label {
+.cb-lbl {
   font-family: var(--mono);
   font-size: 9px;
-  color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: .12em;
-  margin-right: 4px;
+  color: var(--text-3);
 }
+.cb-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 .cb-chip {
   padding: 5px 10px;
   border: 1px solid var(--hairline);
@@ -163,7 +188,6 @@ function onSave() {
   border-radius: 999px;
   font-family: var(--mono);
   font-size: 9px;
-  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: .08em;
   cursor: pointer;

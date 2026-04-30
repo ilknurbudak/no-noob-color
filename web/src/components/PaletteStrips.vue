@@ -5,10 +5,10 @@ import PaletteStrip from "./PaletteStrip.vue";
 
 defineProps<{
   palette: Swatch[];
-  cbMode?: CBMode;
   emptyMessage?: string;
   emptyMini?: string[];
   emptyTag?: string;
+  cbMode?: CBMode;
 }>();
 </script>
 
