@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { Swatch } from "@/types";
+import type { CBMode } from "@/services/colorblind";
 import PaletteStrip from "./PaletteStrip.vue";
 
 defineProps<{
   palette: Swatch[];
+  cbMode?: CBMode;
   emptyMessage?: string;
   emptyMini?: string[];
   emptyTag?: string;
@@ -13,7 +15,7 @@ defineProps<{
 <template>
   <div class="palette-strips">
     <template v-if="palette.length">
-      <PaletteStrip v-for="(sw, i) in palette" :key="i" :swatch="sw" />
+      <PaletteStrip v-for="(sw, i) in palette" :key="i" :swatch="sw" :cb-mode="cbMode" />
     </template>
     <div v-else class="palette-empty">
       <div v-if="emptyMini" class="palette-empty-mini">

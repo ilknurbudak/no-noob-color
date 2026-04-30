@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from "vue";
 import type { Swatch, Harmony } from "@/types";
+import type { CBMode } from "@/services/colorblind";
 import PaletteStrips from "@/components/PaletteStrips.vue";
 import ProfilePill from "@/components/ProfilePill.vue";
 import ExportMenu from "@/components/ExportMenu.vue";
@@ -10,6 +11,8 @@ import { useLibraryStore } from "@/stores/library";
 import { useToastStore } from "@/stores/toast";
 import { harmonize as apiHarmonize, getApiUrl } from "@/services/api";
 import { hexToRgb, rgbToHex, rgbToHsv, hsvToRgb, rgbToLab } from "@/services/color";
+import { useRefImage } from "@/composables/useRefImage";
+import { parsePrompt, pickHueFromBias, clampToBias } from "@/services/promptParser";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -20,6 +23,28 @@ const rule = ref<Harmony>("auto");
 const n = ref(5);
 const palette = ref<Swatch[]>([]);
 const loading = ref(false);
+const cbMode = ref<CBMode>("normal");
+const promptText = ref("");
+
+const CB_OPTIONS: { id: CBMode; label: string }[] = [
+  { id: "normal",       label: "normal" },
+  { id: "protanopia",   label: "protan" },
+  { id: "deuteranopia", label: "deuter" },
+  { id: "tritanopia",   label: "tritan" },
+];
+
+const refImage = useRefImage(1);
+const refInputEl = ref<HTMLInputElement | null>(null);
+
+async function onRefFile(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  await refImage.loadFile(file, 1);
+  if (refImage.palette.value.length) {
+    baseHex.value = rgbToHex(...refImage.palette.value[0].rgb);
+    await generate();
+  }
+}
 
 const HARMONY_OPTIONS: { id: Harmony; label: string }[] = [
   { id: "auto", label: "auto" },
@@ -31,9 +56,13 @@ const HARMONY_OPTIONS: { id: Harmony; label: string }[] = [
   { id: "tetradic", label: "tetradic" },
 ];
 
-function localHarmonize(hex: string, kind: Harmony, count: number): Swatch[] {
+function localHarmonize(hex: string, kind: Harmony, count: number, promptStr = ""): Swatch[] {
+  const bias = promptStr ? parsePrompt(promptStr) : { tags: [] };
   const rgb = hexToRgb(hex);
-  const [h, s, v] = rgbToHsv(...rgb);
+  let [h, s, v] = rgbToHsv(...rgb);
+  if (promptStr && bias.hues?.length) h = pickHueFromBias(bias, h);
+  if (promptStr) [s, v] = clampToBias(s, v, bias);
+
   const offsets: Record<Exclude<Harmony, "auto">, number[]> = {
     monochromatic: [0],
     analogous: [-30, -15, 0, 15, 30],
@@ -58,6 +87,7 @@ function localHarmonize(hex: string, kind: Harmony, count: number): Swatch[] {
       const ladder = (Math.floor(i / ring.length)) * 0.12;
       nv = Math.max(0.15, Math.min(0.95, v - ladder));
     }
+    if (promptStr) [ns, nv] = clampToBias(ns, nv, bias);
     const newRgb = hsvToRgb(nh, ns, nv);
     const [L, a, b] = rgbToLab(...newRgb);
     out.push({ rgb: newRgb, L, chroma: Math.sqrt(a * a + b * b) });
@@ -68,11 +98,12 @@ function localHarmonize(hex: string, kind: Harmony, count: number): Swatch[] {
 async function generate() {
   loading.value = true;
   let result: Swatch[] | null = null;
-  if (getApiUrl()) {
+  // Prompt'lu durumda lokal motoru kullan — API'nin prompt parser'ı yok
+  if (!promptText.value && getApiUrl()) {
     try { result = await apiHarmonize(baseHex.value, rule.value === "auto" ? "analogous" : rule.value, n.value); }
     catch (err) { console.warn("API harmonize failed, falling back:", err); }
   }
-  if (!result) result = localHarmonize(baseHex.value, rule.value, n.value);
+  if (!result) result = localHarmonize(baseHex.value, rule.value, n.value, promptText.value);
   palette.value = result;
   loading.value = false;
 }
@@ -132,6 +163,11 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
           <div class="base-row">
             <input type="color" v-model="baseHex" />
             <input type="text" v-model="baseHex" class="base-hex" maxlength="7" />
+            <button type="button" class="ref-btn" :title="refImage.thumbnail.value ? 'replace reference' : 'pick from image'" @click="refInputEl?.click()">
+              <img v-if="refImage.thumbnail.value" :src="refImage.thumbnail.value" alt="" class="ref-thumb" />
+              <span v-else class="ref-icon">img</span>
+            </button>
+            <input ref="refInputEl" type="file" accept="image/*" hidden @change="onRefFile" />
           </div>
         </label>
 
@@ -153,6 +189,17 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
           <input type="range" min="2" max="20" v-model.number="n" />
         </label>
 
+        <label class="ctrl">
+          <span>Prompt <em class="opt">— optional</em></span>
+          <input
+            type="text"
+            v-model="promptText"
+            class="prompt-input"
+            placeholder="muted ocean dusk, vintage warm, neon cyberpunk…"
+            @keydown.enter="generate"
+          />
+        </label>
+
         <button class="generate-btn" :disabled="loading" @click="generate">
           {{ loading ? "generating…" : "Generate" }}
         </button>
@@ -166,10 +213,22 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
 
         <PaletteStrips
           :palette="palette"
+          :cb-mode="cbMode"
           :empty-mini="['#7a4b8a', '#9d6bb5', '#c4a3d8', '#5d3a6b', '#3a2347']"
           empty-tag="example · plum"
           empty-message="Pick a base color and harmony rule. Output adapts to the active persona."
         />
+
+        <div class="cb-row">
+          <span class="cb-label">vision preview</span>
+          <button
+            v-for="o in CB_OPTIONS"
+            :key="o.id"
+            class="cb-chip"
+            :class="{ active: cbMode === o.id }"
+            @click="cbMode = o.id"
+          >{{ o.label }}</button>
+        </div>
 
         <div class="palette-footer">
           <button class="chip-btn ghost" :disabled="!palette.length" @click="onSave">
@@ -303,6 +362,49 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
   text-transform: uppercase;
 }
 .base-hex:focus { outline: none; border-color: var(--text); }
+.ref-btn {
+  width: 32px; height: 32px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.ref-btn:hover { border-color: var(--text); }
+.ref-btn .ref-icon {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-2);
+}
+.ref-btn .ref-thumb { width: 100%; height: 100%; object-fit: cover; }
+
+.prompt-input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 9px 11px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+}
+.prompt-input::placeholder { color: var(--text-3); }
+.prompt-input:focus { outline: none; border-color: var(--text); }
+.opt {
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-3);
+  font-size: 9px;
+  margin-left: 4px;
+}
 
 .rule-grid {
   display: grid;
@@ -355,6 +457,37 @@ input[type="range"] {
   flex-wrap: wrap;
 }
 .palette-header .section-label { margin: 0; }
+.cb-row {
+  margin-top: var(--s-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cb-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  margin-right: 4px;
+}
+.cb-chip {
+  padding: 5px 10px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text-2);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.cb-chip:hover { color: var(--text); border-color: var(--text); }
+.cb-chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 .palette-footer {
   margin-top: var(--s-3);
   display: flex;

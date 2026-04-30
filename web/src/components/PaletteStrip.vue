@@ -3,21 +3,23 @@ import { computed } from "vue";
 import type { Swatch } from "@/types";
 import { rgbToHex, rgbToCmyk, textColorFor, wcagContrast, wcagGrade } from "@/services/color";
 import { nameForRGB, paletteLabel } from "@/services/colorNames";
+import { simulate, type CBMode } from "@/services/colorblind";
 import { useProfileStore } from "@/stores/profile";
 import { useToastStore } from "@/stores/toast";
 
-const props = defineProps<{ swatch: Swatch }>();
+const props = defineProps<{ swatch: Swatch; cbMode?: CBMode }>();
 
 const profile = useProfileStore();
 const toast = useToastStore();
 
 const transformed = computed(() => {
   const t = profile.transform([props.swatch.rgb[0], props.swatch.rgb[1], props.swatch.rgb[2]]);
-  return [
+  const clamped: [number, number, number] = [
     Math.round(Math.max(0, Math.min(255, t[0]))),
     Math.round(Math.max(0, Math.min(255, t[1]))),
     Math.round(Math.max(0, Math.min(255, t[2]))),
-  ] as [number, number, number];
+  ];
+  return simulate(clamped, props.cbMode ?? "normal");
 });
 const hex = computed(() => rgbToHex(...transformed.value).toUpperCase());
 const rgbStr = computed(() => transformed.value.join(", "));

@@ -6,7 +6,6 @@ const route = useRoute();
 
 const tabs = [
   { name: "generate", label: "Generate" },
-  { name: "photo",    label: "Photo" },
   { name: "library",  label: "Library" },
   { name: "blog",     label: "Blog" },
 ];
