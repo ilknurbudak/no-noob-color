@@ -15,7 +15,7 @@ Docs:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones
+from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones, material
 
 app = FastAPI(
     title="no noob color API",
@@ -40,6 +40,7 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(palettes.router, prefix="/palettes", tags=["palettes"])
 app.include_router(colorblind.router, prefix="/colorblind", tags=["colorblind"])
 app.include_router(tones.router, prefix="/tones", tags=["tones"])
+app.include_router(material.router, prefix="/material", tags=["material"])
 
 
 @app.get("/")
@@ -58,6 +59,8 @@ def root():
             "POST /colorblind/simulate": "Brettel/Viénot CVD simulation for a palette",
             "POST /tones/generate":     "single seed → 11-stop tonal scale (50-950)",
             "POST /tones/tailwind":     "tonal scale + Tailwind config snippet",
+            "POST /material/theme":     "Material 3 theme — roles + 16-stop tonal palettes + light/dark",
+            "POST /material/css-variables": "Material 3 theme as CSS variables",
             "POST /convert/spaces":     "convert RGB - Lab - OKLab - CMYK - HSL",
             "POST /auth/signup":        "create account in PocketBase users collection",
             "POST /auth/login":         "exchange email+password for a bearer token",
