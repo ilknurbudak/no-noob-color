@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useToastStore } from "@/stores/toast";
 
@@ -12,10 +12,21 @@ const toast = useToastStore();
 const mode = ref<"login" | "signup">("login");
 const email = ref("");
 const password = ref("");
+const emailInput = ref<HTMLInputElement | null>(null);
 
-watch(() => props.open, (o) => {
-  if (o) { email.value = ""; password.value = ""; auth.error = null; }
+watch(() => props.open, async (o) => {
+  if (o) {
+    email.value = ""; password.value = ""; auth.error = null;
+    await nextTick();
+    emailInput.value?.focus();
+  }
 });
+
+function onEsc(e: KeyboardEvent) {
+  if (e.key === "Escape" && props.open) emit("close");
+}
+onMounted(() => window.addEventListener("keydown", onEsc));
+onUnmounted(() => window.removeEventListener("keydown", onEsc));
 
 async function submit() {
   try {
@@ -37,7 +48,7 @@ async function submit() {
       <form @submit.prevent="submit">
         <label>
           <span>Email</span>
-          <input v-model="email" type="email" autocomplete="email" required />
+          <input ref="emailInput" v-model="email" type="email" autocomplete="email" required />
         </label>
         <label>
           <span>Password</span>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, watch } from "vue";
 import BrandHeader from "@/components/BrandHeader.vue";
 import BottomNav from "@/components/BottomNav.vue";
 import Toast from "@/components/Toast.vue";
@@ -15,6 +15,11 @@ onMounted(async () => {
   setInterval(() => detectApi(true), 30_000);
   await auth.refresh();
   if (auth.isAuthed) await lib.sync();
+});
+
+watch(() => auth.isAuthed, async (now, prev) => {
+  if (now && !prev) await lib.sync();
+  else if (!now && prev) lib.resetToLocal();
 });
 </script>
 

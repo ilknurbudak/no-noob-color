@@ -107,5 +107,10 @@ export const useLibraryStore = defineStore("library", () => {
     return items.value.filter(i => (i.source ?? "photo") === source);
   }
 
-  return { items, isRemote, syncing, save, remove, bySource, sync };
+  function resetToLocal() {
+    remote.value = false;
+    items.value = load();
+  }
+
+  return { items, isRemote, syncing, save, remove, bySource, sync, resetToLocal };
 });

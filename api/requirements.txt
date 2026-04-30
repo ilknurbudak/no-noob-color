@@ -4,7 +4,8 @@ pillow==11.0.0
 numpy==2.1.0
 scikit-learn==1.5.2
 scikit-image==0.24.0
-colour-science==0.4.4
+colour-science>=0.4.6
 python-multipart==0.0.12
 requests==2.32.3
 python-dotenv==1.0.1
+email-validator==2.2.0

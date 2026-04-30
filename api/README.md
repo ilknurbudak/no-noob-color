@@ -34,28 +34,43 @@ You need **two** processes: PocketBase (BaaS) and the FastAPI service.
 
 ### 1. Start PocketBase
 
-Download the binary from <https://pocketbase.io/docs/> (single Go executable, ~15 MB).
+A `pocketbase/pb_migrations/` directory in this repo creates the `palettes` collection on first boot — no manual setup needed.
+
+Download the binary once (single Go executable, ~15 MB) into `pocketbase/`:
+
+```sh
+cd pocketbase
+curl -L -o pb.zip "https://github.com/pocketbase/pocketbase/releases/download/v0.37.4/pocketbase_0.37.4_darwin_arm64.zip"
+unzip -o pb.zip pocketbase && rm pb.zip
+chmod +x pocketbase
+```
+
+For other platforms grab the matching asset from <https://github.com/pocketbase/pocketbase/releases>.
+
+First-run admin (one time):
+
+```sh
+./pocketbase superuser upsert admin@example.com yourpassword
+```
+
+Run it:
 
 ```sh
 ./pocketbase serve
 # Server: http://127.0.0.1:8090
-# Admin:  http://127.0.0.1:8090/_/    (create admin on first visit)
+# Admin:  http://127.0.0.1:8090/_/
 ```
 
-Set up the `palettes` collection (one-time):
+The migration runs automatically on first boot, creating the `palettes` collection with row-level rules (`owner = @request.auth.id`) and the schema below:
 
-1. Open the admin UI, **Collections** → **New collection** → name it `palettes`.
-2. Add fields:
-   - `name` — Plain text, required, max 120
-   - `swatches` — JSON, required
-   - `source` — Select (single), values: `photo, generate, prompt, ref`
-   - `thumbnail` — File (single), max size ~2 MB, MIME types `image/png, image/jpeg, image/webp`
-   - `owner` — Relation → `users`, single, required, **cascade delete on**
-3. **API rules** (all five — list, view, create, update, delete):
-   ```
-   owner = @request.auth.id
-   ```
-4. Save.
+| Field | Type | Notes |
+|---|---|---|
+| `name` | text | required, max 120 |
+| `swatches` | json | required, max 2 MB |
+| `source` | select | `photo / generate / prompt / ref` |
+| `thumbnail` | file | image/png, jpeg, webp, max 2 MB |
+| `owner` | relation → users | required, cascade delete |
+| `created` / `updated` | autodate | system-managed |
 
 The built-in `users` collection already provides email/password auth — no setup needed.
 

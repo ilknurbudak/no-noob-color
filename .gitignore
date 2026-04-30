@@ -57,3 +57,14 @@ Thumbs.db
 
 # Test artifacts (regeneratable)
 tools/output/
+
+# Node
+web/node_modules/
+web/dist/
+
+# PocketBase — binary and user data are local; only migrations are tracked
+pocketbase/pocketbase
+pocketbase/pb_data/
+pocketbase/pb_hooks/
+pocketbase/CHANGELOG.md
+pocketbase/LICENSE.md
