@@ -31,7 +31,7 @@ defineProps<{
 .palette-strips {
   display: flex;
   width: 100%;
-  height: 460px;
+  height: clamp(280px, 48vw, 460px);
   border: 1px solid var(--hairline);
   border-radius: 14px;
   overflow: hidden;
@@ -64,13 +64,9 @@ defineProps<{
   line-height: 1.5;
   max-width: 280px;
 }
-@media (max-width: 720px) {
+@media (max-width: 480px) {
   .palette-strips {
-    overflow-x: auto;
-    height: 400px;
-    scrollbar-width: none;
+    height: clamp(240px, 60vw, 360px);
   }
-  .palette-strips::-webkit-scrollbar { display: none; }
-  .palette-strips :deep(.strip) { flex: 0 0 140px; min-width: 140px; }
 }
 </style>

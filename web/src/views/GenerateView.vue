@@ -379,7 +379,7 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
 
 .studio-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-columns: minmax(280px, 2fr) minmax(0, 3fr);
   gap: var(--s-5);
   align-items: start;
 }
@@ -643,8 +643,25 @@ input[type="range"] {
 .chip-btn:disabled { opacity: .4; cursor: not-allowed; }
 .chip-btn svg { width: 12px; height: 12px; }
 
-@media (max-width: 720px) {
+@media (max-width: 880px) {
   .studio-grid { grid-template-columns: 1fr; gap: var(--s-5); }
   .persona-active { margin-left: 0; width: 100%; }
+  .palette-header { flex-wrap: wrap; }
+  .palette-footer {
+    justify-content: stretch;
+    flex-wrap: wrap;
+  }
+  .palette-footer .chip-btn,
+  .palette-footer :deep(.wrap),
+  .palette-footer :deep(.chip-btn) {
+    flex: 1;
+    justify-content: center;
+  }
+}
+@media (max-width: 480px) {
+  .studio-grid { gap: var(--s-4); }
+  .ctrl { margin-bottom: var(--s-3); }
+  .rule-grid { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
+  .palette-footer { gap: 6px; }
 }
 </style>
