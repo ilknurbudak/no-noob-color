@@ -13,15 +13,22 @@ export const useThemeStore = defineStore("theme", () => {
   })());
 
   function apply() {
-    if (mode.value === "dark") document.documentElement.dataset.theme = "dark";
-    else delete document.documentElement.dataset.theme;
+    const html = document.documentElement;
+    const body = document.body;
+    if (mode.value === "dark") {
+      html.setAttribute("data-theme", "dark");
+      body?.setAttribute("data-theme", "dark");
+    } else {
+      html.removeAttribute("data-theme");
+      body?.removeAttribute("data-theme");
+    }
   }
   apply();
 
   watch(mode, (v) => {
     try { localStorage.setItem(KEY, v); } catch {}
     apply();
-  });
+  }, { flush: "post" });
 
   function toggle() {
     mode.value = mode.value === "dark" ? "light" : "dark";

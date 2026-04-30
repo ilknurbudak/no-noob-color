@@ -1,32 +1,18 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { useLibraryStore } from "@/stores/library";
 import { useAuthStore } from "@/stores/auth";
 import { rgbToHex } from "@/services/color";
 
 const lib = useLibraryStore();
 const auth = useAuthStore();
-const filter = ref<"photo" | "generate">("photo");
-const items = computed(() => lib.bySource(filter.value));
+const items = computed(() => lib.items);
 </script>
 
 <template>
   <section>
     <div class="library-filters">
-      <button
-        class="filter-chip"
-        :class="{ active: filter === 'photo' }"
-        @click="filter = 'photo'"
-      >
-        Photo <span class="count">{{ lib.bySource("photo").length }}</span>
-      </button>
-      <button
-        class="filter-chip"
-        :class="{ active: filter === 'generate' }"
-        @click="filter = 'generate'"
-      >
-        Generate <span class="count">{{ lib.bySource("generate").length }}</span>
-      </button>
+      <span class="lib-count">{{ items.length }} palette{{ items.length === 1 ? "" : "s" }}</span>
       <span class="sync-state" :class="{ remote: lib.isRemote, syncing: lib.syncing }">
         <span class="dot"></span>
         <template v-if="lib.syncing">syncing</template>
@@ -36,8 +22,8 @@ const items = computed(() => lib.bySource(filter.value));
     </div>
 
     <div v-if="items.length === 0" class="empty-large">
-      <p>No {{ filter }} palettes saved yet.</p>
-      <p>save from {{ filter }} to populate this tab</p>
+      <p>No palettes saved yet.</p>
+      <p>save a palette from generate to populate this tab</p>
     </div>
 
     <div v-else class="library-list">
@@ -65,34 +51,18 @@ const items = computed(() => lib.bySource(filter.value));
 <style scoped>
 .library-filters {
   display: flex;
-  gap: var(--s-2);
+  gap: var(--s-3);
   margin-bottom: var(--s-5);
+  align-items: center;
   flex-wrap: wrap;
 }
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid var(--hairline);
-  background: var(--bg);
-  color: var(--text-2);
-  border-radius: 999px;
+.lib-count {
   font-family: var(--mono);
   font-size: 11px;
-  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: .08em;
-  cursor: pointer;
-}
-.filter-chip:hover { color: var(--text); border-color: var(--text); }
-.filter-chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-.filter-chip .count {
-  font-size: 9px;
-  opacity: .7;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: rgba(127, 127, 127, .15);
+  letter-spacing: .12em;
+  color: var(--text-2);
+  font-weight: 500;
 }
 .sync-state {
   margin-left: auto;

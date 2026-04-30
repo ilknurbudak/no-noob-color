@@ -6,9 +6,11 @@ import PaletteStrips from "@/components/PaletteStrips.vue";
 import ProfilePill from "@/components/ProfilePill.vue";
 import ExportMenu from "@/components/ExportMenu.vue";
 import TabInfo from "@/components/TabInfo.vue";
+import TasteCarousel from "@/components/TasteCarousel.vue";
 import { usePersonaStore } from "@/stores/persona";
 import { useLibraryStore } from "@/stores/library";
 import { useToastStore } from "@/stores/toast";
+import { useTasteStore } from "@/stores/taste";
 import { harmonize as apiHarmonize, getApiUrl } from "@/services/api";
 import { hexToRgb, rgbToHex, rgbToHsv, hsvToRgb, rgbToLab } from "@/services/color";
 import { useRefImage } from "@/composables/useRefImage";
@@ -17,6 +19,8 @@ import { parsePrompt, pickHueFromBias, clampToBias } from "@/services/promptPars
 const persona = usePersonaStore();
 const lib = useLibraryStore();
 const toast = useToastStore();
+const taste = useTasteStore();
+const useTaste = ref(false);
 
 const baseHex = ref("#7a4b8a");
 const rule = ref<Harmony>("auto");
@@ -56,12 +60,19 @@ const HARMONY_OPTIONS: { id: Harmony; label: string }[] = [
   { id: "tetradic", label: "tetradic" },
 ];
 
-function localHarmonize(hex: string, kind: Harmony, count: number, promptStr = ""): Swatch[] {
-  const bias = promptStr ? parsePrompt(promptStr) : { tags: [] };
+function localHarmonize(hex: string, kind: Harmony, count: number, promptStr = "", useTasteProfile = false): Swatch[] {
+  const bias = promptStr ? parsePrompt(promptStr) : {};
   const rgb = hexToRgb(hex);
   let [h, s, v] = rgbToHsv(...rgb);
   if (promptStr && bias.hues?.length) h = pickHueFromBias(bias, h);
   if (promptStr) [s, v] = clampToBias(s, v, bias);
+  if (useTasteProfile && taste.profile.ready) {
+    h = taste.preferredHue();
+    const [sl, sh] = taste.profile.satRange;
+    const [ll, lh] = taste.profile.litRange;
+    s = (sl + sh) / 2;
+    v = (ll + lh) / 2;
+  }
 
   const offsets: Record<Exclude<Harmony, "auto">, number[]> = {
     monochromatic: [0],
@@ -98,12 +109,12 @@ function localHarmonize(hex: string, kind: Harmony, count: number, promptStr = "
 async function generate() {
   loading.value = true;
   let result: Swatch[] | null = null;
-  // Prompt'lu durumda lokal motoru kullan — API'nin prompt parser'ı yok
-  if (!promptText.value && getApiUrl()) {
+  // Prompt veya taste varsa lokal motoru kullan — API'nin bu bias'ları yok
+  if (!promptText.value && !useTaste.value && getApiUrl()) {
     try { result = await apiHarmonize(baseHex.value, rule.value === "auto" ? "analogous" : rule.value, n.value); }
     catch (err) { console.warn("API harmonize failed, falling back:", err); }
   }
-  if (!result) result = localHarmonize(baseHex.value, rule.value, n.value, promptText.value);
+  if (!result) result = localHarmonize(baseHex.value, rule.value, n.value, promptText.value, useTaste.value);
   palette.value = result;
   loading.value = false;
 }
@@ -200,6 +211,11 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
           />
         </label>
 
+        <label class="ctrl taste-toggle" v-if="taste.profile.ready">
+          <input type="checkbox" v-model="useTaste" />
+          <span class="taste-label">Use my taste profile <em class="opt">({{ taste.sampleCount }} likes)</em></span>
+        </label>
+
         <button class="generate-btn" :disabled="loading" @click="generate">
           {{ loading ? "generating…" : "Generate" }}
         </button>
@@ -240,6 +256,10 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
           <ExportMenu :palette="palette" :disabled="!palette.length" />
         </div>
       </div>
+    </div>
+
+    <div class="taste-section">
+      <TasteCarousel />
     </div>
 
     <TabInfo
@@ -405,6 +425,25 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
   font-size: 9px;
   margin-left: 4px;
 }
+
+.taste-toggle {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.taste-toggle input { accent-color: var(--text); }
+.taste-toggle .taste-label {
+  display: inline !important;
+  margin: 0 !important;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-2);
+}
+.taste-section { margin-top: var(--s-7); }
 
 .rule-grid {
   display: grid;
