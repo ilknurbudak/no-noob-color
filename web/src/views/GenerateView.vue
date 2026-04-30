@@ -12,6 +12,7 @@ import { harmonize as apiHarmonize, getApiUrl } from "@/services/api";
 import { hexToRgb, rgbToHex, rgbToHsv, hsvToRgb, rgbToLab } from "@/services/color";
 import { CB_MODES, type CBMode } from "@/services/colorblind";
 import { useRefImage } from "@/composables/useRefImage";
+import { parsePrompt, biasToPalette } from "@/services/promptBias";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -24,6 +25,17 @@ const palette = ref<Swatch[]>([]);
 const loading = ref(false);
 const cbMode = ref<CBMode>("normal");
 const refImg = useRefImage(1);
+const prompt = ref("");
+const promptInfo = computed(() => parsePrompt(prompt.value));
+
+function generateFromPrompt() {
+  const info = promptInfo.value;
+  if (!info.matched.length) {
+    toast.show("No keywords matched");
+    return;
+  }
+  palette.value = biasToPalette(info.bias, n.value);
+}
 
 async function onRefDrop(e: DragEvent) {
   e.preventDefault();
@@ -188,6 +200,29 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
         <button class="generate-btn" :disabled="loading" @click="generate">
           {{ loading ? "generating…" : "Generate" }}
         </button>
+
+        <label class="ctrl prompt-ctrl">
+          <span>
+            Prompt
+            <span class="prompt-meta" v-if="prompt">
+              · {{ promptInfo.matched.length }}/{{ promptInfo.tokens.length }} matched
+            </span>
+          </span>
+          <div class="prompt-row">
+            <input
+              type="text"
+              v-model="prompt"
+              placeholder="warm vintage sunset · soluk pastel deniz"
+              @keydown.enter="generateFromPrompt"
+            />
+            <button class="prompt-btn" :disabled="!promptInfo.matched.length" @click="generateFromPrompt">
+              from prompt
+            </button>
+          </div>
+          <div v-if="prompt && promptInfo.unknown.length" class="prompt-unknown">
+            ignored: {{ promptInfo.unknown.join(", ") }}
+          </div>
+        </label>
 
         <div class="ref-zone"
           @click="onRefClick"
@@ -429,6 +464,49 @@ input[type="range"] {
 .ref-zone.has { border-style: solid; padding: 0; }
 .ref-zone.busy { opacity: .7; }
 .ref-zone img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.prompt-ctrl { margin-top: var(--s-3); }
+.prompt-meta {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-2);
+  font-size: 9px;
+}
+.prompt-row { display: flex; gap: 6px; }
+.prompt-row input {
+  flex: 1;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 12px;
+}
+.prompt-row input:focus { outline: none; border-color: var(--text); }
+.prompt-btn {
+  padding: 7px 11px;
+  border: 1px solid var(--text);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.prompt-btn:hover:not(:disabled) { background: var(--text); color: var(--bg); }
+.prompt-btn:disabled { opacity: .4; cursor: not-allowed; }
+.prompt-unknown {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: .04em;
+}
 
 .palette-header {
   display: flex;
