@@ -15,7 +15,7 @@ Docs:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import extract, harmonize, contrast, convert, auth, palettes
+from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind
 
 app = FastAPI(
     title="no noob color API",
@@ -38,6 +38,7 @@ app.include_router(contrast.router, prefix="/contrast", tags=["contrast"])
 app.include_router(convert.router, prefix="/convert", tags=["convert"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(palettes.router, prefix="/palettes", tags=["palettes"])
+app.include_router(colorblind.router, prefix="/colorblind", tags=["colorblind"])
 
 
 @app.get("/")
@@ -53,6 +54,7 @@ def root():
             "POST /contrast/audit":     "audit a whole palette against AA/AAA",
             "POST /contrast/delta-e":   "perceptual difference (CIE76/94/CIEDE2000)",
             "POST /contrast/delta-e/matrix": "pairwise delta-e matrix for a palette",
+            "POST /colorblind/simulate": "Brettel/Viénot CVD simulation for a palette",
             "POST /convert/spaces":     "convert RGB - Lab - OKLab - CMYK - HSL",
             "POST /auth/signup":        "create account in PocketBase users collection",
             "POST /auth/login":         "exchange email+password for a bearer token",
