@@ -11,7 +11,8 @@ const router = createRouter({
     { path: "/blog/:slug", name: "blog-post", component: () => import("@/views/BlogPostView.vue") },
     { path: "/share/:slug", name: "share", component: () => import("@/views/ShareView.vue") },
     { path: "/profile", name: "profile", component: () => import("@/views/ProfileView.vue") },
-    { path: "/:rest(.*)*", redirect: "/" },
+    { path: "/about", name: "about", component: () => import("@/views/AboutView.vue") },
+    { path: "/:rest(.*)*", name: "not-found", component: () => import("@/views/NotFoundView.vue") },
   ],
 });
 

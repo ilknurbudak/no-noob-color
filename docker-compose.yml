@@ -1,0 +1,45 @@
+# Local full-stack: PocketBase + FastAPI + Vue dev preview.
+# Usage:
+#   docker compose up --build
+#   open http://localhost:8080  (Vue)
+#   open http://localhost:8090/_/  (PocketBase admin)
+#
+# For development with hot reload, prefer running each service directly
+# (uvicorn --reload, npm run dev, ./pocketbase serve). This compose file
+# is for one-shot smoke tests and shippable images.
+
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:0.22.4
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pocketbase/pb_data:/pb_data
+      - ./pocketbase/pb_migrations:/pb_migrations
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8090/api/health"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - POCKETBASE_URL=http://pocketbase:8090
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: unless-stopped
