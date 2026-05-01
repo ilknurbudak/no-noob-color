@@ -338,7 +338,7 @@ function clearQuery() { query.value = ""; }
           aria-label="Copy share link"
           title="Copy share link"
         >↗</button>
-        <img v-if="item.thumb" class="lib-thumb" :src="item.thumb" alt="" />
+        <img v-if="item.thumb" class="lib-thumb" :src="item.thumb" alt="" loading="lazy" decoding="async" />
         <div v-else class="lib-thumb-fallback"></div>
         <div class="lib-swatches">
           <span

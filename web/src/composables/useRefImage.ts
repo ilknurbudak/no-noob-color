@@ -3,6 +3,29 @@ import type { Swatch } from "@/types";
 import { extractKMeans, getApiUrl } from "@/services/api";
 import { extractPalette, makeThumbnail } from "@/services/extract";
 
+// Resize a File to max dimension `maxDim` while preserving aspect ratio.
+// Returns a Blob (image/jpeg quality 0.85). If the input is already small,
+// returns the original file untouched.
+async function preprocessImage(file: File, maxDim = 1200): Promise<File | Blob> {
+  if (file.size < 200_000) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    if (Math.max(bitmap.width, bitmap.height) <= maxDim) return file;
+    const scale = maxDim / Math.max(bitmap.width, bitmap.height);
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = new OffscreenCanvas(w, h);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.85 });
+    return blob;
+  } catch (e) {
+    console.warn("image preprocess failed, sending original:", e);
+    return file;
+  }
+}
+
 // Drop/select a reference image, get back a palette + dataURL thumbnail.
 // API-first, local k-means fallback. Used by Photo view and Generate's
 // "use as seed" flow.
@@ -33,7 +56,10 @@ export function useRefImage(defaultN = 5) {
       thumb.value = makeThumbnail(img);
       let extracted: Swatch[] | null = null;
       if (getApiUrl()) {
-        try { extracted = await extractKMeans(file, n, "lab"); }
+        try {
+          const preprocessed = await preprocessImage(file);
+          extracted = await extractKMeans(preprocessed as Blob, n, "lab");
+        }
         catch (e) { console.warn("API ref extract failed, fallback:", e); }
       }
       if (!extracted) extracted = await extractPalette(img, n);
