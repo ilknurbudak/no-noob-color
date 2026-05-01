@@ -39,6 +39,34 @@ function makeFolder() {
   newFolderName.value = "";
 }
 
+function exportLibrary() {
+  const json = lib.exportAll();
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `nnc-library-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast.show("Library exported");
+}
+
+function importLibrary(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const result = lib.importAll(reader.result as string);
+      toast.show(`Imported ${result.added} (${result.skipped} duplicate)`);
+    } catch (err: any) {
+      toast.show(err.message || "Import failed");
+    }
+  };
+  reader.readAsText(file);
+  (e.target as HTMLInputElement).value = "";
+}
+
 async function copyHex(hex: string) {
   try {
     await navigator.clipboard.writeText(hex);
@@ -131,6 +159,15 @@ function clearQuery() { query.value = ""; }
         <template v-else-if="lib.isRemote">cloud · {{ auth.user?.email.split("@")[0] }}</template>
         <template v-else>local only</template>
       </span>
+      <div class="io-buttons">
+        <button class="io-btn" @click="exportLibrary" :disabled="!lib.items.length" title="Export library as JSON">
+          export
+        </button>
+        <label class="io-btn">
+          import
+          <input type="file" accept="application/json" @change="importLibrary" hidden />
+        </label>
+      </div>
     </div>
 
     <template v-if="tab === 'palettes'">
@@ -442,6 +479,23 @@ function clearQuery() { query.value = ""; }
 .filter-pill:hover { color: var(--text); border-color: var(--text); }
 .filter-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 .filter-pill .star { font-size: 11px; line-height: 1; }
+
+.io-buttons { display: flex; gap: 4px; }
+.io-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text-2);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.io-btn:hover:not(:disabled) { color: var(--text); border-color: var(--text); }
+.io-btn:disabled { opacity: .4; cursor: not-allowed; }
 
 /* FOLDERS */
 .folder-bar {

@@ -238,10 +238,57 @@ export const useLibraryStore = defineStore("library", () => {
     return folders.value.filter(f => f.items.includes(itemId));
   }
 
+  // ---------- bulk export / import ----------
+  function exportAll(): string {
+    return JSON.stringify({
+      version: 1,
+      exported: new Date().toISOString(),
+      items: items.value,
+      stars: [...stars.value],
+      tags: tags.value,
+      folders: folders.value,
+    }, null, 2);
+  }
+
+  function importAll(json: string): { added: number; skipped: number } {
+    let parsed: any;
+    try { parsed = JSON.parse(json); }
+    catch { throw new Error("invalid JSON"); }
+    if (!parsed || !Array.isArray(parsed.items)) throw new Error("not a library export");
+
+    const existing = new Set(items.value.map(i => i.id));
+    let added = 0, skipped = 0;
+    for (const it of parsed.items) {
+      if (existing.has(it.id)) { skipped++; continue; }
+      items.value.unshift(it);
+      added++;
+    }
+    persist(items.value);
+
+    if (Array.isArray(parsed.stars)) {
+      for (const id of parsed.stars) stars.value.add(id);
+      stars.value = new Set(stars.value);
+      persistStars(stars.value);
+    }
+    if (parsed.tags && typeof parsed.tags === "object") {
+      tags.value = { ...tags.value, ...parsed.tags };
+      persistTags(tags.value);
+    }
+    if (Array.isArray(parsed.folders)) {
+      const fmap = new Map(folders.value.map(f => [f.id, f]));
+      for (const f of parsed.folders) {
+        if (!fmap.has(f.id)) folders.value.unshift(f);
+      }
+      persistFolders(folders.value);
+    }
+    return { added, skipped };
+  }
+
   return {
     items, isRemote, syncing, save, remove, bySource, sync, resetToLocal,
     stars, isStarred, toggleStar,
     tags, getTags, setTags, addTag, removeTag, allTags,
     folders, createFolder, renameFolder, deleteFolder, toggleInFolder, foldersFor,
+    exportAll, importAll,
   };
 });
