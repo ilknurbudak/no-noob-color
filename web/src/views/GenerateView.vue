@@ -18,6 +18,7 @@ import TasteTrainer from "@/components/TasteTrainer.vue";
 import UIPanel from "@/components/persona/UIPanel.vue";
 import IllustratorPanel from "@/components/persona/IllustratorPanel.vue";
 import ConceptPanel from "@/components/persona/ConceptPanel.vue";
+import CinemaPanel from "@/components/persona/CinemaPanel.vue";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -320,6 +321,7 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
     <UIPanel v-if="persona.activeId === 'ui'" :palette="palette" />
     <IllustratorPanel v-if="persona.activeId === 'illustrator'" :palette="palette" />
     <ConceptPanel v-if="persona.activeId === 'concept'" :palette="palette" />
+    <CinemaPanel v-if="persona.activeId === 'cinema'" :palette="palette" />
 
     <TabInfo
       eyebrow="How it works"
