@@ -193,20 +193,20 @@
       <button class="device-btn" data-device="iphone15-pro-max">15 Pro Max</button>
       <button class="device-btn" data-device="ipad-mini">iPad mini</button>
     </div>
-    <input class="url-input" id="url" value="http://localhost:4173/" />
+    <input class="url-input" id="url" value="http://localhost:5173/" />
   </header>
 
   <div class="device iphone15" id="device">
     <div class="notch"></div>
     <div class="device-screen">
-      <iframe id="frame" src="http://localhost:4173/"></iframe>
+      <iframe id="frame" src="http://localhost:5173/"></iframe>
     </div>
     <button class="reload-btn" id="reload" title="Reload">↻</button>
   </div>
 
   <div class="footer">
-    if blank: run <a href="#">npm run preview</a> in web/ first ·
-    or change URL above to <a href="#">http://localhost:5173/</a> for dev mode
+    dev mode (HMR · no cache) · for production preview switch URL to
+    <a href="#">http://localhost:4173/</a>
   </div>
 </div>
 
@@ -230,7 +230,10 @@
   });
 
   reload.addEventListener("click", () => {
-    frame.src = frame.src;
+    // Cache-busting: append a fresh query param so the iframe pulls a new copy
+    var base = url.value.split("?")[0].replace(/#.*$/, "");
+    var hash = url.value.includes("#") ? url.value.substring(url.value.indexOf("#")) : "";
+    frame.src = base + "?_t=" + Date.now() + hash;
   });
 </script>
 
