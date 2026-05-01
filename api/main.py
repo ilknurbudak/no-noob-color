@@ -15,7 +15,7 @@ Docs:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones, material, llm, glasbey_palette
+from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones, material, llm, glasbey_palette, lut
 
 app = FastAPI(
     title="no noob color API",
@@ -43,6 +43,7 @@ app.include_router(tones.router, prefix="/tones", tags=["tones"])
 app.include_router(material.router, prefix="/material", tags=["material"])
 app.include_router(llm.router, prefix="/llm", tags=["llm"])
 app.include_router(glasbey_palette.router, prefix="/glasbey", tags=["glasbey"])
+app.include_router(lut.router, prefix="/lut", tags=["lut"])
 
 
 @app.get("/")
@@ -68,6 +69,8 @@ def root():
             "POST /llm/prompt-to-palette": "freeform prompt → palette via OpenAI/Apify",
             "GET  /llm/status":         "which LLM providers are configured",
             "POST /glasbey/generate":   "max-distinct N colors via Glasbey algorithm",
+            "POST /lut/cube":           "palette → .cube 3D LUT (downloadable)",
+            "POST /lut/preview":        "same as /lut/cube but returns text",
             "POST /convert/spaces":     "convert RGB - Lab - OKLab - CMYK - HSL",
             "POST /auth/signup":        "create account in PocketBase users collection",
             "POST /auth/login":         "exchange email+password for a bearer token",
