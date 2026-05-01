@@ -84,3 +84,7 @@ pocketbase/pb_data/
 pocketbase/pb_hooks/
 pocketbase/CHANGELOG.md
 pocketbase/LICENSE.md
+
+# Vite generated declaration files
+web/vite.config.d.ts
+web/vite.config.js
