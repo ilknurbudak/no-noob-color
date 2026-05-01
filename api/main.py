@@ -15,7 +15,7 @@ Docs:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones, material, llm, glasbey_palette, lut, aces
+from routers import extract, harmonize, contrast, convert, auth, palettes, colorblind, tones, material, llm, glasbey_palette, lut, aces, pantone
 
 app = FastAPI(
     title="no noob color API",
@@ -45,6 +45,7 @@ app.include_router(llm.router, prefix="/llm", tags=["llm"])
 app.include_router(glasbey_palette.router, prefix="/glasbey", tags=["glasbey"])
 app.include_router(lut.router, prefix="/lut", tags=["lut"])
 app.include_router(aces.router, prefix="/aces", tags=["aces"])
+app.include_router(pantone.router, prefix="/pantone", tags=["pantone"])
 
 
 @app.get("/")
@@ -74,6 +75,8 @@ def root():
             "POST /lut/preview":        "same as /lut/cube but returns text",
             "GET  /aces/spaces":        "list supported RGB color spaces",
             "POST /aces/convert":       "transform palette between sRGB / Rec.709 / Rec.2020 / P3 / ACEScg / ACES2065-1",
+            "GET  /pantone/dataset":    "info about the bundled Pantone-like subset",
+            "POST /pantone/match":      "closest Pantone-like match for a palette via CIEDE2000",
             "POST /convert/spaces":     "convert RGB - Lab - OKLab - CMYK - HSL",
             "POST /auth/signup":        "create account in PocketBase users collection",
             "POST /auth/login":         "exchange email+password for a bearer token",
