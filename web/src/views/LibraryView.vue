@@ -67,6 +67,53 @@ function importLibrary(e: Event) {
   (e.target as HTMLInputElement).value = "";
 }
 
+// DIFF MODE
+const diffMode = ref(false);
+const selectedForDiff = ref<string[]>([]);
+
+function toggleDiff(id: string) {
+  if (selectedForDiff.value.includes(id)) {
+    selectedForDiff.value = selectedForDiff.value.filter(x => x !== id);
+  } else if (selectedForDiff.value.length < 2) {
+    selectedForDiff.value = [...selectedForDiff.value, id];
+  } else {
+    selectedForDiff.value = [selectedForDiff.value[1], id];
+  }
+}
+
+const diffPair = computed(() => {
+  if (selectedForDiff.value.length !== 2) return null;
+  const a = lib.items.find(i => i.id === selectedForDiff.value[0]);
+  const b = lib.items.find(i => i.id === selectedForDiff.value[1]);
+  if (!a || !b) return null;
+  return { a, b };
+});
+
+function paletteDistance(a: typeof lib.items[number], b: typeof lib.items[number]): number {
+  // Average ΔLab between sorted Lab values
+  const labA = a.palette.map(p => {
+    const [r, g, bl] = p.rgb;
+    return { r, g, b: bl };
+  });
+  const labB = b.palette.map(p => {
+    const [r, g, bl] = p.rgb;
+    return { r, g, b: bl };
+  });
+  const minLen = Math.min(labA.length, labB.length);
+  if (!minLen) return 0;
+  // Greedy match: for each in a, find nearest in b
+  let total = 0;
+  for (const sa of labA) {
+    let min = Infinity;
+    for (const sb of labB) {
+      const d = Math.sqrt((sa.r-sb.r)**2 + (sa.g-sb.g)**2 + (sa.b-sb.b)**2);
+      if (d < min) min = d;
+    }
+    total += min;
+  }
+  return total / labA.length;
+}
+
 async function shareLink(item: typeof lib.items[number]) {
   const hexes = item.palette.map(p =>
     rgbToHex(p.rgb[0], p.rgb[1], p.rgb[2]).slice(1).toLowerCase()
@@ -161,6 +208,13 @@ function clearQuery() { query.value = ""; }
       >
         <span class="star">★</span> starred only
       </button>
+      <button
+        class="filter-pill"
+        :class="{ active: diffMode }"
+        @click="diffMode = !diffMode; selectedForDiff = []"
+      >
+        diff mode
+      </button>
       <span class="library-count">
         <strong>{{ items.length }}</strong>
         <template v-if="query || onlyStarred">/ {{ lib.items.length }} </template>
@@ -184,6 +238,40 @@ function clearQuery() { query.value = ""; }
     </div>
 
     <template v-if="tab === 'palettes'">
+
+    <!-- DIFF PANEL -->
+    <div v-if="diffMode" class="diff-bar">
+      <span class="diff-hint">
+        <template v-if="selectedForDiff.length === 0">click two palettes to compare</template>
+        <template v-else-if="selectedForDiff.length === 1">click one more palette · {{ selectedForDiff.length }}/2</template>
+        <template v-else>2/2 selected · scroll down for diff</template>
+      </span>
+      <button v-if="selectedForDiff.length" class="filter-pill" @click="selectedForDiff = []">clear</button>
+    </div>
+
+    <div v-if="diffPair" class="diff-panel">
+      <div class="diff-eyebrow">comparison · avg color distance ≈ {{ paletteDistance(diffPair.a, diffPair.b).toFixed(1) }}</div>
+      <div class="diff-grid">
+        <div class="diff-side">
+          <span class="diff-label">A · {{ new Date(diffPair.a.ts).toISOString().slice(0,10) }}</span>
+          <div class="diff-strip">
+            <div v-for="(p, i) in diffPair.a.palette" :key="i" class="diff-cell"
+              :style="{ background: rgbToHex(p.rgb[0], p.rgb[1], p.rgb[2]) }"
+              :title="rgbToHex(p.rgb[0], p.rgb[1], p.rgb[2])"
+            ></div>
+          </div>
+        </div>
+        <div class="diff-side">
+          <span class="diff-label">B · {{ new Date(diffPair.b.ts).toISOString().slice(0,10) }}</span>
+          <div class="diff-strip">
+            <div v-for="(p, i) in diffPair.b.palette" :key="i" class="diff-cell"
+              :style="{ background: rgbToHex(p.rgb[0], p.rgb[1], p.rgb[2]) }"
+              :title="rgbToHex(p.rgb[0], p.rgb[1], p.rgb[2])"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- FOLDERS -->
     <div v-if="lib.folders.length || showFolderManager" class="folder-bar">
@@ -232,7 +320,11 @@ function clearQuery() { query.value = ""; }
     </div>
 
     <div v-else class="library-list">
-      <div v-for="item in items" :key="item.id" class="library-card">
+      <div v-for="item in items" :key="item.id" class="library-card"
+        :class="{ 'diff-selected': diffMode && selectedForDiff.includes(item.id) }"
+        @click="diffMode && toggleDiff(item.id)"
+        :style="diffMode ? { cursor: 'pointer' } : {}"
+      >
         <button class="lib-delete" @click="lib.remove(item.id)" aria-label="Delete">×</button>
         <button
           class="lib-star"
@@ -769,6 +861,64 @@ function clearQuery() { query.value = ""; }
 .library-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+}
+.library-card.diff-selected {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+.diff-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  margin-bottom: var(--s-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-2);
+}
+.diff-hint { flex: 1; }
+
+.diff-panel {
+  border: 1px solid var(--text);
+  border-radius: 12px;
+  padding: var(--s-4);
+  margin-bottom: var(--s-4);
+  background: var(--bg);
+}
+.diff-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--text-3);
+  margin-bottom: var(--s-3);
+}
+.diff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+}
+.diff-side { display: flex; flex-direction: column; gap: 6px; }
+.diff-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  color: var(--text-2);
+}
+.diff-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(28px, 1fr));
+  gap: 2px;
+}
+.diff-cell { height: 80px; border-radius: 4px; }
+
+@media (max-width: 600px) {
+  .diff-grid { grid-template-columns: 1fr; }
 }
 .lib-thumb,
 .lib-thumb-fallback {
