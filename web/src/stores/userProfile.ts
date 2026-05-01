@@ -7,14 +7,13 @@ const KEY = "nnc_user_profile_v1";
 
 interface ProfileData {
   niche: string;        // 'editorial illustration · indie books'
-  bio: string;          // free-form
   aiNote: string;       // pinned context fed to AI prompts
   city: string;
   website: string;
 }
 
 function blank(): ProfileData {
-  return { niche: "", bio: "", aiNote: "", city: "", website: "" };
+  return { niche: "", aiNote: "", city: "", website: "" };
 }
 
 function load(): ProfileData {

@@ -127,16 +127,6 @@ function logout() {
           <span>Website</span>
           <input v-model="profile.data.website" placeholder="https://..." type="url" />
         </label>
-        <label class="field">
-          <span>Bio</span>
-          <textarea
-            v-model="profile.data.bio"
-            placeholder="A sentence or two — tone, mediums, who you make for."
-            rows="3"
-            maxlength="280"
-          ></textarea>
-          <span class="char-count">{{ profile.data.bio.length }} / 280</span>
-        </label>
       </div>
 
       <div class="card ai-note-card" :class="{ pinned: aiNotePinned && profile.data.aiNote.length > 0 }">

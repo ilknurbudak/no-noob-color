@@ -46,7 +46,18 @@ export const useThemeStore = defineStore("theme", () => {
 
   function toggle() {
     mode.value = mode.value === "dark" ? "light" : "dark";
+    // Persist + apply IMMEDIATELY — don't trust the watch chain in case
+    // pinia setup-store reactivity has timing issues.
+    try { localStorage.setItem(KEY, mode.value); } catch {}
+    apply();
   }
 
-  return { mode, toggle };
+  function setMode(next: "light" | "dark") {
+    if (next === mode.value) return;
+    mode.value = next;
+    try { localStorage.setItem(KEY, next); } catch {}
+    apply();
+  }
+
+  return { mode, toggle, setMode };
 });
