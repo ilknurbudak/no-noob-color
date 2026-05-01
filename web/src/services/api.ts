@@ -212,3 +212,31 @@ export async function deletePalette(id: string): Promise<void> {
   });
   await jsonOrThrow(res);
 }
+
+// ---------- Material 3 ----------
+
+export interface MaterialTheme {
+  seed: string;
+  schemes: { light: Record<string, string>; dark: Record<string, string> };
+  palettes: Record<string, Record<string, string>>;
+  stops: number[];
+  roles: string[];
+}
+
+export async function materialTheme(seed: string): Promise<MaterialTheme> {
+  const res = await fetch(requireBase() + "/material/theme", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ seed }),
+  });
+  return jsonOrThrow(res);
+}
+
+export async function materialCss(seed: string): Promise<{ css: string }> {
+  const res = await fetch(requireBase() + "/material/css-variables", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ seed }),
+  });
+  return jsonOrThrow(res);
+}

@@ -15,6 +15,7 @@ export const PERSONAS: Persona[] = [
   { id: "cinema",      name: "Cinematographer",      desc: "Film & video grading. ACES/Rec.709, .cube LUT export, day-for-night, looks.",         profile: "Display P3", wcagMin: 0,   preferred: "json",      bias: "cinematic",    size: 7,  creativity: 30, variations: "off"   },
   { id: "fashion",     name: "Fashion Designer",     desc: "Seasonal palettes, fabric extraction, Pantone matches, color stories.",                 profile: "CMYK",       wcagMin: 0,   preferred: "ase",       bias: "seasonal",     size: 8,  creativity: 35, variations: "off"   },
   { id: "content",     name: "Content Creator",      desc: "Social media palettes, IG feed harmony, thumbnail extraction, brand consistency.",      profile: "sRGB",       wcagMin: 3.0, preferred: "json",      bias: "bold",         size: 9,  creativity: 40, variations: "off"   },
+  { id: "material",    name: "Material 3",            desc: "Single seed → Google's Material You theme. HCT-based, 13-stop tonal palettes, light/dark schemes.", profile: "sRGB", wcagMin: 4.5, preferred: "css", bias: "modern", size: 5, creativity: 5, variations: "off" },
 ];
 
 export const usePersonaStore = defineStore("persona", () => {
