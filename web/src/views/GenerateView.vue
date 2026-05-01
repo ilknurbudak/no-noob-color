@@ -22,6 +22,8 @@ import CinemaPanel from "@/components/persona/CinemaPanel.vue";
 import BrandPanel from "@/components/persona/BrandPanel.vue";
 import PrintPanel from "@/components/persona/PrintPanel.vue";
 import MaterialPanel from "@/components/persona/MaterialPanel.vue";
+import FashionPanel from "@/components/persona/FashionPanel.vue";
+import ContentPanel from "@/components/persona/ContentPanel.vue";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -328,6 +330,8 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
     <BrandPanel v-if="persona.activeId === 'brand'" :palette="palette" />
     <PrintPanel v-if="persona.activeId === 'print'" :palette="palette" />
     <MaterialPanel v-if="persona.activeId === 'material'" :palette="palette" />
+    <FashionPanel v-if="persona.activeId === 'fashion'" :palette="palette" />
+    <ContentPanel v-if="persona.activeId === 'content'" :palette="palette" />
 
     <TabInfo
       eyebrow="How it works"
