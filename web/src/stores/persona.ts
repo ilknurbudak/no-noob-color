@@ -11,6 +11,10 @@ export const PERSONAS: Persona[] = [
   { id: "brand",       name: "Brand Designer",       desc: "Identity, logos, campaigns. Versatile multi-format exports, AA enforcement.",           profile: "sRGB",       wcagMin: 4.5, preferred: "ase",       bias: "elegant",      size: 5,  creativity: 5,  variations: "off"   },
   { id: "game",        name: "Game / Motion Artist", desc: "Game UI, characters, motion. Display P3, vibrant defaults, JSON tokens.",               profile: "Display P3", wcagMin: 0,   preferred: "json",      bias: "vibrant",      size: 8,  creativity: 60, variations: "tints" },
   { id: "editorial",   name: "Editorial / Photo",    desc: "Magazines, photography, mood boards. sRGB, muted tendencies.",                          profile: "sRGB",       wcagMin: 0,   preferred: "text",      bias: "muted",        size: 5,  creativity: 25, variations: "off"   },
+  { id: "concept",     name: "Concept Artist",       desc: "Environments, characters, color script. Lighting + time-of-day + SSS sims.",          profile: "Display P3", wcagMin: 0,   preferred: "procreate", bias: "atmospheric",  size: 8,  creativity: 50, variations: "all"   },
+  { id: "cinema",      name: "Cinematographer",      desc: "Film & video grading. ACES/Rec.709, .cube LUT export, day-for-night, looks.",         profile: "Display P3", wcagMin: 0,   preferred: "json",      bias: "cinematic",    size: 7,  creativity: 30, variations: "off"   },
+  { id: "fashion",     name: "Fashion Designer",     desc: "Seasonal palettes, fabric extraction, Pantone matches, color stories.",                 profile: "CMYK",       wcagMin: 0,   preferred: "ase",       bias: "seasonal",     size: 8,  creativity: 35, variations: "off"   },
+  { id: "content",     name: "Content Creator",      desc: "Social media palettes, IG feed harmony, thumbnail extraction, brand consistency.",      profile: "sRGB",       wcagMin: 3.0, preferred: "json",      bias: "bold",         size: 9,  creativity: 40, variations: "off"   },
 ];
 
 export const usePersonaStore = defineStore("persona", () => {
