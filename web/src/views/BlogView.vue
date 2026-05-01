@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { POSTS } from "@/data/blog/posts";
+import { POSTS, TIPS } from "@/data/blog/posts";
 
 const router = useRouter();
 
@@ -15,10 +15,18 @@ function open(slug: string) {
       <div class="eyebrow">Field notes · color science for working artists</div>
       <h1>Why this works the way it does.</h1>
       <p class="lead">
-        Eight short pieces on the math, history, and human factors behind the
-        colors you ship — in this app, on a screen, on paper, in a film.
+        Long-form pieces on the math and history behind the colors you ship,
+        plus quick how-to tips for everyday production work.
       </p>
+      <div class="blog-links">
+        <button @click="router.push('/glossary')" class="blog-link">browse glossary →</button>
+      </div>
     </header>
+
+    <div class="section-head">
+      <span class="section-eyebrow">Deep dives</span>
+      <h2 class="section-title">{{ POSTS.length }} long-form pieces</h2>
+    </div>
 
     <div class="post-grid">
       <article
@@ -36,6 +44,26 @@ function open(slug: string) {
         <h2>{{ p.title }}</h2>
         <p>{{ p.lead }}</p>
         <span class="cta">read →</span>
+      </article>
+    </div>
+
+    <div class="section-head tips-head">
+      <span class="section-eyebrow">Tips</span>
+      <h2 class="section-title">{{ TIPS.length }} quick how-tos</h2>
+    </div>
+
+    <div class="tips-grid">
+      <article
+        v-for="t in TIPS"
+        :key="t.slug"
+        class="tip-card"
+        @click="open(t.slug)"
+      >
+        <div class="tip-meta">
+          <span>{{ t.eyebrow }}</span>
+        </div>
+        <h3>{{ t.title }}</h3>
+        <p>{{ t.lead }}</p>
       </article>
     </div>
   </section>
@@ -70,8 +98,21 @@ function open(slug: string) {
   line-height: 1.6;
   color: var(--text-2);
   max-width: 620px;
-  margin: 0;
+  margin: 0 0 var(--s-3);
 }
+.blog-links { display: flex; gap: 12px; }
+.blog-link {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+  letter-spacing: .04em;
+  padding: 0;
+}
+.blog-link:hover { opacity: .7; }
 .post-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -139,6 +180,75 @@ function open(slug: string) {
   margin-top: 4px;
 }
 .post-card:hover .cta { color: var(--text); }
+
+.section-head {
+  margin: var(--s-7) 0 var(--s-4);
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+.section-head:first-of-type { margin-top: 0; }
+.section-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--text-3);
+}
+.section-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  font-weight: 500;
+  margin: 0;
+  text-transform: lowercase;
+  letter-spacing: .04em;
+}
+.tips-head { border-top: 1px solid var(--hairline); padding-top: var(--s-5); }
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--s-3);
+}
+.tip-card {
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: var(--s-4);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tip-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--text);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .05);
+}
+.tip-meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--text-3);
+}
+.tip-card h3 {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  line-height: 1.25;
+  margin: 0;
+  color: var(--text);
+}
+.tip-card p {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin: 0;
+}
 
 @media (max-width: 720px) {
   .blog-head h1 { font-size: 30px; }

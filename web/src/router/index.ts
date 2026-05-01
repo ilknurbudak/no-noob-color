@@ -12,6 +12,9 @@ const router = createRouter({
     { path: "/share/:slug", name: "share", component: () => import("@/views/ShareView.vue") },
     { path: "/profile", name: "profile", component: () => import("@/views/ProfileView.vue") },
     { path: "/about", name: "about", component: () => import("@/views/AboutView.vue") },
+    { path: "/glossary", name: "glossary", component: () => import("@/views/GlossaryView.vue") },
+    { path: "/legal/:kind?", name: "legal", component: () => import("@/views/LegalView.vue") },
+    { path: "/changelog", name: "changelog", component: () => import("@/views/ChangelogView.vue") },
     { path: "/:rest(.*)*", name: "not-found", component: () => import("@/views/NotFoundView.vue") },
   ],
 });

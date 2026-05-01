@@ -328,6 +328,173 @@ The lesson generalizes: **you don't need to choose between a beautiful frontend 
   },
 ];
 
+// ---------- TIPS ----------
+
+export const TIPS: Article[] = [
+  {
+    slug: "tip-cmyk-print-prep",
+    eyebrow: "Tip · 2 min",
+    title: "Your screen lied. Prep for print in three checks.",
+    lead: "Your monitor shows colors that don't physically exist on paper. Three quick checks before you send to the printer save you from muddy disappointment.",
+    readingTime: "2 min",
+    kind: "tip",
+    sections: [
+      {
+        type: "prose",
+        body: `**1. CMYK gamut.** Vibrant cyans, electric greens, neon oranges — most don't survive the trip from RGB to CMYK ink. The Print persona panel flags any swatch that exceeds the printable gamut and suggests a closer print-safe alternative. Use that suggestion as your hand-off color, then approve the original screen color separately.
+
+**2. Total ink coverage.** Each CMYK channel is up to 100%, but stacking them above ~320% causes drying/registration issues on coated paper. The ink density meter tints offending swatches red. Consider boosting the K (black) channel to bring totals down — black ink is cheap; total coverage is expensive.
+
+**3. ICC profile.** FOGRA39 (EU coated), GRACoL (US commercial), SWOP (US news), Japan Color (JP) — your shop will tell you which one they use. The Print panel preset shifts CMYK numbers per profile so you can see how the same brand red drifts between presses.`,
+      },
+      { type: "demo", component: "gamut" },
+      {
+        type: "quote",
+        body: "If you only do one thing: ask your shop which ICC profile they use, then preview your palette under it. Everything else flows from that.",
+      },
+    ],
+    sources: [
+      { title: "Print Designer panel · /generate", url: "/#/generate", blurb: "Live CMYK gamut + ICC + ink density audit." },
+    ],
+  },
+
+  {
+    slug: "tip-instagram-feed-cohesion",
+    eyebrow: "Tip · 2 min",
+    title: "Instagram feed cohesion in one harmony rule",
+    lead: "A unified feed isn't about the same exact filter — it's about a tight hue range. Pick analogous and you can post 100 things without ever 'breaking the grid'.",
+    readingTime: "2 min",
+    kind: "tip",
+    sections: [
+      {
+        type: "prose",
+        body: `**Pick analogous, not complementary.** Complementary palettes (red + cyan) look great in single posts, terrible in a grid — every other tile is screaming at the next. Analogous palettes (warm yellows through warm reds, or cool blues through teals) keep the feed visually quiet while leaving room for individual posts to be bold.
+
+**Cap the saturation range.** Mix 30% high-sat + 70% mid/low-sat. Fully saturated feeds read as desperate; fully muted reads as dead. The Content Creator panel scores your palette's hue range as tight / balanced / loose — aim for tight on IG, looser on TikTok.
+
+**Reserve one disruptor swatch.** Your 5-color palette should have one outlier — a pop you only use for big-moment posts (launch, sale, story arc payoff). That's the 10% in 60-30-10 — applied to your feed instead of a UI.`,
+      },
+      { type: "demo", component: "hue" },
+    ],
+    sources: [
+      { title: "Content Creator panel · /generate", url: "/#/generate", blurb: "9-grid feed preview, TikTok aesthetic match, consistency audit." },
+    ],
+  },
+
+  {
+    slug: "tip-wcag-text-on-image",
+    eyebrow: "Tip · 3 min",
+    title: "Text-on-image readability — the 4.5:1 trap",
+    lead: "Your hero text passes WCAG AA on a flat color. Drop it onto a photo and that 4.5:1 number becomes a lie. Here's the fix.",
+    readingTime: "3 min",
+    kind: "tip",
+    sections: [
+      {
+        type: "prose",
+        body: `WCAG contrast assumes a single foreground color on a single background color. Photos have hundreds of background colors per pixel — your text might pass over the dark sky and fail over the bright clouds in the same image.
+
+**Three fixes, ranked:**
+
+1. **Text shadow** — \`text-shadow: 0 1px 4px rgba(0,0,0,.45)\`. Cheap, effective, breaks under critical inspection. Fine for hero typography on stable photos.
+2. **Solid bar** — put a translucent dark band behind the text only. The contrast becomes deterministic again. Used on every Netflix title card for a reason.
+3. **Image gradient overlay** — a 0% → 70% black gradient at the bottom (or matching to your text position) keeps the photo visible while guaranteeing background lightness.
+
+For Stories / Reels / vertical content, the bottom gradient is almost always correct.`,
+      },
+      { type: "demo", component: "contrast" },
+      {
+        type: "prose",
+        body: `**The audit move:** sample 10 random pixels from your photo, run each through the WCAG check against your text color, and use the *worst* ratio as your design constraint — not the average.`,
+      },
+    ],
+    sources: [
+      { title: "WCAG 2.1 Contrast", url: "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html", blurb: "Spec text on the 4.5:1 threshold." },
+    ],
+  },
+
+  {
+    slug: "tip-procreate-import",
+    eyebrow: "Tip · 1 min",
+    title: "Procreate .swatches: import every export, not just yours",
+    lead: "Procreate's .swatches format is a tiny ZIP. We export it. Adobe Capture exports it. Pinterest doesn't, but you can fake it.",
+    readingTime: "1 min",
+    kind: "tip",
+    sections: [
+      {
+        type: "prose",
+        body: `On any export menu, hit \`Procreate · .swatches\`. AirDrop the file to your iPad → tap once → it imports straight into Procreate's color palette tab. No Files app dance needed.
+
+**If you got a palette as PNG/JPG**: drop it into Generate's reference image zone. The k-means extracts swatches; export those as .swatches. You just turned a screenshot into a working palette.
+
+**If you got a list of hex codes**: paste them into a quick HTML file with a swatch grid, screenshot it, then route through the same flow. Or skip that — type the hexes manually into Generate's base color one at a time and chain Save calls.
+
+The validated import format passes Procreate 5+ on iPad and macOS Catalyst.`,
+      },
+    ],
+    sources: [
+      { title: "Procreate Color Palettes", url: "https://help.procreate.com/procreate/handbook/colors/colors-palettes", blurb: "Official handbook on palette files." },
+    ],
+  },
+
+  {
+    slug: "tip-color-blindness-quick-check",
+    eyebrow: "Tip · 1 min",
+    title: "Test for color blindness in three keyboard taps",
+    lead: "9% of male users see red and green as the same color. Your data viz, your status badges, your map legend — check them.",
+    readingTime: "1 min",
+    kind: "tip",
+    sections: [
+      {
+        type: "prose",
+        body: `In Generate, the **Color blindness preview** chip row sits above your palette. Click \`protan\` to simulate protanopia (no red cones, ~1% of males), \`deuteran\` for deuteranopia (no green cones, the most common — ~6% of males), \`tritan\` for tritanopia (no blue cones, rare).
+
+**What to look for:**
+
+- Red and green swatches that become the same yellow-tan. Status indicators using only red/green for "error/success" fail here. Add an icon, a stripe, an outline — anything besides hue.
+- Blue and purple becoming indistinguishable. Often hits brand palettes that lean cool.
+- Saturated reds dropping to the same brightness as deep greens — kills any "fire vs forest" metaphor.
+
+**Fix:** add a second visual channel (icon, weight, position) for any meaning currently carried by hue alone.`,
+      },
+    ],
+    sources: [
+      { title: "DaltonLens", url: "https://daltonlens.org/", blurb: "Open color blindness simulation reference." },
+    ],
+  },
+
+  {
+    slug: "tip-naming-your-palettes",
+    eyebrow: "Tip · 2 min",
+    title: "Name palettes for future-you, not present-you",
+    lead: "'Test 4', 'Final', 'New Palette (1)'. Your library is a pile. A naming convention turns it into a system.",
+    readingTime: "2 min",
+    kind: "tip",
+    sections: [
+      {
+        type: "prose",
+        body: `**Three things in every palette name:** the project, the role, the season. \`Acme · Hero · SS26\`. \`Personal Site · Footer · Spring\`. \`Wedding Inv · Stationery · Aug\`.
+
+**Why this works:**
+
+- **Project first** lets you filter Library by typing the project name in search.
+- **Role next** distinguishes between palettes for the same brand (you'll have a hero, a body copy, a marketing-only, a docs-only).
+- **Season / date last** means version history is implicit. \`Acme · Hero · SS26\` and \`Acme · Hero · FW26\` automatically sort and tell the story.
+
+**Tags pick up the rest.** Add \`#warm\`, \`#minimal\`, \`#client-approved\` as folksonomy labels — they cross-cut the project structure when you need to find "all warm palettes" across clients.`,
+      },
+      {
+        type: "quote",
+        body: "Your future self going through 100 palettes does not remember why you saved them. Make the name say everything.",
+      },
+    ],
+    sources: [
+      { title: "Library · search + tags + folders", url: "/#/library", blurb: "All three filters available." },
+    ],
+  },
+];
+
 export function findPost(slug: string): Article | undefined {
-  return POSTS.find((p) => p.slug === slug);
+  return [...POSTS, ...TIPS].find((p) => p.slug === slug);
 }
+
+export const ALL_POSTS: Article[] = [...POSTS, ...TIPS];
