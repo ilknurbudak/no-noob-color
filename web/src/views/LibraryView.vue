@@ -67,6 +67,19 @@ function importLibrary(e: Event) {
   (e.target as HTMLInputElement).value = "";
 }
 
+async function shareLink(item: typeof lib.items[number]) {
+  const hexes = item.palette.map(p =>
+    rgbToHex(p.rgb[0], p.rgb[1], p.rgb[2]).slice(1).toLowerCase()
+  );
+  const name = (item as any).name || `palette-${item.id.slice(0, 6)}`;
+  const slug = `${encodeURIComponent(name)}~${hexes.join("-")}`;
+  const url = `${window.location.origin}${window.location.pathname}#/share/${slug}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.show("Share link copied");
+  } catch { toast.show("Copy failed"); }
+}
+
 async function copyHex(hex: string) {
   try {
     await navigator.clipboard.writeText(hex);
@@ -227,6 +240,12 @@ function clearQuery() { query.value = ""; }
           @click="lib.toggleStar(item.id)"
           :aria-label="lib.isStarred(item.id) ? 'Unstar' : 'Star'"
         >★</button>
+        <button
+          class="lib-share"
+          @click="shareLink(item)"
+          aria-label="Copy share link"
+          title="Copy share link"
+        >↗</button>
         <img v-if="item.thumb" class="lib-thumb" :src="item.thumb" alt="" />
         <div v-else class="lib-thumb-fallback"></div>
         <div class="lib-swatches">
@@ -813,6 +832,26 @@ function clearQuery() { query.value = ""; }
 .library-card:hover .lib-star { opacity: 1; }
 .lib-star.active { opacity: 1; color: #ffd400; }
 .lib-star:hover { color: #ffd400; }
+
+.lib-share {
+  position: absolute;
+  top: 8px; left: 44px;
+  width: 28px; height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, .55);
+  color: rgba(255, 255, 255, .55);
+  border-radius: 50%;
+  font-size: 13px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+}
+.library-card:hover .lib-share { opacity: 1; }
+.lib-share:hover { color: white; }
 .count-meta {
   text-transform: uppercase;
   letter-spacing: .06em;

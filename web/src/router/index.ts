@@ -9,6 +9,7 @@ const router = createRouter({
     { path: "/library",  name: "library",  component: () => import("@/views/LibraryView.vue") },
     { path: "/blog",     name: "blog",     component: () => import("@/views/BlogView.vue") },
     { path: "/blog/:slug", name: "blog-post", component: () => import("@/views/BlogPostView.vue") },
+    { path: "/share/:slug", name: "share", component: () => import("@/views/ShareView.vue") },
     { path: "/:rest(.*)*", redirect: "/" },
   ],
 });
