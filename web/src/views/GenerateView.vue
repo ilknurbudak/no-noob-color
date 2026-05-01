@@ -16,6 +16,7 @@ import { parsePrompt, biasToPalette, type Bias } from "@/services/promptBias";
 import { useTasteStore } from "@/stores/taste";
 import TasteTrainer from "@/components/TasteTrainer.vue";
 import UIPanel from "@/components/persona/UIPanel.vue";
+import IllustratorPanel from "@/components/persona/IllustratorPanel.vue";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -316,6 +317,7 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
     </div>
 
     <UIPanel v-if="persona.activeId === 'ui'" :palette="palette" />
+    <IllustratorPanel v-if="persona.activeId === 'illustrator'" :palette="palette" />
 
     <TabInfo
       eyebrow="How it works"
