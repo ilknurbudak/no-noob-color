@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import type { LibraryItem, Swatch } from "@/types";
 import * as api from "@/services/api";
+import { subscribe as rtSubscribe, disconnect as rtDisconnect } from "@/services/realtime";
 
 const KEY = "nnc_library_v1";
 const STAR_KEY = "nnc_library_stars_v1";
@@ -88,6 +89,8 @@ export const useLibraryStore = defineStore("library", () => {
 
   const isRemote = computed(() => remote.value);
 
+  let unsubRealtime: (() => void) | null = null;
+
   async function sync() {
     if (!api.getToken()) { remote.value = false; return; }
     syncing.value = true;
@@ -95,6 +98,30 @@ export const useLibraryStore = defineStore("library", () => {
       const list = await api.listPalettes();
       items.value = list.map(remoteToLocal);
       remote.value = true;
+      // Subscribe to realtime updates
+      const token = api.getToken();
+      if (token && !unsubRealtime) {
+        unsubRealtime = rtSubscribe("palettes", (event) => {
+          if (event.action === "create") {
+            const local = remoteToLocal({
+              id: event.record.id,
+              name: event.record.name,
+              source: event.record.source,
+              swatches: typeof event.record.swatches === "string"
+                ? JSON.parse(event.record.swatches)
+                : event.record.swatches,
+              thumbnail: null,
+              created: event.record.created,
+              updated: event.record.updated,
+            });
+            if (!items.value.find(i => i.id === local.id)) {
+              items.value = [local, ...items.value];
+            }
+          } else if (event.action === "delete") {
+            items.value = items.value.filter(i => i.id !== event.record.id);
+          }
+        }, token);
+      }
     } catch (e) {
       console.warn("library sync failed, falling back to local:", e);
       remote.value = false;
@@ -151,6 +178,8 @@ export const useLibraryStore = defineStore("library", () => {
   function resetToLocal() {
     remote.value = false;
     items.value = load();
+    if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
+    rtDisconnect();
   }
 
   // ---------- favorites (always local) ----------
