@@ -2,12 +2,24 @@
 import { computed, ref } from "vue";
 import { useLibraryStore } from "@/stores/library";
 import { useAuthStore } from "@/stores/auth";
-import { rgbToHex, hexToRgb, wcagContrast } from "@/services/color";
+import { useTasteStore } from "@/stores/taste";
+import { rgbToHex, textColorFor, hexToRgb } from "@/services/color";
+import { useToastStore } from "@/stores/toast";
 
 const lib = useLibraryStore();
 const auth = useAuthStore();
+const taste = useTasteStore();
+const toast = useToastStore();
 const query = ref("");
 const onlyStarred = ref(false);
+const tab = ref<"palettes" | "liked">("palettes");
+
+async function copyHex(hex: string) {
+  try {
+    await navigator.clipboard.writeText(hex);
+    toast.show(`Copied ${hex}`);
+  } catch { toast.show("Copy failed"); }
+}
 
 function normalizeHex(h: string): string {
   return h.replace(/[^0-9a-f]/gi, "").toLowerCase();
@@ -51,7 +63,16 @@ function clearQuery() { query.value = ""; }
 
 <template>
   <section>
-    <div class="library-filters">
+    <div class="library-tabs">
+      <button class="lib-tab" :class="{ active: tab === 'palettes' }" @click="tab = 'palettes'">
+        Palettes <span class="lib-tab-count">{{ lib.items.length }}</span>
+      </button>
+      <button class="lib-tab" :class="{ active: tab === 'liked' }" @click="tab = 'liked'">
+        Liked colors <span class="lib-tab-count">{{ taste.liked.length }}</span>
+      </button>
+    </div>
+
+    <div v-if="tab === 'palettes'" class="library-filters">
       <div class="search-wrap">
         <input
           v-model="query"
@@ -81,6 +102,7 @@ function clearQuery() { query.value = ""; }
       </span>
     </div>
 
+    <template v-if="tab === 'palettes'">
     <div v-if="items.length === 0 && !query" class="empty-large">
       <p>No palettes saved yet.</p>
       <p>generate or drop a reference image, then save</p>
@@ -116,16 +138,160 @@ function clearQuery() { query.value = ""; }
         </div>
       </div>
     </div>
+    </template>
+
+    <!-- LIKED COLORS TAB -->
+    <template v-if="tab === 'liked'">
+      <div class="liked-head">
+        <span class="liked-meta">
+          <strong>{{ taste.liked.length }}</strong> liked
+          <template v-if="taste.trained">
+            · {{ taste.state.count }} sessions
+          </template>
+          <template v-if="taste.trainedToday">
+            · trained today ✓
+          </template>
+        </span>
+        <button v-if="taste.liked.length" class="filter-pill" @click="taste.reset()">reset all</button>
+      </div>
+
+      <div v-if="taste.liked.length === 0" class="empty-large">
+        <p>No liked colors yet.</p>
+        <p>train your taste in Generate to start your collection</p>
+      </div>
+
+      <div v-else class="liked-grid">
+        <div
+          v-for="l in taste.liked" :key="l.hex"
+          class="liked-cell"
+          :style="{ background: l.hex, color: textColorFor(...hexToRgb(l.hex)) }"
+        >
+          <button class="liked-unlike" @click="taste.unlike(l.hex)" aria-label="Unlike">×</button>
+          <span class="liked-hex" @click="copyHex(l.hex)">{{ l.hex }}</span>
+          <span class="liked-date">{{ new Date(l.ts).toISOString().slice(0, 10) }}</span>
+        </div>
+      </div>
+    </template>
   </section>
 </template>
 
 <style scoped>
+.library-tabs {
+  display: flex;
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
+  border-bottom: 1px solid var(--hairline);
+}
+.lib-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.lib-tab:hover { color: var(--text); }
+.lib-tab.active { color: var(--text); border-bottom-color: var(--text); }
+.lib-tab-count {
+  font-size: 9px;
+  padding: 2px 7px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  color: var(--text-3);
+  font-weight: 500;
+}
+.lib-tab.active .lib-tab-count { background: var(--text); color: var(--bg); }
+
 .library-filters {
   display: flex;
   gap: var(--s-2);
   margin-bottom: var(--s-5);
   flex-wrap: wrap;
+  align-items: center;
 }
+
+/* LIKED */
+.liked-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+  flex-wrap: wrap;
+}
+.liked-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  letter-spacing: .04em;
+}
+.liked-meta strong { color: var(--text); font-weight: 700; }
+.liked-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px;
+}
+.liked-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: default;
+  transition: transform .15s;
+}
+.liked-cell:hover { transform: translateY(-2px); }
+.liked-hex {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  cursor: pointer;
+  background: rgba(0,0,0,.3);
+  color: white;
+  padding: 3px 7px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+.liked-date {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .04em;
+  background: rgba(0,0,0,.25);
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  align-self: flex-start;
+  opacity: .85;
+}
+.liked-unlike {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 22px; height: 22px;
+  border: none;
+  background: rgba(0,0,0,.4);
+  color: white;
+  border-radius: 50%;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .15s;
+}
+.liked-cell:hover .liked-unlike { opacity: 1; }
 .search-wrap {
   position: relative;
   flex: 1;
