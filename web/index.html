@@ -41,6 +41,19 @@
   }
   </script>
 
+  <!-- Plausible analytics (privacy-respecting, no cookies, no PII) — opt-in via VITE_PLAUSIBLE_DOMAIN at build -->
+  <script>
+    (function () {
+      var d = document.documentElement.dataset.plausibleDomain;
+      if (!d) return;
+      var s = document.createElement("script");
+      s.defer = true;
+      s.dataset.domain = d;
+      s.src = "https://plausible.io/js/script.js";
+      document.head.appendChild(s);
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />

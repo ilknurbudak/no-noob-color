@@ -328,6 +328,165 @@ The lesson generalizes: **you don't need to choose between a beautiful frontend 
   },
 ];
 
+// ---------- DEEP DIVES (phase 2) ----------
+
+POSTS.push(
+  {
+    slug: "ciede2000-deep-dive",
+    eyebrow: "Math",
+    title: "CIEDE2000 — the formula behind 'how different is this?'",
+    lead: "Every time you ask 'are these two colors close enough?' there is a number. The number you actually want is CIEDE2000, and it is older and weirder than you think.",
+    readingTime: "7 min",
+    sections: [
+      {
+        type: "prose",
+        body: `In 1976, the CIE published L\\*a\\*b\\* with the promise that **Euclidean distance in this space approximates perceived color difference**. The formula was simple: \`ΔE76 = sqrt((L1-L2)² + (a1-a2)² + (b1-b2)²)\`. One number, no parameters, easy to compute.
+
+It was wrong in places. Specifically: in the blue corner of color space, ΔE76 overestimated differences. In the gray-near-neutral region, it underestimated. Two colors that humans called identical produced ΔE76 = 5; two colors humans called clearly different produced ΔE76 = 3. The formula's foundational claim — that Lab is perceptually uniform — broke under scrutiny.
+
+The CIE responded with **CIE94** in 1994, which weighted the differences in chroma and hue separately. Better in saturated regions, still flawed in the dark blues. The fix wasn't done.
+
+**CIEDE2000** arrived in 2000 with five corrections layered on top of CIE94:
+
+1. A hue-rotation correction in the blue region (where CIE94 still failed)
+2. A compensation for low chroma differences appearing larger than they are
+3. A weighting that recognizes the eye is more sensitive to lightness in mid-tones than in extremes
+4. A neutral-color correction that prevents grays from inflating ΔE
+5. Reference conditions (kL, kC, kH) for adjusting based on viewing context`,
+      },
+      {
+        type: "quote",
+        body: "ΔE2000 is not pretty math. It is empirically derived, full of magic numbers, and slow to compute. But it is the closest formula we have to 'how different do these two colors actually look?'",
+      },
+      {
+        type: "prose",
+        body: `**The thresholds in practice:**
+
+- ΔE < 1 — imperceptible to the human eye, even side-by-side
+- ΔE 1-2 — close inspection only; print proofing tolerance
+- ΔE 2-10 — perceptible at a glance; brand color drift territory
+- ΔE 10-49 — clearly distinct colors
+- ΔE 50+ — opposite ends of color space (red vs cyan, etc)
+
+In this app's contrast/delta-e endpoint, all three (CIE76, CIE94, CIEDE2000) are exposed. CIE76 is fastest, CIEDE2000 is most accurate, CIE94 sits in the middle.
+
+**Where you actually use it:**
+- Pantone closest-match search (which PMS code is nearest to your hex?)
+- Quality control in printing (is this proof close enough to the master?)
+- Library duplicate detection (are these two saved palettes effectively the same?)
+- Color theme generation (am I picking distinct enough accents?)`,
+      },
+    ],
+    sources: [
+      { title: "CIEDE2000 (Wikipedia)", url: "https://en.wikipedia.org/wiki/Color_difference#CIEDE2000", blurb: "Reference implementation + history." },
+      { title: "Sharma, Wu, Dalal — implementation paper", url: "https://www.imaging.org/", blurb: "The canonical 2005 paper with all the corrections explained." },
+    ],
+  },
+
+  {
+    slug: "oklab-vs-cielab",
+    eyebrow: "Modern Color",
+    title: "OKLab and OKLCH — Lab grew up in 2020",
+    lead: "CIELAB has been the standard for 50 years. Then in 2020, a Swedish engineer noticed it had problems with blue and dark colors and quietly fixed them.",
+    readingTime: "5 min",
+    sections: [
+      {
+        type: "prose",
+        body: `**OKLab** was published by Björn Ottosson in December 2020 as a free, open-source alternative to CIELAB. It was a single-author project. It is now in the CSS specification (\`oklch()\` is supported in every modern browser) and increasingly the default choice for new color tools.
+
+The problem OKLab solves is specific: **CIELAB's perceptual uniformity breaks at the extremes**. Two colors at the same Lab L\\* value (lightness) but different hues can look noticeably different in brightness — especially in the deep blue region, where Lab consistently overstates lightness, and in highly saturated colors, where Lab's a\\*/b\\* axes shear in unintuitive ways.
+
+OKLab uses a different optimization target: it fits human perceptual data more carefully in the modern wide gamuts (P3, Rec.2020) that didn't exist when CIELAB was designed in 1976. The math is similar — a 3x3 matrix into a perceptual intermediate, then a non-linear curve, then another 3x3 matrix — but the constants are different.`,
+      },
+      { type: "demo", component: "lab" },
+      {
+        type: "prose",
+        body: `**Why OKLCH (cylindrical OKLab) is the practical winner:**
+
+OKLab gives you L (lightness), a (green-red), b (blue-yellow). Useful for math, hard for designers.
+
+OKLCH gives you L (lightness), C (chroma), H (hue, 0-360°). Same coordinate space, but in a form designers can think in: "rotate the hue, keep the chroma and lightness". This is what HSL/HSV pretend to do but don't actually deliver perceptually.
+
+**In CSS:**
+\`\`\`css
+:root {
+  --primary: oklch(70% 0.18 290);     /* lavender */
+  --primary-dark: oklch(40% 0.18 290); /* same hue + chroma, darker */
+}
+\`\`\`
+
+The dark version is *guaranteed* to feel like a darker version of the same color. With HSL, you'd lower lightness and the hue might appear to shift. With OKLCH, only L changes.
+
+**This app uses OKLab/OKLCH for:**
+- The 11-stop tonal palette generator (\`/tones/generate\`)
+- Lab-fallback in extract endpoints
+- Material 3 theming (HCT is also CAM-derived, related family)
+
+CIELAB is fine for backward compatibility and image processing. OKLab is the design system answer for the next decade.`,
+      },
+    ],
+    sources: [
+      { title: "Björn Ottosson — A perceptual color space for image processing", url: "https://bottosson.github.io/posts/oklab/", blurb: "The original 2020 OKLab paper and motivation." },
+      { title: "CSS Color Module Level 4", url: "https://www.w3.org/TR/css-color-4/", blurb: "Spec for oklab(), oklch() in CSS." },
+    ],
+  },
+
+  {
+    slug: "k-means-math",
+    eyebrow: "Algorithm",
+    title: "k-means in 30 lines — and why we run it in Lab",
+    lead: "The algorithm behind every 'extract palette from photo' button. It's older than your laptop, simpler than you'd guess, and one trick keeps the output honest.",
+    readingTime: "5 min",
+    sections: [
+      {
+        type: "prose",
+        body: `**k-means clustering** picks K representative points from a cloud of N data points, minimizing the sum of squared distances from each point to its nearest representative. Published in 1957, used everywhere from market segmentation to compression to (here) palette extraction.
+
+The algorithm:
+
+1. Pick K random pixels as initial centroids.
+2. Assign each pixel to its nearest centroid.
+3. Recompute each centroid as the mean of its assigned pixels.
+4. Repeat 2-3 until centroids stop moving.
+
+That's it. Convergence is not guaranteed in finite time but in practice happens within 10-20 iterations for image data.
+
+**Why we run it in Lab, not RGB:**
+
+In RGB, "distance" is meaningless to a human. The Euclidean distance from \`(50, 50, 50)\` to \`(50, 100, 50)\` equals the distance from \`(150, 150, 150)\` to \`(150, 200, 150)\`, but the first jump is far more visually dramatic. Cluster centroids in RGB therefore land in the wrong places — pulled toward the most numerous pixels, not the most perceptually distinct ones.
+
+In Lab, distance is roughly proportional to perceived difference. Centroids land where humans would say "that's a distinct color" — which is the entire point of palette extraction.`,
+      },
+      {
+        type: "quote",
+        body: "Switch the same image's k-means from RGB to Lab and you'll usually see at least one swatch shift dramatically — the algorithm finds a perceptually meaningful color that the RGB-space run completely missed.",
+      },
+      {
+        type: "prose",
+        body: `**The mode-snap trick:**
+
+After k-means converges, the K centroids are *averaged colors*. They mathematically represent each cluster but don't necessarily correspond to any real pixel in the image. Take a photo of a sunset where pixels are split between deep magenta and bright orange — the centroid lands on a muddy brown that's in neither part of the photo.
+
+The fix: after computing centroids, replace each one with the **most common quantized pixel** in its cluster. Quantize to (e.g.) 8-bit-per-channel buckets, count frequencies, pick the mode. The resulting palette is guaranteed to consist of colors that actually appear in the image.
+
+This is what \`/extract/kmeans\` does by default. The endpoint exposes \`color_space\` (lab, rgb, oklab) so you can compare; the mode-snap is always on.
+
+**When K=5 and N=400×400=160,000 pixels:**
+
+- ~20 iterations × 160K pixels × 5 distance calcs each = ~16M operations
+- numpy vectorizes this into a single 5×3 matrix subtraction broadcast over 160K vectors
+- runs in <100ms on any laptop
+
+The 'AI' marketing for color extraction is, in 99% of cases, this 1957 algorithm.`,
+      },
+    ],
+    sources: [
+      { title: "k-means clustering (Wikipedia)", url: "https://en.wikipedia.org/wiki/K-means_clustering", blurb: "The 1957 paper, history, and modern variants." },
+      { title: "scikit-learn — KMeans", url: "https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html", blurb: "The implementation we use server-side." },
+    ],
+  },
+);
+
 // ---------- TIPS ----------
 
 export const TIPS: Article[] = [
