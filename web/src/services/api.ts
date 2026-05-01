@@ -157,6 +157,33 @@ export async function me() {
   return jsonOrThrow(res);
 }
 
+export async function requestVerification(email: string) {
+  const res = await fetch(requireBase() + "/auth/verify/request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return jsonOrThrow(res);
+}
+
+export async function requestPasswordReset(email: string) {
+  const res = await fetch(requireBase() + "/auth/password/request-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return jsonOrThrow(res);
+}
+
+export async function confirmPasswordReset(token: string, password: string) {
+  const res = await fetch(requireBase() + "/auth/password/confirm-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+  return jsonOrThrow(res);
+}
+
 export interface RemotePalette {
   id: string;
   name: string;

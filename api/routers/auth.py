@@ -64,3 +64,70 @@ def me(user: Annotated[dict, Depends(current_user)]):
 @router.get("/health")
 def health():
     return {"pocketbase": pb.health(), "url": pb.POCKETBASE_URL}
+
+
+class EmailBody(BaseModel):
+    email: EmailStr
+
+
+class ResetBody(BaseModel):
+    token: str
+    password: str = Field(min_length=8, max_length=72)
+
+
+@router.post("/verify/request")
+def request_verification(body: EmailBody):
+    """Send verification email via PocketBase."""
+    import requests
+    try:
+        resp = requests.post(
+            f"{pb.POCKETBASE_URL}/api/collections/users/request-verification",
+            json={"email": body.email},
+            timeout=10,
+        )
+        if resp.status_code >= 400:
+            raise HTTPException(resp.status_code, resp.text[:200])
+    except HTTPException: raise
+    except Exception as e:
+        raise HTTPException(502, str(e)) from e
+    return {"sent": True}
+
+
+@router.post("/password/request-reset")
+def request_password_reset(body: EmailBody):
+    """Send password reset email via PocketBase."""
+    import requests
+    try:
+        resp = requests.post(
+            f"{pb.POCKETBASE_URL}/api/collections/users/request-password-reset",
+            json={"email": body.email},
+            timeout=10,
+        )
+        if resp.status_code >= 400:
+            raise HTTPException(resp.status_code, resp.text[:200])
+    except HTTPException: raise
+    except Exception as e:
+        raise HTTPException(502, str(e)) from e
+    return {"sent": True}
+
+
+@router.post("/password/confirm-reset")
+def confirm_password_reset(body: ResetBody):
+    """Confirm reset with token + new password."""
+    import requests
+    try:
+        resp = requests.post(
+            f"{pb.POCKETBASE_URL}/api/collections/users/confirm-password-reset",
+            json={
+                "token": body.token,
+                "password": body.password,
+                "passwordConfirm": body.password,
+            },
+            timeout=10,
+        )
+        if resp.status_code >= 400:
+            raise HTTPException(resp.status_code, resp.text[:200])
+    except HTTPException: raise
+    except Exception as e:
+        raise HTTPException(502, str(e)) from e
+    return {"reset": True}
