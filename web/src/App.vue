@@ -3,6 +3,7 @@ import { onMounted, watch } from "vue";
 import BrandHeader from "@/components/BrandHeader.vue";
 import BottomNav from "@/components/BottomNav.vue";
 import Toast from "@/components/Toast.vue";
+import FeedbackWidget from "@/components/FeedbackWidget.vue";
 import { detectApi } from "@/services/api";
 import { useAuthStore } from "@/stores/auth";
 import { useLibraryStore } from "@/stores/library";
@@ -32,4 +33,5 @@ watch(() => auth.isAuthed, async (now, prev) => {
   </div>
   <BottomNav />
   <Toast />
+  <FeedbackWidget />
 </template>

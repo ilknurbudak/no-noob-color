@@ -15,6 +15,8 @@ const router = createRouter({
     { path: "/glossary", name: "glossary", component: () => import("@/views/GlossaryView.vue") },
     { path: "/legal/:kind?", name: "legal", component: () => import("@/views/LegalView.vue") },
     { path: "/changelog", name: "changelog", component: () => import("@/views/ChangelogView.vue") },
+    { path: "/playground", name: "playground", component: () => import("@/views/PlaygroundView.vue") },
+    { path: "/api-docs", name: "api-docs", component: () => import("@/views/ApiDocsView.vue") },
     { path: "/:rest(.*)*", name: "not-found", component: () => import("@/views/NotFoundView.vue") },
   ],
 });
