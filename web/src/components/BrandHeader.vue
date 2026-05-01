@@ -13,10 +13,6 @@ const showAuth = ref(false);
 function goHome() {
   router.push("/");
 }
-
-function toggleTheme() {
-  theme.toggle();
-}
 </script>
 
 <template>
@@ -28,12 +24,12 @@ function toggleTheme() {
       @click="goHome"
     />
     <div class="header-controls">
-      <button v-if="auth.isAuthed" class="user-pill" @click="auth.logout" :title="`Sign out · ${auth.user?.email}`">
+      <button v-if="auth.isAuthed" class="user-pill" @click="router.push('/profile')" :title="`Profile · ${auth.user?.email}`">
         <span class="dot"></span>
         {{ auth.user?.email.split("@")[0] }}
       </button>
       <button v-else class="user-pill ghost" @click="showAuth = true">Sign in</button>
-      <button class="theme-toggle" :class="{ dark: theme.mode === 'dark' }" @click="toggleTheme" aria-label="Toggle theme">
+      <button class="theme-toggle" :class="{ dark: theme.mode === 'dark' }" @click="theme.toggle" aria-label="Toggle theme">
         <span class="thumb"></span>
       </button>
     </div>
