@@ -7,6 +7,7 @@ import { rgbToHex, hexToRgb, wcagContrast } from "@/services/color";
 const lib = useLibraryStore();
 const auth = useAuthStore();
 const query = ref("");
+const onlyStarred = ref(false);
 
 function normalizeHex(h: string): string {
   return h.replace(/[^0-9a-f]/gi, "").toLowerCase();
@@ -40,7 +41,10 @@ function matchesQuery(item: typeof lib.items[number], q: string): boolean {
   return false;
 }
 
-const items = computed(() => lib.items.filter(i => matchesQuery(i, query.value)));
+const items = computed(() => lib.items
+  .filter(i => matchesQuery(i, query.value))
+  .filter(i => !onlyStarred.value || lib.isStarred(i.id))
+);
 
 function clearQuery() { query.value = ""; }
 </script>
@@ -57,9 +61,16 @@ function clearQuery() { query.value = ""; }
         />
         <button v-if="query" class="search-clear" @click="clearQuery" aria-label="Clear">×</button>
       </div>
+      <button
+        class="filter-pill"
+        :class="{ active: onlyStarred }"
+        @click="onlyStarred = !onlyStarred"
+      >
+        <span class="star">★</span> starred only
+      </button>
       <span class="library-count">
         <strong>{{ items.length }}</strong>
-        <template v-if="query">/ {{ lib.items.length }} </template>
+        <template v-if="query || onlyStarred">/ {{ lib.items.length }} </template>
         {{ items.length === 1 ? "palette" : "palettes" }}
       </span>
       <span class="sync-state" :class="{ remote: lib.isRemote, syncing: lib.syncing }">
@@ -83,6 +94,12 @@ function clearQuery() { query.value = ""; }
     <div v-else class="library-list">
       <div v-for="item in items" :key="item.id" class="library-card">
         <button class="lib-delete" @click="lib.remove(item.id)" aria-label="Delete">×</button>
+        <button
+          class="lib-star"
+          :class="{ active: lib.isStarred(item.id) }"
+          @click="lib.toggleStar(item.id)"
+          :aria-label="lib.isStarred(item.id) ? 'Unstar' : 'Star'"
+        >★</button>
         <img v-if="item.thumb" class="lib-thumb" :src="item.thumb" alt="" />
         <div v-else class="lib-thumb-fallback"></div>
         <div class="lib-swatches">
@@ -146,6 +163,26 @@ function clearQuery() { query.value = ""; }
   line-height: 1;
 }
 .search-clear:hover { background: var(--text); color: var(--bg); }
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text-2);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.filter-pill:hover { color: var(--text); border-color: var(--text); }
+.filter-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.filter-pill .star { font-size: 11px; line-height: 1; }
 
 .library-count {
   font-family: var(--mono);
@@ -260,6 +297,26 @@ function clearQuery() { query.value = ""; }
   justify-content: center;
 }
 .library-card:hover .lib-delete { opacity: 1; }
+.lib-star {
+  position: absolute;
+  top: 8px; left: 8px;
+  width: 28px; height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, .55);
+  color: rgba(255, 255, 255, .4);
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .15s, color .15s;
+  opacity: 0;
+}
+.library-card:hover .lib-star { opacity: 1; }
+.lib-star.active { opacity: 1; color: #ffd400; }
+.lib-star:hover { color: #ffd400; }
 .count-meta {
   text-transform: uppercase;
   letter-spacing: .06em;

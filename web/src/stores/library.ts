@@ -4,6 +4,17 @@ import type { LibraryItem, Swatch } from "@/types";
 import * as api from "@/services/api";
 
 const KEY = "nnc_library_v1";
+const STAR_KEY = "nnc_library_stars_v1";
+
+function loadStars(): Set<string> {
+  try {
+    const raw = localStorage.getItem(STAR_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+function persistStars(set: Set<string>) {
+  try { localStorage.setItem(STAR_KEY, JSON.stringify([...set])); } catch {}
+}
 
 function load(): LibraryItem[] {
   try {
@@ -112,5 +123,23 @@ export const useLibraryStore = defineStore("library", () => {
     items.value = load();
   }
 
-  return { items, isRemote, syncing, save, remove, bySource, sync, resetToLocal };
+  // ---------- favorites (always local) ----------
+  const stars = ref<Set<string>>(loadStars());
+
+  function isStarred(id: string): boolean {
+    return stars.value.has(id);
+  }
+
+  function toggleStar(id: string) {
+    if (stars.value.has(id)) stars.value.delete(id);
+    else stars.value.add(id);
+    // Trigger reactivity
+    stars.value = new Set(stars.value);
+    persistStars(stars.value);
+  }
+
+  return {
+    items, isRemote, syncing, save, remove, bySource, sync, resetToLocal,
+    stars, isStarred, toggleStar,
+  };
 });
