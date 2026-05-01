@@ -25,7 +25,7 @@ jobs:
       - run: npm run build
 
   api:
-    name: api · py compile + import smoke
+    name: api · py compile
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,7 +35,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
-      - run: pip install -r requirements.txt
-      - run: python -m py_compile $(git ls-files '*.py')
-      - run: python -c "from main import app; print('routes:', len(app.routes))"
+      # Heavy ML deps (glasbey, scikit-image, material-color-utilities) take
+      # 5+ minutes to build wheels in CI. We only need syntax verification
+      # here — the full integration smoke runs against the actual deployment.
+      - name: install lightweight deps for syntax check
+        run: pip install fastapi pydantic email-validator python-multipart requests python-dotenv
+      - name: byte-compile every .py
+        run: |
+          find . -name '*.py' -not -path './.venv/*' -print0 | xargs -0 python -m py_compile
