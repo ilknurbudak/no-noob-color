@@ -17,6 +17,9 @@ const router = createRouter({
     { path: "/changelog", name: "changelog", component: () => import("@/views/ChangelogView.vue") },
     { path: "/playground", name: "playground", component: () => import("@/views/PlaygroundView.vue") },
     { path: "/api-docs", name: "api-docs", component: () => import("@/views/ApiDocsView.vue") },
+    { path: "/case-studies", name: "case-studies", component: () => import("@/views/CaseStudiesView.vue") },
+    { path: "/case-studies/:slug", name: "case-study", component: () => import("@/views/CaseStudiesView.vue") },
+    { path: "/videos", name: "videos", component: () => import("@/views/VideosView.vue") },
     { path: "/:rest(.*)*", name: "not-found", component: () => import("@/views/NotFoundView.vue") },
   ],
 });
