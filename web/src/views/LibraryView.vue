@@ -1,19 +1,66 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useLibraryStore } from "@/stores/library";
 import { useAuthStore } from "@/stores/auth";
-import { rgbToHex } from "@/services/color";
+import { rgbToHex, hexToRgb, wcagContrast } from "@/services/color";
 
 const lib = useLibraryStore();
 const auth = useAuthStore();
-const items = computed(() => lib.items);
+const query = ref("");
+
+function normalizeHex(h: string): string {
+  return h.replace(/[^0-9a-f]/gi, "").toLowerCase();
+}
+
+function matchesQuery(item: typeof lib.items[number], q: string): boolean {
+  if (!q) return true;
+  const lower = q.toLowerCase().trim();
+  const hexClean = normalizeHex(lower);
+
+  // Hex needle (3 or 6 char prefix)
+  if (hexClean.length >= 3) {
+    const palHexes = item.palette.map(p =>
+      rgbToHex(p.rgb[0], p.rgb[1], p.rgb[2]).slice(1).toLowerCase()
+    );
+    if (palHexes.some(h => h.startsWith(hexClean) || h.includes(hexClean))) return true;
+  }
+
+  // Source filter (photo, generate, etc.)
+  if (item.source && item.source.toLowerCase().includes(lower)) return true;
+
+  // Name (if present in future)
+  if ((item as any).name && (item as any).name.toLowerCase().includes(lower)) return true;
+
+  // Date prefix (e.g. "2026-05")
+  if (lower.match(/^\d{4}/)) {
+    const d = new Date(item.ts).toISOString().slice(0, 10);
+    if (d.startsWith(lower)) return true;
+  }
+
+  return false;
+}
+
+const items = computed(() => lib.items.filter(i => matchesQuery(i, query.value)));
+
+function clearQuery() { query.value = ""; }
 </script>
 
 <template>
   <section>
     <div class="library-filters">
+      <div class="search-wrap">
+        <input
+          v-model="query"
+          class="search-input"
+          type="text"
+          placeholder="search · hex (#7a4 / 7a4b8a) · source · date (2026-05)"
+        />
+        <button v-if="query" class="search-clear" @click="clearQuery" aria-label="Clear">×</button>
+      </div>
       <span class="library-count">
-        <strong>{{ items.length }}</strong> {{ items.length === 1 ? "palette" : "palettes" }}
+        <strong>{{ items.length }}</strong>
+        <template v-if="query">/ {{ lib.items.length }} </template>
+        {{ items.length === 1 ? "palette" : "palettes" }}
       </span>
       <span class="sync-state" :class="{ remote: lib.isRemote, syncing: lib.syncing }">
         <span class="dot"></span>
@@ -23,9 +70,14 @@ const items = computed(() => lib.items);
       </span>
     </div>
 
-    <div v-if="items.length === 0" class="empty-large">
+    <div v-if="items.length === 0 && !query" class="empty-large">
       <p>No palettes saved yet.</p>
       <p>generate or drop a reference image, then save</p>
+    </div>
+
+    <div v-else-if="items.length === 0 && query" class="empty-large">
+      <p>No matches for "{{ query }}"</p>
+      <p>try a hex prefix, source name, or date</p>
     </div>
 
     <div v-else class="library-list">
@@ -57,6 +109,44 @@ const items = computed(() => lib.items);
   margin-bottom: var(--s-5);
   flex-wrap: wrap;
 }
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 380px;
+}
+.search-input {
+  width: 100%;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text);
+  padding: 8px 30px 8px 12px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+.search-input:focus { outline: none; border-color: var(--text); }
+.search-input::placeholder { color: var(--text-3); }
+.search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px; height: 22px;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.search-clear:hover { background: var(--text); color: var(--bg); }
+
 .library-count {
   font-family: var(--mono);
   font-size: 10px;
