@@ -12,7 +12,32 @@ const taste = useTasteStore();
 const toast = useToastStore();
 const query = ref("");
 const onlyStarred = ref(false);
+const activeFolder = ref<string | null>(null);
+const activeTag = ref<string | null>(null);
 const tab = ref<"palettes" | "liked">("palettes");
+const editingTagsFor = ref<string | null>(null);
+const newTagInput = ref("");
+const newFolderName = ref("");
+const showFolderManager = ref(false);
+
+function openTagsFor(id: string) {
+  editingTagsFor.value = editingTagsFor.value === id ? null : id;
+  newTagInput.value = "";
+}
+
+function commitTag(id: string) {
+  const t = newTagInput.value.trim();
+  if (!t) return;
+  lib.addTag(id, t);
+  newTagInput.value = "";
+}
+
+function makeFolder() {
+  const name = newFolderName.value.trim();
+  if (!name) return;
+  lib.createFolder(name);
+  newFolderName.value = "";
+}
 
 async function copyHex(hex: string) {
   try {
@@ -56,6 +81,12 @@ function matchesQuery(item: typeof lib.items[number], q: string): boolean {
 const items = computed(() => lib.items
   .filter(i => matchesQuery(i, query.value))
   .filter(i => !onlyStarred.value || lib.isStarred(i.id))
+  .filter(i => !activeTag.value || lib.getTags(i.id).includes(activeTag.value))
+  .filter(i => {
+    if (!activeFolder.value) return true;
+    const f = lib.folders.find(x => x.id === activeFolder.value);
+    return f ? f.items.includes(i.id) : true;
+  })
 );
 
 function clearQuery() { query.value = ""; }
@@ -103,6 +134,43 @@ function clearQuery() { query.value = ""; }
     </div>
 
     <template v-if="tab === 'palettes'">
+
+    <!-- FOLDERS -->
+    <div v-if="lib.folders.length || showFolderManager" class="folder-bar">
+      <button
+        class="folder-chip"
+        :class="{ active: activeFolder === null }"
+        @click="activeFolder = null"
+      >all</button>
+      <button
+        v-for="f in lib.folders" :key="f.id"
+        class="folder-chip"
+        :class="{ active: activeFolder === f.id }"
+        @click="activeFolder = activeFolder === f.id ? null : f.id"
+      >
+        {{ f.name }} <span class="f-count">{{ f.items.length }}</span>
+      </button>
+      <button class="folder-chip add" @click="showFolderManager = !showFolderManager">+ folder</button>
+    </div>
+    <div v-if="showFolderManager" class="folder-form">
+      <input v-model="newFolderName" placeholder="new folder name" @keydown.enter="makeFolder" />
+      <button @click="makeFolder">create</button>
+      <button v-if="activeFolder" class="ghost" @click="lib.deleteFolder(activeFolder); activeFolder = null">
+        delete '{{ lib.folders.find(f => f.id === activeFolder)?.name }}'
+      </button>
+    </div>
+
+    <!-- TAG BAR -->
+    <div v-if="lib.allTags.length" class="tag-bar">
+      <span class="tag-bar-label">tags:</span>
+      <button
+        v-for="t in lib.allTags" :key="t"
+        class="tag-chip"
+        :class="{ active: activeTag === t }"
+        @click="activeTag = activeTag === t ? null : t"
+      >{{ t }}</button>
+    </div>
+
     <div v-if="items.length === 0 && !query" class="empty-large">
       <p>No palettes saved yet.</p>
       <p>generate or drop a reference image, then save</p>
@@ -135,6 +203,31 @@ function clearQuery() { query.value = ""; }
         <div class="lib-meta">
           <span>{{ new Date(item.ts).toISOString().slice(0, 10) }}</span>
           <span class="count-meta">{{ item.palette.length }} swatches</span>
+        </div>
+
+        <div class="lib-tags">
+          <span v-for="t in lib.getTags(item.id)" :key="t" class="lib-tag-chip">
+            {{ t }}
+            <button class="tag-x" @click="lib.removeTag(item.id, t)" aria-label="Remove tag">×</button>
+          </span>
+          <button class="tag-add" @click="openTagsFor(item.id)">+ tag</button>
+        </div>
+
+        <div v-if="editingTagsFor === item.id" class="tag-editor" @click.stop>
+          <input
+            v-model="newTagInput"
+            placeholder="tag name"
+            @keydown.enter="commitTag(item.id)"
+          />
+          <div v-if="lib.folders.length" class="folder-toggles">
+            <span class="ft-label">add to:</span>
+            <button
+              v-for="f in lib.folders" :key="f.id"
+              class="ft-chip"
+              :class="{ active: f.items.includes(item.id) }"
+              @click="lib.toggleInFolder(f.id, item.id)"
+            >{{ f.name }}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -349,6 +442,189 @@ function clearQuery() { query.value = ""; }
 .filter-pill:hover { color: var(--text); border-color: var(--text); }
 .filter-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 .filter-pill .star { font-size: 11px; line-height: 1; }
+
+/* FOLDERS */
+.folder-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+}
+.folder-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text-2);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: lowercase;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.folder-chip:hover { color: var(--text); border-color: var(--text); }
+.folder-chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.folder-chip.add { color: var(--text-3); border-style: dashed; }
+.folder-chip .f-count {
+  font-size: 9px;
+  background: var(--surface-2);
+  color: var(--text-3);
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+.folder-chip.active .f-count { background: var(--bg); color: var(--text); }
+.folder-form {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--s-3);
+  flex-wrap: wrap;
+}
+.folder-form input {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.folder-form button {
+  padding: 6px 12px;
+  border: 1px solid var(--text);
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  cursor: pointer;
+}
+.folder-form button.ghost {
+  background: var(--bg);
+  color: #c00;
+  border-color: rgba(192,0,0,.3);
+}
+
+/* TAG BAR */
+.tag-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+}
+.tag-bar-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--text-3);
+}
+.tag-chip {
+  padding: 4px 9px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text-2);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: lowercase;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.tag-chip:hover { color: var(--text); border-color: var(--text); }
+.tag-chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* CARD TAGS */
+.lib-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  border-top: 1px solid var(--hairline);
+}
+.lib-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .04em;
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  color: var(--text-2);
+}
+.lib-tag-chip .tag-x {
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+}
+.lib-tag-chip .tag-x:hover { color: #c00; }
+.tag-add {
+  font-family: var(--mono);
+  font-size: 8px;
+  padding: 2px 6px;
+  border: 1px dashed var(--hairline);
+  background: var(--bg);
+  color: var(--text-3);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.tag-add:hover { color: var(--text); border-color: var(--text); }
+
+.tag-editor {
+  padding: 8px;
+  border-top: 1px solid var(--hairline);
+  background: var(--surface-2);
+}
+.tag-editor input {
+  width: 100%;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+.folder-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+}
+.ft-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-3);
+  margin-right: 4px;
+}
+.ft-chip {
+  font-family: var(--mono);
+  font-size: 8px;
+  padding: 2px 6px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text-2);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ft-chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 .library-count {
   font-family: var(--mono);

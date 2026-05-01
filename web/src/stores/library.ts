@@ -5,6 +5,8 @@ import * as api from "@/services/api";
 
 const KEY = "nnc_library_v1";
 const STAR_KEY = "nnc_library_stars_v1";
+const TAGS_KEY = "nnc_library_tags_v1";
+const FOLDERS_KEY = "nnc_library_folders_v1";
 
 function loadStars(): Set<string> {
   try {
@@ -14,6 +16,34 @@ function loadStars(): Set<string> {
 }
 function persistStars(set: Set<string>) {
   try { localStorage.setItem(STAR_KEY, JSON.stringify([...set])); } catch {}
+}
+
+// Tags: itemId → string[] of lowercase tag names
+function loadTags(): Record<string, string[]> {
+  try {
+    const raw = localStorage.getItem(TAGS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function persistTags(map: Record<string, string[]>) {
+  try { localStorage.setItem(TAGS_KEY, JSON.stringify(map)); } catch {}
+}
+
+// Folders: { id, name, items: string[] }
+export interface LibraryFolder {
+  id: string;
+  name: string;
+  items: string[];
+  ts: number;
+}
+function loadFolders(): LibraryFolder[] {
+  try {
+    const raw = localStorage.getItem(FOLDERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+function persistFolders(arr: LibraryFolder[]) {
+  try { localStorage.setItem(FOLDERS_KEY, JSON.stringify(arr)); } catch {}
 }
 
 function load(): LibraryItem[] {
@@ -138,8 +168,80 @@ export const useLibraryStore = defineStore("library", () => {
     persistStars(stars.value);
   }
 
+  // ---------- tags ----------
+  const tags = ref<Record<string, string[]>>(loadTags());
+
+  function getTags(id: string): string[] {
+    return tags.value[id] || [];
+  }
+
+  function setTags(id: string, list: string[]) {
+    const cleaned = [...new Set(list.map(t => t.trim().toLowerCase()).filter(t => t))];
+    if (cleaned.length === 0) delete tags.value[id];
+    else tags.value[id] = cleaned;
+    tags.value = { ...tags.value };
+    persistTags(tags.value);
+  }
+
+  function addTag(id: string, tag: string) {
+    setTags(id, [...getTags(id), tag]);
+  }
+
+  function removeTag(id: string, tag: string) {
+    setTags(id, getTags(id).filter(t => t !== tag.toLowerCase()));
+  }
+
+  const allTags = computed(() => {
+    const set = new Set<string>();
+    for (const list of Object.values(tags.value)) for (const t of list) set.add(t);
+    return [...set].sort();
+  });
+
+  // ---------- folders ----------
+  const folders = ref<LibraryFolder[]>(loadFolders());
+
+  function createFolder(name: string): LibraryFolder {
+    const folder: LibraryFolder = {
+      id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+      name: name.trim(),
+      items: [],
+      ts: Date.now(),
+    };
+    folders.value = [folder, ...folders.value];
+    persistFolders(folders.value);
+    return folder;
+  }
+
+  function renameFolder(id: string, name: string) {
+    const f = folders.value.find(x => x.id === id);
+    if (!f) return;
+    f.name = name.trim();
+    folders.value = [...folders.value];
+    persistFolders(folders.value);
+  }
+
+  function deleteFolder(id: string) {
+    folders.value = folders.value.filter(x => x.id !== id);
+    persistFolders(folders.value);
+  }
+
+  function toggleInFolder(folderId: string, itemId: string) {
+    const f = folders.value.find(x => x.id === folderId);
+    if (!f) return;
+    if (f.items.includes(itemId)) f.items = f.items.filter(x => x !== itemId);
+    else f.items = [...f.items, itemId];
+    folders.value = [...folders.value];
+    persistFolders(folders.value);
+  }
+
+  function foldersFor(itemId: string): LibraryFolder[] {
+    return folders.value.filter(f => f.items.includes(itemId));
+  }
+
   return {
     items, isRemote, syncing, save, remove, bySource, sync, resetToLocal,
     stars, isStarred, toggleStar,
+    tags, getTags, setTags, addTag, removeTag, allTags,
+    folders, createFolder, renameFolder, deleteFolder, toggleInFolder, foldersFor,
   };
 });
