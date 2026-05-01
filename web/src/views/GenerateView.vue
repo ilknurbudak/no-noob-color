@@ -19,6 +19,7 @@ import UIPanel from "@/components/persona/UIPanel.vue";
 import IllustratorPanel from "@/components/persona/IllustratorPanel.vue";
 import ConceptPanel from "@/components/persona/ConceptPanel.vue";
 import CinemaPanel from "@/components/persona/CinemaPanel.vue";
+import BrandPanel from "@/components/persona/BrandPanel.vue";
 
 const persona = usePersonaStore();
 const lib = useLibraryStore();
@@ -322,6 +323,7 @@ const personaName = computed(() => persona.active?.name ?? "no persona");
     <IllustratorPanel v-if="persona.activeId === 'illustrator'" :palette="palette" />
     <ConceptPanel v-if="persona.activeId === 'concept'" :palette="palette" />
     <CinemaPanel v-if="persona.activeId === 'cinema'" :palette="palette" />
+    <BrandPanel v-if="persona.activeId === 'brand'" :palette="palette" />
 
     <TabInfo
       eyebrow="How it works"
