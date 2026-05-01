@@ -47,6 +47,54 @@ async function copy(text: string, label: string) {
   }
 }
 
+// True if Web Share Level 2 (file sharing) is supported — iOS Safari 15+,
+// Android Chrome 89+. Without this we fall back to download.
+const canShareFiles = typeof navigator !== "undefined" && !!navigator.canShare;
+
+async function shareFile(bytes: Uint8Array, filename: string, mime: string, label: string) {
+  if (!canShareFiles) {
+    downloadBlob(bytes, filename, mime);
+    toast.show(`Downloaded ${label}`);
+    return;
+  }
+  try {
+    const file = new File([bytes], filename, { type: mime });
+    if (navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: label,
+        text: `no noob color · ${label}`,
+      });
+      toast.show(`Shared ${label}`);
+      return;
+    }
+  } catch (e: any) {
+    // User cancelled share — silent. Otherwise fallback to download.
+    if (e.name !== "AbortError") {
+      console.warn("share failed, falling back:", e);
+      downloadBlob(bytes, filename, mime);
+      toast.show(`Downloaded ${label}`);
+    }
+    return;
+  }
+  // Final fallback
+  downloadBlob(bytes, filename, mime);
+  toast.show(`Downloaded ${label}`);
+}
+
+async function shareText(text: string, label: string) {
+  if (typeof navigator === "undefined" || !navigator.share) {
+    await copy(text, label);
+    return;
+  }
+  try {
+    await navigator.share({ title: label, text });
+    toast.show(`Shared ${label}`);
+  } catch (e: any) {
+    if (e.name !== "AbortError") await copy(text, label);
+  }
+}
+
 async function exportFormat(fmt: string) {
   if (!props.palette.length) return;
   const ts = new Date().toISOString().slice(0, 10);
@@ -54,13 +102,26 @@ async function exportFormat(fmt: string) {
   const named = transformedNamed();
 
   try {
-    if (fmt === "procreate") downloadBlob(buildSwatches(named, name), `palette-${ts}.swatches`);
-    else if (fmt === "ase") downloadBlob(buildASE(named, name), `palette-${ts}.ase`);
+    if (fmt === "procreate") {
+      await shareFile(buildSwatches(named, name), `palette-${ts}.swatches`,
+        "application/octet-stream", "Procreate palette");
+    }
+    else if (fmt === "ase") {
+      await shareFile(buildASE(named, name), `palette-${ts}.ase`,
+        "application/octet-stream", "Adobe palette");
+    }
     else if (fmt === "tailwind") await copy(buildTailwind(named, name), "Tailwind config");
     else if (fmt === "css") await copy(buildCSSVars(named, name), "CSS variables");
     else if (fmt === "json") await copy(buildJSON(named, name), "JSON");
-    else if (fmt === "svg") downloadBlob(buildSVGPoster(named, name), `palette-${ts}.svg`, "image/svg+xml");
-    else if (fmt === "text") await copy(buildText(named, name), "palette");
+    else if (fmt === "svg") {
+      const svg = buildSVGPoster(named, name);
+      const bytes = new TextEncoder().encode(typeof svg === "string" ? svg : new TextDecoder().decode(svg));
+      await shareFile(bytes, `palette-${ts}.svg`, "image/svg+xml", "SVG poster");
+    }
+    else if (fmt === "text") {
+      // Prefer share sheet on mobile (AirDrop, Messages, Notes, Procreate)
+      await shareText(buildText(named, name), "palette text");
+    }
   } catch (e) {
     console.error("export failed", e);
     toast.show("Export failed");

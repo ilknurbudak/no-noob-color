@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>no noob color · iPhone simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a1a;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    color: #f5f5f5;
+    min-height: 100vh;
+  }
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    gap: 20px;
+  }
+  header {
+    text-align: center;
+  }
+  h1 {
+    font-family: "Inter", -apple-system, system-ui, sans-serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 0 0 6px;
+    letter-spacing: -.01em;
+  }
+  .sub {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: rgba(255, 255, 255, .55);
+    margin: 0;
+  }
+  .controls {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 6px;
+  }
+  .device-btn {
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, .25);
+    background: transparent;
+    color: rgba(255, 255, 255, .85);
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .device-btn:hover { background: rgba(255, 255, 255, .1); }
+  .device-btn.active {
+    background: #f5f5f5;
+    color: #0a0a0a;
+    border-color: #f5f5f5;
+  }
+  .url-input {
+    margin-top: 6px;
+    width: 360px;
+    max-width: 90vw;
+    border: 1px solid rgba(255, 255, 255, .25);
+    background: transparent;
+    color: rgba(255, 255, 255, .9);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11px;
+    text-align: center;
+  }
+  .url-input:focus { outline: none; border-color: #f5f5f5; }
+
+  .device {
+    position: relative;
+    background: #0a0a0a;
+    box-shadow:
+      0 30px 80px rgba(0, 0, 0, .6),
+      0 0 0 1.5px rgba(255, 255, 255, .08),
+      inset 0 0 0 4px #000;
+    transition: width .25s ease, height .25s ease;
+  }
+  .device.iphone15 {
+    width: 390px;
+    height: 844px;
+    border-radius: 50px;
+    padding: 12px;
+  }
+  .device.iphone15-pro-max {
+    width: 430px;
+    height: 932px;
+    border-radius: 55px;
+    padding: 12px;
+  }
+  .device.iphone-se {
+    width: 375px;
+    height: 667px;
+    border-radius: 36px;
+    padding: 8px;
+  }
+  .device.ipad-mini {
+    width: 768px;
+    height: 1024px;
+    border-radius: 36px;
+    padding: 16px;
+  }
+  .device-screen {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 38px;
+    overflow: hidden;
+    position: relative;
+  }
+  .device.iphone-se .device-screen { border-radius: 28px; }
+  .device.ipad-mini .device-screen { border-radius: 22px; }
+
+  .notch {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 30px;
+    background: #000;
+    border-radius: 18px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .device.iphone-se .notch { display: none; }
+  .device.ipad-mini .notch { display: none; }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+
+  .footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 9px;
+    color: rgba(255, 255, 255, .35);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .footer a { color: rgba(255, 255, 255, .55); text-decoration: none; }
+
+  .reload-btn {
+    position: absolute;
+    bottom: -42px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .25);
+    background: transparent;
+    color: rgba(255, 255, 255, .65);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .reload-btn:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+
+  @media (max-width: 600px) {
+    .device.iphone15, .device.iphone15-pro-max, .device.ipad-mini {
+      width: 92vw;
+      height: calc(92vw * 2.16);
+      border-radius: 36px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <header>
+    <h1>no noob color</h1>
+    <p class="sub">iPhone simulator · in browser</p>
+    <div class="controls">
+      <button class="device-btn" data-device="iphone-se">SE</button>
+      <button class="device-btn active" data-device="iphone15">15</button>
+      <button class="device-btn" data-device="iphone15-pro-max">15 Pro Max</button>
+      <button class="device-btn" data-device="ipad-mini">iPad mini</button>
+    </div>
+    <input class="url-input" id="url" value="http://localhost:4173/" />
+  </header>
+
+  <div class="device iphone15" id="device">
+    <div class="notch"></div>
+    <div class="device-screen">
+      <iframe id="frame" src="http://localhost:4173/"></iframe>
+    </div>
+    <button class="reload-btn" id="reload" title="Reload">↻</button>
+  </div>
+
+  <div class="footer">
+    if blank: run <a href="#">npm run preview</a> in web/ first ·
+    or change URL above to <a href="#">http://localhost:5173/</a> for dev mode
+  </div>
+</div>
+
+<script>
+  const device = document.getElementById("device");
+  const buttons = document.querySelectorAll(".device-btn");
+  const frame = document.getElementById("frame");
+  const url = document.getElementById("url");
+  const reload = document.getElementById("reload");
+
+  buttons.forEach(b => {
+    b.addEventListener("click", () => {
+      buttons.forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      device.className = "device " + b.dataset.device;
+    });
+  });
+
+  url.addEventListener("change", () => {
+    frame.src = url.value;
+  });
+
+  reload.addEventListener("click", () => {
+    frame.src = frame.src;
+  });
+</script>
+
+</body>
+</html>

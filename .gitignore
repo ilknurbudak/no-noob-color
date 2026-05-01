@@ -61,6 +61,22 @@ tools/output/
 # Node
 web/node_modules/
 web/dist/
+web/*.tsbuildinfo
+
+# Capacitor (generated on demand by `npx cap add ios/android`)
+web/ios/
+web/android/
+web/capacitor.config.d.ts
+web/capacitor.config.js
+App.xcodeproj/
+
+# Random screenshots dropped on Desktop
+*.jpg
+*.png
+!web/public/*.png
+!docs/*.gif
+!docs/*.png
+!prototype/*.png
 
 # PocketBase — binary and user data are local; only migrations are tracked
 pocketbase/pocketbase

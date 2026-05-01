@@ -10,6 +10,9 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
     "marked": "^18.0.2",
     "pinia": "^2.2.4",
     "tippy.js": "^6.3.7",

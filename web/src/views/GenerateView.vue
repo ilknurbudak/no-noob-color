@@ -183,7 +183,36 @@ function applyPersona() {
 }
 
 watch(() => persona.active?.id, applyPersona);
-onMounted(() => { applyPersona(); generate(); });
+
+// Capture handoff from BottomNav camera button
+async function consumePendingCamera() {
+  const dataUrl = sessionStorage.getItem("nnc_camera_pending");
+  const name = sessionStorage.getItem("nnc_camera_pending_name") || "camera.jpg";
+  if (!dataUrl) return;
+  sessionStorage.removeItem("nnc_camera_pending");
+  sessionStorage.removeItem("nnc_camera_pending_name");
+
+  // Convert dataURL to File and feed to ref-image composable
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const file = new File([blob], name, { type: blob.type || "image/jpeg" });
+  try {
+    const extracted = await refImg.load(file, 5);
+    if (extracted.length) {
+      const sw = extracted[0];
+      baseHex.value = "#" + sw.rgb.map(v => v.toString(16).padStart(2, "0")).join("");
+      palette.value = extracted;
+    }
+  } catch (e) {
+    console.warn("camera capture extract failed:", e);
+  }
+}
+
+onMounted(() => {
+  applyPersona();
+  generate();
+  consumePendingCamera();
+});
 
 function makeThumbFromPalette(pal: Swatch[]): string {
   const canvas = document.createElement("canvas");

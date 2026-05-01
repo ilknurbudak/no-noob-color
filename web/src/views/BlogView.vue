@@ -1,12 +1,35 @@
 <script setup lang="ts">
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { POSTS, TIPS } from "@/data/blog/posts";
 
 const router = useRouter();
+const query = ref("");
 
 function open(slug: string) {
   router.push({ name: "blog-post", params: { slug } });
 }
+
+function matches(text: string, q: string): boolean {
+  if (!q) return true;
+  return text.toLowerCase().includes(q.toLowerCase());
+}
+
+function searchHaystack(post: typeof POSTS[number]): string {
+  return [
+    post.title,
+    post.lead,
+    post.eyebrow,
+    ...post.sections.filter(s => s.type === "prose" || s.type === "quote").map((s: any) => s.body),
+  ].join(" ");
+}
+
+const filteredDeep = computed(() =>
+  POSTS.filter(p => matches(searchHaystack(p), query.value))
+);
+const filteredTips = computed(() =>
+  TIPS.filter(p => matches(searchHaystack(p), query.value))
+);
 </script>
 
 <template>
@@ -23,14 +46,28 @@ function open(slug: string) {
       </div>
     </header>
 
-    <div class="section-head">
-      <span class="section-eyebrow">Deep dives</span>
-      <h2 class="section-title">{{ POSTS.length }} long-form pieces</h2>
+    <div class="search-row">
+      <input
+        v-model="query"
+        class="blog-search"
+        type="text"
+        placeholder="search articles · tips · keywords"
+      />
+      <button v-if="query" class="search-clear" @click="query = ''" aria-label="Clear">×</button>
     </div>
 
-    <div class="post-grid">
+    <div v-if="!filteredDeep.length && !filteredTips.length" class="empty">
+      <p>No articles match "{{ query }}".</p>
+    </div>
+
+    <div v-if="filteredDeep.length" class="section-head">
+      <span class="section-eyebrow">Deep dives</span>
+      <h2 class="section-title">{{ filteredDeep.length }} {{ query ? 'matching' : '' }} long-form {{ filteredDeep.length === 1 ? 'piece' : 'pieces' }}</h2>
+    </div>
+
+    <div v-if="filteredDeep.length" class="post-grid">
       <article
-        v-for="(p, i) in POSTS"
+        v-for="(p, i) in filteredDeep"
         :key="p.slug"
         class="post-card"
         @click="open(p.slug)"
@@ -47,14 +84,14 @@ function open(slug: string) {
       </article>
     </div>
 
-    <div class="section-head tips-head">
+    <div v-if="filteredTips.length" class="section-head tips-head">
       <span class="section-eyebrow">Tips</span>
-      <h2 class="section-title">{{ TIPS.length }} quick how-tos</h2>
+      <h2 class="section-title">{{ filteredTips.length }} {{ query ? 'matching' : '' }} quick how-{{ filteredTips.length === 1 ? 'to' : 'tos' }}</h2>
     </div>
 
-    <div class="tips-grid">
+    <div v-if="filteredTips.length" class="tips-grid">
       <article
-        v-for="t in TIPS"
+        v-for="t in filteredTips"
         :key="t.slug"
         class="tip-card"
         @click="open(t.slug)"
@@ -180,6 +217,49 @@ function open(slug: string) {
   margin-top: 4px;
 }
 .post-card:hover .cta { color: var(--text); }
+
+.search-row {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  padding: var(--s-3) 0;
+  margin-bottom: var(--s-4);
+  display: flex;
+  align-items: center;
+}
+.blog-search {
+  width: 100%;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--text);
+  padding: 11px 18px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+.blog-search:focus { outline: none; border-color: var(--text); }
+.search-clear {
+  position: absolute;
+  right: 8px;
+  width: 26px; height: 26px;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+}
+.search-clear:hover { background: var(--text); color: var(--bg); }
+.empty {
+  padding: var(--s-6) var(--s-5);
+  text-align: center;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .04em;
+}
 
 .section-head {
   margin: var(--s-7) 0 var(--s-4);

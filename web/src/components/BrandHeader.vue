@@ -57,7 +57,10 @@ function goHome() {
   transition: opacity .15s;
 }
 .brand-lockup:hover { opacity: .72; }
-:global([data-theme="dark"]) .brand-lockup { filter: invert(1); }
+/* Logo PNG is white; invert in light mode so it reads black on white,
+   leave it as-is in dark mode so the white strokes show on dark bg. */
+.brand-lockup { filter: invert(1); }
+:global([data-theme="dark"]) .brand-lockup { filter: none; }
 .header-controls {
   position: absolute;
   bottom: var(--s-4);

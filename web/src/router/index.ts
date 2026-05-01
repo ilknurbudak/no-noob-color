@@ -4,6 +4,7 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: "/",         name: "home",     component: () => import("@/views/HomeView.vue") },
+    { path: "/welcome",  name: "welcome",  component: () => import("@/views/WelcomeView.vue") },
     { path: "/photo",    redirect: "/generate" },
     { path: "/generate", name: "generate", component: () => import("@/views/GenerateView.vue") },
     { path: "/library",  name: "library",  component: () => import("@/views/LibraryView.vue") },
