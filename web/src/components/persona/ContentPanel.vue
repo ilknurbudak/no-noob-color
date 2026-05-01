@@ -315,9 +315,12 @@ async function copy(text: string, label: string) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--s-3);
+  max-width: 540px;
+  margin: 0 auto;
 }
 .story-template {
   aspect-ratio: 9 / 16;
+  max-height: 440px;
   border-radius: 12px;
   padding: var(--s-4);
   display: flex;
@@ -334,6 +337,8 @@ async function copy(text: string, label: string) {
 .story-sw { width: 24px; height: 60px; border-radius: 4px; }
 .post-template {
   aspect-ratio: 1;
+  max-height: 280px;
+  align-self: start;
   border-radius: 12px;
   padding: var(--s-4);
   display: flex; align-items: center; justify-content: center;
