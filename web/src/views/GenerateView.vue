@@ -29,7 +29,15 @@ const persona = usePersonaStore();
 const lib = useLibraryStore();
 const toast = useToastStore();
 
-const baseHex = ref("#7a4b8a");
+function randomBaseHex(): string {
+  // Random pleasant seed: random hue, mid-saturation, mid-lightness
+  const h = Math.floor(Math.random() * 360);
+  const s = 0.55 + Math.random() * 0.25;
+  const v = 0.55 + Math.random() * 0.25;
+  return rgbToHex(...hsvToRgb(h, s, v));
+}
+
+const baseHex = ref(randomBaseHex());
 const rule = ref<Harmony>("auto");
 const n = ref(5);
 const palette = ref<Swatch[]>([]);
@@ -41,6 +49,18 @@ const promptInfo = computed(() => parsePrompt(prompt.value));
 const taste = useTasteStore();
 const useTaste = ref(false);
 const showTrainer = ref(false);
+
+// After any palette generation, sync base to the most vibrant swatch.
+// This keeps the picker honest — what's on the right is reflected on the left.
+function syncBaseFromPalette() {
+  if (!palette.value.length) return;
+  const sorted = [...palette.value].sort((a, b) => {
+    const sa = (a.chroma ?? 0);
+    const sb = (b.chroma ?? 0);
+    return sb - sa;
+  });
+  baseHex.value = rgbToHex(...sorted[0].rgb);
+}
 
 function combineBias(a: Bias, b: Bias): Bias {
   const out: Bias = { ...a };
@@ -70,6 +90,7 @@ function generateFromPrompt() {
     return;
   }
   palette.value = biasToPalette(bias, n.value);
+  syncBaseFromPalette();
 }
 
 async function onRefDrop(e: DragEvent) {
