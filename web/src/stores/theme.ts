@@ -16,26 +16,36 @@ export const useThemeStore = defineStore("theme", () => {
     const isDark = mode.value === "dark";
     const html = document.documentElement;
     const body = document.body;
-
-    // 1. Data attribute (drives CSS variables)
-    html.dataset.theme = isDark ? "dark" : "light";
-
-    // 2. Class fallback (in case some scoped CSS uses .dark like Material 3)
-    html.classList.toggle("dark", isDark);
-    body?.classList.toggle("dark", isDark);
-
-    // 3. Direct inline styles — bulletproof against any CSS specificity
-    //    or service-worker-cached stylesheet weirdness
+    const themeStr = isDark ? "dark" : "light";
     const bg = isDark ? "#0d0d0d" : "#ffffff";
     const fg = isDark ? "#ffffff" : "#000000";
-    html.style.background = bg;
-    html.style.color = fg;
+
+    // 1. Data attributes (html + body)
+    html.dataset.theme = themeStr;
+    if (body) body.dataset.theme = themeStr;
+
+    // 2. Class flags (html + body, light + dark explicit so CSS that
+    //    targets either side always matches)
+    html.classList.toggle("dark", isDark);
+    html.classList.toggle("light", !isDark);
+    body?.classList.toggle("dark", isDark);
+    body?.classList.toggle("light", !isDark);
+
+    // 3. Direct inline styles with priority — beats any later CSS
+    html.style.setProperty("background-color", bg, "important");
+    html.style.setProperty("color", fg, "important");
     if (body) {
-      body.style.background = bg;
-      body.style.color = fg;
+      body.style.setProperty("background-color", bg, "important");
+      body.style.setProperty("color", fg, "important");
     }
+
     // 4. color-scheme so form controls + scrollbars match
-    html.style.colorScheme = isDark ? "dark" : "light";
+    html.style.colorScheme = themeStr;
+
+    // 5. Debug breadcrumb so we can see this fired in console
+    if (typeof window !== "undefined") {
+      (window as any).__nncTheme = { mode: themeStr, ts: Date.now() };
+    }
   }
   apply();
 

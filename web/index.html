@@ -58,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
-  <!-- Apply theme BEFORE Vue mounts so first paint is correct + bg never flashes white. -->
+  <!-- Apply theme BEFORE Vue mounts so first paint is correct + bg never flashes wrong. -->
   <script>
     (function () {
       try {
@@ -67,10 +67,13 @@
           window.matchMedia("(prefers-color-scheme: dark)").matches;
         var isDark = saved === "dark" || (saved !== "light" && prefersDark);
         var html = document.documentElement;
+        var bg = isDark ? "#0d0d0d" : "#ffffff";
+        var fg = isDark ? "#ffffff" : "#000000";
         html.dataset.theme = isDark ? "dark" : "light";
         html.classList.toggle("dark", isDark);
-        html.style.background = isDark ? "#0d0d0d" : "#ffffff";
-        html.style.color = isDark ? "#ffffff" : "#000000";
+        html.classList.toggle("light", !isDark);
+        html.style.setProperty("background-color", bg, "important");
+        html.style.setProperty("color", fg, "important");
         html.style.colorScheme = isDark ? "dark" : "light";
       } catch (e) {}
     })();
@@ -82,9 +85,13 @@
       try {
         var t = document.documentElement.dataset.theme;
         var isDark = t === "dark";
-        document.body.style.background = isDark ? "#0d0d0d" : "#ffffff";
-        document.body.style.color = isDark ? "#ffffff" : "#000000";
+        var bg = isDark ? "#0d0d0d" : "#ffffff";
+        var fg = isDark ? "#ffffff" : "#000000";
+        document.body.style.setProperty("background-color", bg, "important");
+        document.body.style.setProperty("color", fg, "important");
+        document.body.dataset.theme = isDark ? "dark" : "light";
         document.body.classList.toggle("dark", isDark);
+        document.body.classList.toggle("light", !isDark);
       } catch (e) {}
     })();
   </script>
