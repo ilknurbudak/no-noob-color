@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import { useThemeStore } from "@/stores/theme";
+import { useToastStore } from "@/stores/toast";
 const theme = useThemeStore();
+const toast = useToastStore();
+
+function onClick() {
+  theme.toggle();
+  toast.show(theme.mode === "dark" ? "Dark mode" : "Light mode");
+}
 </script>
 
 <template>
   <button
     class="theme-fab"
     :class="{ dark: theme.mode === 'dark' }"
-    @click="theme.toggle"
+    @click="onClick"
     :aria-label="theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
-    :title="theme.mode === 'dark' ? 'Light mode' : 'Dark mode'"
+    :title="theme.mode === 'dark' ? 'Currently dark · click for light' : 'Currently light · click for dark'"
   >
     <span class="icon">
       <!-- Sun (shown in light mode) -->
