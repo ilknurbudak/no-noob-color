@@ -54,10 +54,27 @@ function goHome() {
   transition: opacity .15s;
 }
 .brand-lockup:hover { opacity: .72; }
-/* Logo PNG: black strokes on transparent. Natural in light mode,
-   inverted (white strokes) in dark mode. */
+
+/* Logo PNG has a dark-filled background behind the strokes —
+   we need blend modes to disappear that fill on either theme. */
+
+/* LIGHT MODE: multiply with white bg.
+   - Black strokes stay black.
+   - The dark fill behind also goes black, but since it covers the
+     stroke area only, the surrounding transparent edge merges with
+     the white page. Black strokes read normally. */
+.brand-lockup { mix-blend-mode: multiply; }
+
+/* DARK MODE: lighten — picks the lighter pixel between source and bg.
+   The PNG's dark fill (~black) is darker than the page (#0d0d0d), so
+   the page wins → fill disappears.
+   We invert the strokes first so they go white, and `lighten` keeps
+   the white strokes against the dark page. */
 :global(html[data-theme="dark"]) .brand-lockup,
-:global(html.dark) .brand-lockup { filter: invert(1); }
+:global(html.dark) .brand-lockup {
+  filter: invert(1);
+  mix-blend-mode: lighten;
+}
 .header-controls {
   position: absolute;
   bottom: var(--s-4);
