@@ -54,18 +54,10 @@ function goHome() {
   transition: opacity .15s;
 }
 .brand-lockup:hover { opacity: .72; }
-/* Logo PNG has a dark fill behind the strokes — use blend modes so
-   the surrounding box disappears into the page background.
-   Light mode: multiply (black stays, white→ transparent).
-   Dark mode: invert + screen so strokes go white and the dark fill
-   merges with the dark page bg. */
-.brand-lockup {
-  mix-blend-mode: multiply;
-}
-:global([data-theme="dark"]) .brand-lockup {
-  filter: invert(1);
-  mix-blend-mode: screen;
-}
+/* Logo PNG: black strokes on transparent. Natural in light mode,
+   inverted (white strokes) in dark mode. */
+:global(html[data-theme="dark"]) .brand-lockup,
+:global(html.dark) .brand-lockup { filter: invert(1); }
 .header-controls {
   position: absolute;
   bottom: var(--s-4);
